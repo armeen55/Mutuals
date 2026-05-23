@@ -230,9 +230,7 @@ export default function Reveal({ next, go, goSignup }) {
           <Button
             tone="white"
             icon={Share2}
-            onClick={() =>
-              shareOrCopy({ text: `${card.headline} See who actually knows who:`, url: shareUrl(app.activeGroupId) })
-            }
+            onClick={() => shareOrCopy({ text: card.shareText || card.headline, url: shareUrl(app.activeGroupId) })}
           >
             Share
           </Button>

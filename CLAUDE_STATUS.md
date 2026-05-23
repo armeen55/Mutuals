@@ -5,6 +5,28 @@ Newest entry on top.
 
 ---
 
+## Chunk 11 — Viral reveal decks (duo vs group) (BATCH: local commit only)
+
+### Goal
+Make the real computed reveal the thing people screenshot. Mode-specific decks, roasty copy, honest stats — no change to room/answer/guess flow.
+
+### What changed (`src/lib/insights.js` rewrite + `Reveal.jsx`)
+- **Mode-specific decks.** `computeInsights(bundle)` branches on `group.mode`: `duoDeck` vs `groupDeck`. Same card shape + new optional `shareText`. Seeded stays solo-only.
+- **Duo deck (showdown, ~6 cards):** Winner ("Mason knows Lebron better." 75%), Mutual Score ("You two are 63% mutual."), One-Way Read ("Mason read Lebron. Lebron guessed vibes." +gap), Biggest Miss ("…completely misread Lebron's pressure mode."), Best Read ("had them figured out." x/y), Final Verdict ("Friends. Provisionally." / "Close enough to be dangerous.").
+- **Group deck (argument-starter, ~9 cards):** Group Winner, Most Misunderstood, Open Book, Power Pair, One-Way Friendship, Confidently Wrong, Biggest Blind Spot, **Scoreboard** (ranked one-liner in `detail`), Final Roast.
+- **No empty reveals:** a normal unlocked room produces a full deck (verified: **6 cards duo / 9 cards group** from a clean q1–q4 run). The "not enough overlapping guesses" state is now genuinely rare.
+- **Copy:** ~70% roasty/competitive, ~30% warm; real names used aggressively; no therapy/corporate filler.
+- **Per-card share:** Reveal's Share button now uses `card.shareText || card.headline` — each card has a hook that makes someone want to open the room.
+- **Honest stats:** all % from actual overlapping guesses; scoreboard is a real ranking; no invented numbers.
+
+### Files changed
+`src/lib/insights.js` (full rewrite), `src/components/mutuals/screens/Reveal.jsx` (share-text wiring). No schema, deploy, room-flow, or BigRevealCard changes. Seeded Karan untouched (solo-only).
+
+### Status / verify
+**BATCH MODE — local commit only; not full-built, not pushed, not deployed.** Validated the engine with a throwaway Node smoke test (duo→6 cards, group→9 cards, stats correct, copy reads clean). Live site unchanged until a future deploy.
+
+---
+
 ## Chunk 10 — Fix the stuck/waiting-room experience (BATCH: not built/pushed/deployed)
 
 ### Bug
