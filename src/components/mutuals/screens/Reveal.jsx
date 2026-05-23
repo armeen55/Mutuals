@@ -15,32 +15,56 @@ const SEEDED = [0, 1, 2, 4, 5, 6, 7, 8, 9].map((i) => insightCards[i]);
 
 export default function Reveal({ next, go, goSignup }) {
   const app = useMutuals();
-  const [real, setReal] = useState(null); // { readiness, cards }
+  const [real, setReal] = useState(null); // { readiness, cards, bundle }
   const [loading, setLoading] = useState(!app.soloDemo);
   const [pos, setPos] = useState(0);
-
-  useEffect(() => {
-    if (!app.revealUnlocked && !app.soloDemo) go("Answer");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const myPid = (app.participantIdsByGroup || {})[app.activeGroupId];
 
   const refresh = () => {
     if (app.soloDemo || !app.activeGroupId) {
       setLoading(false);
       return;
     }
-    setLoading(true);
     getInsights(app.activeGroupId)
       .then((r) => setReal(r))
       .catch(() => {})
       .finally(() => setLoading(false));
   };
+
+  // Initial fetch + lightweight auto-refresh until the reveal is ready.
   useEffect(() => {
+    if (app.soloDemo || !app.activeGroupId) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     refresh();
+    const id = setInterval(() => {
+      getInsights(app.activeGroupId)
+        .then((r) => {
+          setReal(r);
+          if (r?.readiness?.unlocked && r.cards?.length > 0) clearInterval(id);
+        })
+        .catch(() => {});
+    }, 6000);
+    return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app.activeGroupId, app.soloDemo]);
 
-  // Real group still computing / loading.
+  // Backend-aware redirect: only bounce to Answer if the user truly hasn't played
+  // (not completed on the backend AND no local unlock) AND the room isn't ready.
+  useEffect(() => {
+    if (app.soloDemo || !real) return;
+    const iCompleted = myPid && real.bundle?.completed?.[myPid];
+    const played = app.revealUnlocked || iCompleted;
+    if (!played && !real.readiness?.unlocked) go("Answer");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [real]);
+
+  const unlocked = !app.soloDemo && real && real.readiness?.unlocked;
+  const realReady = unlocked && real.cards?.length > 0;
+
+  // Real room still loading.
   if (!app.soloDemo && app.activeGroupId && loading && !real) {
     return (
       <Phone mood="purple">
@@ -52,10 +76,8 @@ export default function Reveal({ next, go, goSignup }) {
     );
   }
 
-  const realReady = !app.soloDemo && real && real.readiness?.unlocked && real.cards?.length > 0;
-
-  // Real group, not enough finished → locked / waiting state.
-  if (!app.soloDemo && app.activeGroupId && real && !realReady) {
+  // Real room, not enough finished yet → waiting state (auto-refreshing).
+  if (!app.soloDemo && app.activeGroupId && real && !unlocked) {
     const r = real.readiness || { completedCount: 0, required: 3 };
     const participants = real.bundle?.participants || [];
     const need = Math.max(0, r.required - r.completedCount);
@@ -67,7 +89,7 @@ export default function Reveal({ next, go, goSignup }) {
             {need > 0 ? `Need ${need} more to finish.` : "Unlocking…"}
           </h2>
           <p className="mx-auto mt-4 max-w-[265px] text-sm font-bold text-white/75">
-            {r.completedCount}/{r.required} done. The reveal drops once everyone answers and guesses.
+            {r.completedCount}/{r.required} done. The reveal drops once everyone answers and guesses. Updating live…
           </p>
         </div>
         <BottomSheet>
@@ -108,6 +130,37 @@ export default function Reveal({ next, go, goSignup }) {
           <div className="mt-3">
             <Button tone="dark" onClick={refresh}>
               Check again
+            </Button>
+          </div>
+        </BottomSheet>
+      </Phone>
+    );
+  }
+
+  // Everyone finished but there weren't enough overlapping guesses to build cards.
+  if (!app.soloDemo && app.activeGroupId && unlocked && !realReady) {
+    return (
+      <Phone mood="purple">
+        <div className="relative z-10 px-6 pt-24 text-center text-white">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-white/70">reveal</p>
+          <h2 className="mt-4 text-5xl font-black leading-none tracking-tighter">Everyone's in.</h2>
+          <p className="mx-auto mt-4 max-w-[270px] text-sm font-bold text-white/75">
+            Not enough overlapping guesses yet to build your cards. Get more friends to guess each other, or run it back.
+          </p>
+        </div>
+        <BottomSheet>
+          <Button
+            tone="pink"
+            icon={Share2}
+            onClick={() =>
+              shareOrCopy({ text: "Find out who actually knows who in our group.", url: shareUrl(app.activeGroupId) })
+            }
+          >
+            Share the room
+          </Button>
+          <div className="mt-3">
+            <Button tone="white" onClick={() => go("Share")}>
+              Continue
             </Button>
           </div>
         </BottomSheet>

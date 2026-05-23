@@ -37,7 +37,7 @@ export default function MutualsMergedFlow() {
   }, []);
 
   if (!showPrototype) {
-    return <MarketingLanding onStart={() => setShowPrototype(true)} view={view} setView={setView} />;
+    return <MarketingLanding onStart={() => setShowPrototype(true)} view={view} setView={setView} debug={debug} />;
   }
 
   const effectiveView = debug ? view : "mobile";

@@ -1,7 +1,7 @@
 import AbstractBg from "./ui/AbstractBg";
 import { cx } from "../../utils/ui";
 
-export default function MarketingLanding({ onStart, view, setView }) {
+export default function MarketingLanding({ onStart, view, setView, debug }) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#f5f0e8] px-4 py-6 text-black">
       <AbstractBg mood="cream" />
@@ -16,20 +16,22 @@ export default function MarketingLanding({ onStart, view, setView }) {
               <p className="text-xs font-bold uppercase tracking-widest text-black/35">async group chat test</p>
             </div>
           </div>
-          <div className="flex rounded-2xl bg-[#f3efff] p-1">
-            {["mobile", "desktop"].map((mode) => (
-              <button
-                key={mode}
-                onClick={() => setView(mode)}
-                className={cx(
-                  "rounded-xl px-4 py-2 text-xs font-black capitalize transition",
-                  view === mode ? "bg-[#6b2cff] text-white" : "text-black/50"
-                )}
-              >
-                {mode}
-              </button>
-            ))}
-          </div>
+          {debug && (
+            <div className="flex rounded-2xl bg-[#f3efff] p-1">
+              {["mobile", "desktop"].map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => setView(mode)}
+                  className={cx(
+                    "rounded-xl px-4 py-2 text-xs font-black capitalize transition",
+                    view === mode ? "bg-[#6b2cff] text-white" : "text-black/50"
+                  )}
+                >
+                  {mode}
+                </button>
+              ))}
+            </div>
+          )}
         </nav>
 
         <div className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[1fr_430px]">
@@ -59,15 +61,17 @@ export default function MarketingLanding({ onStart, view, setView }) {
               >
                 Open MUTUALS →
               </button>
-              <button
-                onClick={() => {
-                  setView(view === "mobile" ? "desktop" : "mobile");
-                  onStart();
-                }}
-                className="rounded-3xl bg-black px-8 py-5 text-left text-base font-black text-white shadow-xl"
-              >
-                Try {view === "mobile" ? "desktop" : "mobile"} view
-              </button>
+              {debug && (
+                <button
+                  onClick={() => {
+                    setView(view === "mobile" ? "desktop" : "mobile");
+                    onStart();
+                  }}
+                  className="rounded-3xl bg-black px-8 py-5 text-left text-base font-black text-white shadow-xl"
+                >
+                  Try {view === "mobile" ? "desktop" : "mobile"} view
+                </button>
+              )}
             </div>
           </section>
 

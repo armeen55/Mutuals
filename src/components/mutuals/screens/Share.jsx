@@ -1,21 +1,37 @@
-import { RefreshCcw, MessageCircle, Users, Flame, Trophy } from "lucide-react";
+import { RefreshCcw, MessageCircle, Users, Flame, Trophy, Share2 } from "lucide-react";
 import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
 import ActionTile from "../ui/ActionTile";
 import Button from "../ui/Button";
 import { useMutuals } from "../useMutuals";
-import { shareUrl, saveMutualsState } from "../../../utils/mutualsStorage";
+import { shareUrl, saveMutualsState, newRoomId, ensureGroup } from "../../../utils/mutualsStorage";
+import { captureGroup } from "../../../lib/mutualsApi";
 import { shareOrCopy, showToast } from "../../../utils/ui";
 import { EAZO_VOTE_URL } from "../../../config";
+
+// Until a real vote link is set in src/config.js, don't imply voting is live.
+const eazoReady = !/^https?:\/\/eazo\.ai\/?$/.test(EAZO_VOTE_URL);
 
 export default function Share({ next, go }) {
   const app = useMutuals();
   const link = shareUrl(app.activeGroupId);
+
+  // Rematch must NOT reuse stale answers/guesses. Real rooms get a brand-new room id.
   const rematch = () => {
-    saveMutualsState({ selfAnswers: {}, guesses: {}, revealUnlocked: false, completedSteps: [] });
-    showToast("Rematch ready");
-    go("Answer");
+    if (app.soloDemo) {
+      saveMutualsState({ selfAnswers: {}, guesses: {}, revealUnlocked: false, completedSteps: [] });
+      showToast("Rematch ready");
+      go("Answer");
+      return;
+    }
+    const id = newRoomId();
+    ensureGroup(id);
+    saveMutualsState({ revealUnlocked: false, selfAnswers: {}, guesses: {}, completedSteps: [] });
+    captureGroup();
+    showToast("New room created");
+    go("Create");
   };
+
   return (
     <Phone mood="yellow">
       <div className="relative z-10 px-7 pt-24 text-center">
@@ -31,9 +47,7 @@ export default function Share({ next, go }) {
           <ActionTile
             icon={MessageCircle}
             label="Send the reveal"
-            onClick={() =>
-              shareOrCopy({ text: "Our group is about to find out who the mystery friend is.", url: link })
-            }
+            onClick={() => shareOrCopy({ text: "Our group just found out who the mystery friend is.", url: link })}
           />
           <ActionTile
             icon={Users}
@@ -42,16 +56,18 @@ export default function Share({ next, go }) {
           />
           <ActionTile icon={Flame} label="Today" onClick={() => go("Today")} />
         </div>
-        <div className="mt-5 rounded-[26px] bg-black p-4 text-white">
-          <p className="text-xs font-black uppercase tracking-widest text-white/45">caption</p>
-          <p className="mt-2 text-xl font-black">Find out who actually knows who in our group.</p>
-        </div>
         <div className="mt-5 space-y-3">
-          <Button tone="pink" icon={Trophy} onClick={() => window.open(EAZO_VOTE_URL, "_blank", "noopener")}>
-            Help MUTUALS win on Eazo
+          <Button
+            tone="pink"
+            icon={Share2}
+            onClick={() =>
+              shareOrCopy({ text: "We just found out who actually knows who. Take it with your group:", url: link })
+            }
+          >
+            Share this result
           </Button>
-          <Button onClick={next} tone="white" icon={Flame}>
-            Open Today
+          <Button tone="white" icon={Trophy} onClick={() => window.open(EAZO_VOTE_URL, "_blank", "noopener")}>
+            {eazoReady ? "Help MUTUALS win on Eazo" : "Vote for MUTUALS on Eazo (soon)"}
           </Button>
         </div>
       </BottomSheet>

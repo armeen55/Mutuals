@@ -5,6 +5,40 @@ Newest entry on top.
 
 ---
 
+## Chunk 8 — Post-answer / reveal / share blocker pass
+
+### Deploy identity fix
+GitHub→Vercel auto-deploys were failing ("Persian5 not a team member" — commit's GitHub identity isn't on the Vercel team). Fix: **disconnected the Vercel git integration** (`link: null`); deploys now go through the **Vercel CLI** as account `armeen-5267`. `git push` no longer triggers (failing) builds. Live URL unchanged: **https://mutuals-dun.vercel.app**.
+
+### What changed
+- **Guess (real rooms):** confirmed real-participant-only targeting (excludes self via per-room id), q1–q4 per target, group caps at 3; no valid targets → waiting (never seeded). Completion now via awaited `submitGuesses()` (no race).
+- **Reveal (Goal 2):** redirect to Answer is now **backend-aware** — only bounces if the user isn't completed on the backend AND has no local unlock AND the room isn't ready (no longer trusts local `revealUnlocked` alone). Added a **graceful "Everyone's in / not enough overlapping guesses" state** when readiness is unlocked but `cards.length === 0`.
+- **Auto-refresh (Goal 3):** Guess waiting + Reveal locked/waiting now poll the backend every **6s** (stop once others join / reveal is ready); manual "Check again" kept. No realtime subscriptions.
+- **Rematch (Goal 4):** real rooms now mint a **brand-new room id** (`newRoomId` → `ensureGroup` → `captureGroup`) and route to Create — no stale rows reused. Solo still resets locally.
+- **Share (Goal 5):** primary CTA **"Share this result"** (native share), secondary **Eazo vote** CTA; `EAZO_VOTE_URL` is the single source; while it's the placeholder (`eazo.ai`), the CTA reads "Vote for MUTUALS on Eazo (soon)".
+- **Public landing (Goal 6):** "Try desktop view" + mobile/desktop nav toggle hidden unless `?debug=1`.
+
+### Files changed
+screens `Reveal/Guess/Share`, `MarketingLanding.jsx`, `MutualsMergedFlow.jsx`.
+
+### Build
+`npm run build` → success (546 kB, size warning only).
+
+### Exact remaining manual test (2-phone, live)
+1. Phone A → https://mutuals-dun.vercel.app → **Create a room** → pick 1:1 or Group → **Share invite**.
+2. Phone B → open the shared link → enter name → **Join room** → answer q1–q4 → guess A (q1–q4).
+3. Phone A → answer q1–q4 → guess B → on the last guess it should auto-advance to the reveal.
+4. Both: reveal should show **real computed cards** (real names). If one finishes first, they see "Need 1 more to finish" and it **auto-updates within ~6s** when the other completes.
+5. Tap **Share this result** (native share sheet) and **Rematch** (should create a fresh room link).
+
+### Known risks
+- Open RLS + public URL (anon read/write any room) — demo-grade.
+- Eazo vote link still placeholder (`src/config.js`).
+- Auto-refresh is polling (6s), not realtime — fine at small scale.
+- Deploys are now CLI-only (git auto-deploy intentionally disconnected).
+
+---
+
 ## Chunk 7 — Deployed to Vercel (public URL)
 
 ### Live URL

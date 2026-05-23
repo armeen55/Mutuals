@@ -46,7 +46,21 @@ export default function Guess({ next }) {
         .catch(() => {});
   };
   useEffect(() => {
-    if (!app.soloDemo) refresh();
+    if (app.soloDemo) return;
+    refresh();
+    // Poll until at least one other participant joins, then stop.
+    const id = setInterval(() => {
+      if (!app.activeGroupId) return;
+      getBundle(app.activeGroupId)
+        .then((b) => {
+          setBundle(b);
+          if (b?.group?.mode) saveMutualsState({ groupMode: b.group.mode });
+          const mine = (getMutualsState().participantIdsByGroup || {})[app.activeGroupId];
+          if ((b?.participants || []).some((p) => p.id !== mine)) clearInterval(id);
+        })
+        .catch(() => {});
+    }, 6000);
+    return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app.activeGroupId, app.soloDemo]);
 
