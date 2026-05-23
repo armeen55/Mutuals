@@ -5,6 +5,33 @@ Newest entry on top.
 
 ---
 
+## Chunk 7 — Deployed to Vercel (public URL)
+
+### Live URL
+**https://mutuals-dun.vercel.app** (production, public).
+Also aliased: `mutuals-armeen-5267s-projects.vercel.app`. Debug controls: append `?debug=1`.
+
+### Deploy setup
+- Vercel project `armeen-5267s-projects/mutuals`, linked to GitHub `armeen55/Mutuals` (pushes to `main` now auto-deploy to production).
+- `vercel.json` pins framework=vite, build=`npm run build`, output=`dist`.
+- Env vars set in Vercel **Production**: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (same as `.env.local`). Confirmed baked into the production bundle → Supabase is the live backend in prod.
+- **Deployment Protection disabled** (`ssoProtection=null`) so the link is publicly openable.
+
+### Verified
+- `/` → 200, `/?debug=1` → 200, title correct, Supabase URL present in the deployed JS.
+- `shareUrl` uses `window.location.origin`, so rooms created on the live site share `https://mutuals-dun.vercel.app/?group=<id>` (Vercel domain).
+
+### Known risks
+- **Open RLS + public URL:** anon can read/write all rows (demo-grade). Anyone with a room link could read/write that room's data. Fine for the hackathon; tighten before real scale.
+- Env vars are in **Production only** — preview/branch deploys fall back to localStorage (no Supabase).
+- Publishable key ships in the client bundle (by design; browser-safe with RLS).
+- No custom domain; the `*.vercel.app` URL is the share surface for now.
+
+### Next fastest move
+Real **2-phone test** on the live URL (A creates a room, B opens the link, both finish → real reveal). Fix only blockers, then wire the real `EAZO_VOTE_URL`.
+
+---
+
 ## Chunk 6 — Real room identity + data integrity (pre-deploy blocker)
 
 ### Goal

@@ -16,3 +16,4 @@ dist-ssr
 logs
 .DS_Store
 .vite
+.vercel
