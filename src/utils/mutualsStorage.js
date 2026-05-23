@@ -9,6 +9,7 @@ const DEFAULT_STATE = {
   soloDemo: false,
   currentUserName: "",
   participantIdsByGroup: {}, // { [groupId]: participantId } — scoped per room
+  roundsByGroup: {}, // { [groupId]: { targets:[pid], known:[pid] } } — this player's guess round
   groupMode: "duo", // 'duo' (1:1, unlocks at 2) | 'group' (3+)
   createdGroups: [], // [{ id, name, createdBy, createdAt }]
   activeGroupId: null,
@@ -107,6 +108,40 @@ export function repairParticipantId(groupId, participants) {
   if (valid) return;
   const match = (participants || []).find((p) => p.displayName === s.currentUserName);
   if (match) setParticipantId(groupId, match.id);
+}
+
+// --- guess round (this player's stable target list for a room) ---
+// Locked in when the player first enters Guess so the targets don't shuffle
+// mid-flow. `known` = participant ids present at lock time, used to detect
+// people who joined late.
+export function getRound(groupId) {
+  if (!groupId) return null;
+  return (getMutualsState().roundsByGroup || {})[groupId] || null;
+}
+function setRound(groupId, round) {
+  if (!groupId) return;
+  const map = { ...(getMutualsState().roundsByGroup || {}) };
+  map[groupId] = round;
+  saveMutualsState({ roundsByGroup: map });
+}
+export function ensureRound(groupId, targetIds, knownIds) {
+  if (!groupId) return null;
+  const existing = getRound(groupId);
+  if (existing) return existing;
+  const round = { targets: [...targetIds], known: [...knownIds] };
+  setRound(groupId, round);
+  return round;
+}
+// Append a late joiner to this player's round (and mark them known so they
+// stop reading as "late").
+export function addRoundTarget(groupId, targetId) {
+  const r = getRound(groupId) || { targets: [], known: [] };
+  const next = {
+    targets: r.targets.includes(targetId) ? r.targets : [...r.targets, targetId],
+    known: r.known.includes(targetId) ? r.known : [...r.known, targetId],
+  };
+  setRound(groupId, next);
+  return next;
 }
 
 // Create the active group if it does not exist yet. Pass a fresh id from

@@ -5,11 +5,22 @@ import BottomSheet from "../ui/BottomSheet";
 import Progress from "../ui/Progress";
 import Avatar from "../ui/Avatar";
 import Button from "../ui/Button";
+import PlayerChips from "../ui/PlayerChips";
 import { members } from "../../../data/mutualsDemoData";
 import { selectQuestions, fillName } from "../../../data/questions";
 import { useMutuals } from "../useMutuals";
-import { saveMutualsState, getMutualsState, withStep, shareUrl, repairParticipantId } from "../../../utils/mutualsStorage";
+import {
+  saveMutualsState,
+  getMutualsState,
+  withStep,
+  shareUrl,
+  repairParticipantId,
+  getRound,
+  ensureRound,
+  addRoundTarget,
+} from "../../../utils/mutualsStorage";
 import { getBundle, submitGuesses, captureGroup } from "../../../lib/mutualsApi";
+import { roomStatus } from "../../../lib/insights";
 import { cx, showToast, shareOrCopy } from "../../../utils/ui";
 
 const SEED_OPTIONS = ["Slow walkers", "Loud chewing", "Bad texters", "Overexplaining"];
@@ -32,12 +43,19 @@ function toMember(p, i) {
   };
 }
 
+// Initial target pick: people who have already answered come first, capped.
+function pickTargets(others, answers, cap) {
+  const score = (p) => (Object.keys(answers[p.id] || {}).length > 0 ? 1 : 0);
+  return [...others].sort((a, b) => score(b) - score(a)).slice(0, cap);
+}
+
 export default function Guess({ next }) {
   const app = useMutuals();
   const questions = useMemo(() => selectQuestions(app.activeGroupId), [app.activeGroupId]);
+  const need = questions.length;
   const [bundle, setBundle] = useState(null);
-
   const [checking, setChecking] = useState(false);
+
   const applyBundle = (b) => {
     setBundle(b);
     repairParticipantId(app.activeGroupId, b?.participants);
@@ -60,19 +78,13 @@ export default function Guess({ next }) {
     showToast("Switched to 1:1");
     setTimeout(refresh, 400);
   };
+
+  // Poll the bundle continuously so late joiners surface while waiting/guessing.
   useEffect(() => {
     if (app.soloDemo) return;
     refresh();
-    // Poll until at least one other participant joins, then stop.
     const id = setInterval(() => {
-      if (!app.activeGroupId) return;
-      getBundle(app.activeGroupId)
-        .then((b) => {
-          applyBundle(b);
-          const mine = (getMutualsState().participantIdsByGroup || {})[app.activeGroupId];
-          if ((b?.participants || []).some((p) => p.id !== mine)) clearInterval(id);
-        })
-        .catch(() => {});
+      if (app.activeGroupId) getBundle(app.activeGroupId).then(applyBundle).catch(() => {});
     }, 6000);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -80,8 +92,27 @@ export default function Guess({ next }) {
 
   const realRoom = !app.soloDemo && !!app.activeGroupId;
   const participants = bundle?.participants || [];
+  const answers = bundle?.answers || {};
   const myPid = (app.participantIdsByGroup || {})[app.activeGroupId];
   const others = participants.filter((p) => p.id !== myPid);
+  const cap = app.groupMode === "duo" ? 1 : 3;
+
+  // Lock this player's target list once we know who they are and someone's here,
+  // so the targets don't shuffle mid-flow. `known` powers late-joiner detection.
+  useEffect(() => {
+    if (!realRoom || !myPid || others.length === 0) return;
+    if (getRound(app.activeGroupId)) return;
+    ensureRound(
+      app.activeGroupId,
+      pickTargets(others, answers, cap).map((p) => p.id),
+      participants.map((p) => p.id)
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [realRoom, myPid, others.length, app.activeGroupId, cap]);
+
+  const round = (app.roundsByGroup || {})[app.activeGroupId] || null;
+  const status = roomStatus(bundle, need);
+  const lateJoiners = round ? participants.filter((p) => p.id !== myPid && !round.known.includes(p.id)) : [];
 
   // Real room whose data hasn't loaded yet — never show seeded/fake data.
   if (realRoom && bundle === null) {
@@ -100,7 +131,7 @@ export default function Guess({ next }) {
 
   if (others.length === 0) {
     const required = app.groupMode === "duo" ? 2 : 3;
-    const need = Math.max(0, required - participants.length);
+    const needMore = Math.max(0, required - participants.length);
     return (
       <Phone mood="purple">
         <div className="relative z-10 px-6 pt-20 text-center">
@@ -109,19 +140,20 @@ export default function Guess({ next }) {
           </span>
         </div>
         <BottomSheet tall>
-          <p className="text-xs font-black uppercase tracking-widest text-black/35">{participants.length} joined</p>
+          <p className="text-xs font-black uppercase tracking-widest text-black/35">
+            {status.joined} joined · {status.answered} answered · {status.finished} finished
+          </p>
           <h2 className="mt-2 text-4xl font-black leading-[0.95] tracking-tighter text-black">
-            {need > 0 ? `Need ${need} more ${need === 1 ? "person" : "people"}.` : "Ready to play."}
+            {needMore > 0 ? `Need ${needMore} more ${needMore === 1 ? "person" : "people"}.` : "Ready to play."}
           </h2>
           <p className="mt-2 text-sm font-bold text-black/55">Group rooms unlock at 3. 1:1 rooms unlock at 2.</p>
+          {app.groupMode === "group" && (
+            <p className="mt-2 text-xs font-bold text-black/45">
+              You'll guess up to 3 people. Bigger groups make better receipts as more finish.
+            </p>
+          )}
           <div className="mt-4 rounded-[26px] bg-[#f4f1fa] p-4">
-            <div className="flex flex-wrap gap-2">
-              {participants.map((p) => (
-                <span key={p.id} className="rounded-full bg-[#6b2cff] px-3 py-1 text-xs font-black text-white">
-                  {p.displayName}
-                </span>
-              ))}
-            </div>
+            <PlayerChips participants={participants} statuses={status.statuses} youId={myPid} />
           </div>
           {app.groupMode === "group" && participants.length === 2 && (
             <div className="mt-4">
@@ -161,12 +193,27 @@ export default function Guess({ next }) {
     );
   }
 
-  const targets = others.slice(0, app.groupMode === "duo" ? 1 : 3);
-  return <RealGuess next={next} targets={targets} questions={questions} />;
+  const targetObjs = round
+    ? round.targets.map((id) => participants.find((p) => p.id === id)).filter(Boolean)
+    : pickTargets(others, answers, cap);
+
+  return (
+    <RealGuess
+      next={next}
+      targets={targetObjs.length ? targetObjs : pickTargets(others, answers, cap)}
+      questions={questions}
+      isGroup={app.groupMode === "group"}
+      lateJoiners={lateJoiners}
+      onAddLate={(id) => {
+        addRoundTarget(app.activeGroupId, id);
+        showToast("Added to your round");
+      }}
+    />
+  );
 }
 
-function RealGuess({ next, targets, questions }) {
-  const acc = useRef({}); // { [targetId]: { q1..q4 } } accumulated locally
+function RealGuess({ next, targets, questions, isGroup, lateJoiners = [], onAddLate }) {
+  const acc = useRef({}); // { [targetId]: { qid:idx } } accumulated locally
   const [ti, setTi] = useState(0);
   const [qi, setQi] = useState(0);
   const [selected, setSelected] = useState(null);
@@ -176,6 +223,7 @@ function RealGuess({ next, targets, questions }) {
   const q = questions[qi];
   const lastQ = qi >= questions.length - 1;
   const lastTarget = ti >= targets.length - 1;
+  const late = lateJoiners[0];
 
   const onNext = async () => {
     if (selected == null || saving) return;
@@ -217,6 +265,28 @@ function RealGuess({ next, targets, questions }) {
         <h2 className="mt-3 break-words text-3xl font-black leading-[0.95]">{fillName(q.about, member.name)}</h2>
       </div>
       <BottomSheet tall>
+        {isGroup && (
+          <p className="mb-2 text-center text-[11px] font-bold text-black/45">
+            You'll guess up to 3 people. Bigger groups make better receipts.
+          </p>
+        )}
+        {late && (
+          <div className="mb-3 rounded-2xl bg-[#fff3c4] p-3">
+            <p className="text-sm font-black">{late.displayName} joined late.</p>
+            <p className="mt-0.5 text-xs font-bold text-black/55">This reveal uses your current round.</p>
+            <button
+              onClick={() => onAddLate(late.id)}
+              className="mt-2 w-full rounded-xl bg-black px-3 py-2 text-xs font-black text-white"
+            >
+              Add {late.displayName} to your guesses
+            </button>
+            {lateJoiners.length > 1 && (
+              <p className="mt-1 text-center text-[11px] font-bold text-black/40">
+                +{lateJoiners.length - 1} more joined late
+              </p>
+            )}
+          </div>
+        )}
         <Progress step={5} />
         <p className="mt-4 text-center text-sm font-black text-black/50">
           What did {member.name} actually pick? · {qi + 1}/{questions.length}

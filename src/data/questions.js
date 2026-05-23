@@ -5,64 +5,55 @@
 //   prompt  — first-person self-answer text (Answer screen)
 //   about   — "{name}"-templated text for guessing + the Receipts reveal card
 //   options — 4 guessable multiple-choice labels
-//   topic   — short tag used in reveal copy
 
 export const ALL_QUESTIONS = [
   {
     id: "q1",
-    prompt: "In a group chat fight, I become…",
-    about: "In a group chat fight, {name} becomes…",
-    options: ["The mediator", "The one making it worse", "Dead silent, screenshotting", "Typing three paragraphs"],
-    topic: "group chat fights",
+    prompt: "In conflict, I'm most likely to…",
+    about: "In conflict, {name} is most likely to…",
+    options: ["Go quiet and shut down", "Hit back twice as hard", "Try to fix everyone", "Disappear for a bit"],
   },
   {
     id: "q2",
-    prompt: "Stuck in jail for 24 hours, I'd be…",
-    about: "Stuck in jail for 24 hours, {name} would be…",
-    options: ["Befriending everyone", "Crying in the corner", "Already plotting the lawsuit", "Weirdly thriving"],
-    topic: "a night in jail",
+    prompt: "I pretend not to care, but I definitely do, about…",
+    about: "{name} pretends not to care, but definitely does, about…",
+    options: ["Being invited", "Being right", "What an ex thinks", "Being the funny one"],
   },
   {
     id: "q3",
-    prompt: "My most toxic social habit is…",
-    about: "{name}'s most toxic social habit is…",
-    options: ["Leaving people on read", "Canceling last minute", "Oversharing way too fast", "Never picking the place"],
-    topic: "toxic habits",
+    prompt: "My worst group-chat habit is…",
+    about: "{name}'s worst group-chat habit is…",
+    options: ["Leaving everyone on read", "Dry one-word replies", "Hijacking every topic", "Reacting instead of replying"],
   },
   {
     id: "q4",
-    prompt: "Three drinks in, I become…",
-    about: "Three drinks in, {name} becomes…",
-    options: ["Everyone's therapist", "Glued to the dance floor", "Dangerously honest", "Trying to leave already"],
-    topic: "three drinks in",
+    prompt: "What makes me go quiet is…",
+    about: "What makes {name} go quiet is…",
+    options: ["Feeling judged", "Being talked over", "Too many people", "Someone I like is there"],
   },
   {
     id: "q5",
-    prompt: "In most of my drama, I'm secretly…",
-    about: "In most of {name}'s drama, {name} is secretly…",
-    options: ["The victim", "The villain", "The instigator", "An innocent bystander"],
-    topic: "their drama",
+    prompt: "The compliment that would hit me hardest is…",
+    about: "The compliment that would hit {name} hardest is…",
+    options: ["That I'm funny", "That I'm easy to trust", "That I really get people", "That I'm the strong one"],
   },
   {
     id: "q6",
-    prompt: "My red flag I pretend is a green flag is…",
-    about: "{name}'s red flag they pretend is a green flag is…",
-    options: ["Brutally honest", "Low maintenance", "Always right", "A lot, but worth it"],
-    topic: "red flags",
+    prompt: "What I need from friends but rarely ask for is…",
+    about: "What {name} needs from friends but rarely asks for is…",
+    options: ["To be checked on first", "To be told I matter", "To be invited anyway", "To be left alone sometimes"],
   },
   {
     id: "q7",
     prompt: "The thing people most misunderstand about me is…",
     about: "The thing people most misunderstand about {name} is…",
     options: ["I'm shy, not rude", "I'm joking, not mean", "I need space, not distance", "I care more than I show"],
-    topic: "being misunderstood",
   },
   {
     id: "q8",
-    prompt: "I feel most cared for when someone…",
-    about: "{name} feels most cared for when someone…",
-    options: ["Remembers the small stuff", "Checks in first", "Shows up in person", "Defends me when I'm gone"],
-    topic: "feeling cared for",
+    prompt: "What makes me feel left out is…",
+    about: "What makes {name} feel left out is…",
+    options: ["Inside jokes I missed", "Plans made without me", "Being the last to know", "Everyone pairing off"],
   },
 ];
 

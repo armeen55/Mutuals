@@ -5,6 +5,56 @@ Newest entry on top.
 
 ---
 
+## Chunk 15 — Round logic, late joiners, answer editing, non-abrupt ending (BUILD + PUSH)
+
+### Goal
+The missing product layer so MUTUALS feels like a real group-chat game, not a loose quiz. Client-derived state + existing tables only — **no Supabase schema change**, no deploy change, engine left intact (only re-ranked + one helper added).
+
+### 1. Answer editing / back nav (`Answer.jsx`)
+- A **Back** button appears from question 2 on (3-col grid: Back + Next). Free movement back/forth; selections persist (already saved per-pick), and the final CTA still does the one awaited `submitAnswers`. Verified in preview: pick A → Next → Back restores the highlighted answer.
+
+### 2. Stable round target list (`mutualsStorage.js` + `Guess.jsx`)
+- New `roundsByGroup` state + `getRound / ensureRound / addRoundTarget`. When a player first enters Guess, their target list is **locked** (`{ targets, known }`) so it never shuffles mid-flow.
+- Duo → the other person. Group → **up to 3** of the current participants (excluding self), preferring people who've already answered. `known` = who was present at lock time (powers late-joiner detection).
+
+### 3. Late joiners — explicit, not silent (`Guess` / `Reveal` / `Share`)
+- Bundle now polls continuously (no longer stops once someone joins), so arrivals after lock are detected (`participant not in round.known`).
+- Mid-guess: a banner — "Ava joined late. / This reveal uses your current round." + **Add Ava to your guesses** (`addRoundTarget`, appended at the end so in-progress guessing isn't disrupted). "+N more joined late" when several.
+- Already finished: Reveal shows "Ava joined late — rematch after the reveal."
+
+### 4. Big-group rule (visible, intentional)
+- Group Guess + waiting show: "You'll guess up to 3 people. Bigger groups make better receipts as more finish." 8 people → still only 3 targets each; the engine already scores on **partial graph** data, so this reads as a feature.
+
+### 5. Better waiting status (`PlayerChips.jsx` + `insights.roomStatus`)
+- New `roomStatus(bundle, need)` derives, from existing tables: **joined** (participant exists) / **answering** (some answers) / **guessing** (all `need` answers) / **finished** (`completed`). Waiting screens in Guess + Reveal now show the three counts and per-player chips ("Mason · finished", "Ava · joined late", "(you)").
+
+### 6. Partial-reveal readiness copy (`Reveal.jsx`)
+- On the unlocked reveal: "N finished. Reveal unlocked. M more can still make it better." Duo unlocks at 2, group at 3 — extra finishers improve it rather than block it.
+
+### 7. Non-abrupt ending (`Share.jsx`)
+- Share now opens with an **aftermath** card (fetches `getInsights`): the winner/top-knower headline + "N players in this round" + any late joiner. CTAs: **Share the receipts** (primary, seeds the winner line) → **Run it back with this room** → **Challenge a friend / a group** → Eazo. No fake Today/streak anywhere in the public path.
+
+### 8. Grounded question pack (`questions.js`)
+- Replaced the weaker fake-scenario questions with real social-curiosity ones (still 4 MCQ, no therapy/HR-speak): in conflict I'm most likely to… · pretend not to care but do… · worst group-chat habit · what makes me go quiet · compliment that hits hardest · what I need but rarely ask for · most misunderstood · what makes me feel left out. `selectQuestions` still serves a deterministic 6-of-8. Receipts `SPICY_ORDER` re-ranked for the new ids.
+
+### 9. Late-join / rematch is viral (`Share.jsx`)
+- With late joiners: "Ava joined late — run it back with them?" and the button reads **Run it back with Ava**. Rematch mints a **fresh room** (clean, no stale answers) — same mechanism as Challenge.
+
+### Files changed
+`utils/mutualsStorage.js`, `data/questions.js`, `lib/insights.js`, `ui/PlayerChips.jsx` (new), `screens/Answer.jsx`, `screens/Guess.jsx`, `screens/Reveal.jsx`, `screens/Share.jsx`. **Untouched:** Supabase schema, deploy config, room create/join, core answer/guess saving, Eazo config.
+
+### Build + verify
+One `npm run build` → green (2227 modules, ~282ms). Verified via the live dev engine: `roomStatus` (joined 4 / answered 3 / finished 3, late = "answering"), round helpers (ensure → add late joiner appends to targets+known), late detection, the new questions, and Answer back-nav with persisted selection.
+
+### Smoke-test path (live)
+1. Open URL → Create a room → **Answer your questions**; on Q2+ a **Back** button lets you edit; finish 6.
+2. Phone B (and C for group) → open link → name → Join → answer → guess (group: up to 3 targets; the rule line shows).
+3. A friend opens the link after you're already guessing → **"Ava joined late"** banner with **Add Ava** (before you finish) or **rematch** copy (after).
+4. Waiting/reveal show joined/answered/finished counts + status chips; reveal says "N finished. Reveal unlocked. M more can make it better."
+5. Reveal → Finish → **Share**: aftermath (winner + player count + late joiner) → Share the receipts / Run it back with Ava / Challenge.
+
+---
+
 ## Chunk 14 — Sharper v1 question pack + research-arc reveal (BUILD + PUSH)
 
 ### Goal

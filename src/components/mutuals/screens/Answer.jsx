@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { ChevronLeft } from "lucide-react";
 import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
 import Progress from "../ui/Progress";
@@ -83,13 +84,28 @@ export default function Answer({ next }) {
           </p>
         </div>
         <div className="mt-5">
-          <Button
-            onClick={onNext}
-            tone="primary"
-            className={selected == null || saving ? "pointer-events-none opacity-40" : ""}
-          >
-            {saving ? "Saving…" : qi < questions.length - 1 ? "Next question" : "Guess friends"}
-          </Button>
+          {qi > 0 ? (
+            <div className="grid grid-cols-3 gap-3">
+              <Button tone="dark" icon={ChevronLeft} onClick={() => setQi(qi - 1)} className="col-span-1">
+                Back
+              </Button>
+              <Button
+                onClick={onNext}
+                tone="primary"
+                className={cx("col-span-2", selected == null || saving ? "pointer-events-none opacity-40" : "")}
+              >
+                {saving ? "Saving…" : qi < questions.length - 1 ? "Next question" : "Guess friends"}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={onNext}
+              tone="primary"
+              className={selected == null || saving ? "pointer-events-none opacity-40" : ""}
+            >
+              {saving ? "Saving…" : qi < questions.length - 1 ? "Next question" : "Guess friends"}
+            </Button>
+          )}
         </div>
       </BottomSheet>
     </Phone>

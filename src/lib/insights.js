@@ -7,7 +7,7 @@ import { getQuestion, fillName } from "../data/questions";
 const pct = (x) => Math.round(x * 100);
 
 // Lead the Receipts/miss card with the spiciest question available, not the first.
-const SPICY_ORDER = ["q5", "q1", "q3", "q6", "q2", "q4", "q7", "q8"];
+const SPICY_ORDER = ["q3", "q1", "q2", "q8", "q4", "q5", "q6", "q7"];
 
 function card(id, label, stat, headline, detail, accent, icon, mood, shareText) {
   return { id, label, stat, headline, detail, accent, icon, mood, shareText: shareText || headline };
@@ -69,6 +69,34 @@ export function computeReadiness(bundle) {
   const required = group?.mode === "duo" ? 2 : 3;
   const completedCount = participants.filter((p) => completed[p.id]).length;
   return { required, completedCount, unlocked: completedCount >= required };
+}
+
+// Per-player status derived from existing tables (no schema change):
+//   participant exists           -> "joined"
+//   has some answers (< need)    -> "answering"
+//   has all `need` answers       -> "guessing"
+//   completed[pid] === true      -> "finished"
+export function roomStatus(bundle, need = 6) {
+  const { participants = [], answers = {}, completed = {} } = bundle || {};
+  const statuses = {};
+  let answered = 0;
+  let finished = 0;
+  for (const p of participants) {
+    const aCount = Object.keys(answers[p.id] || {}).length;
+    if (completed[p.id]) {
+      finished += 1;
+      answered += 1;
+      statuses[p.id] = "finished";
+    } else if (aCount >= need) {
+      answered += 1;
+      statuses[p.id] = "guessing";
+    } else if (aCount > 0) {
+      statuses[p.id] = "answering";
+    } else {
+      statuses[p.id] = "joined";
+    }
+  }
+  return { joined: participants.length, answered, finished, statuses };
 }
 
 export function computeInsights(bundle) {

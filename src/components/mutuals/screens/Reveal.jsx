@@ -1,13 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Download, Share2, ChevronLeft, Lock, Copy } from "lucide-react";
 import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
 import BigRevealCard from "../ui/BigRevealCard";
+import PlayerChips from "../ui/PlayerChips";
 import Button from "../ui/Button";
 import { insightCards } from "../../../data/mutualsDemoData";
+import { selectQuestions } from "../../../data/questions";
 import { useMutuals } from "../useMutuals";
 import { shareUrl, saveMutualsState, repairParticipantId } from "../../../utils/mutualsStorage";
 import { getInsights, captureGroup } from "../../../lib/mutualsApi";
+import { roomStatus } from "../../../lib/insights";
 import { cx, showToast, shareOrCopy } from "../../../utils/ui";
 
 // Seeded fallback order (skips index 3 — the "Full Report" gate card).
@@ -19,6 +22,7 @@ export default function Reveal({ next, go, goSignup }) {
   const [loading, setLoading] = useState(!app.soloDemo);
   const [pos, setPos] = useState(0);
   const myPid = (app.participantIdsByGroup || {})[app.activeGroupId];
+  const need = useMemo(() => selectQuestions(app.activeGroupId).length, [app.activeGroupId]);
 
   const [checking, setChecking] = useState(false);
   const applyReal = (r) => {
@@ -100,7 +104,8 @@ export default function Reveal({ next, go, goSignup }) {
     const r = real.readiness || { completedCount: 0, required: 3 };
     const participants = real.bundle?.participants || [];
     const mode = real.bundle?.group?.mode || app.groupMode || "duo";
-    const need = Math.max(0, r.required - r.completedCount);
+    const needFinish = Math.max(0, r.required - r.completedCount);
+    const status = roomStatus(real.bundle, need);
     return (
       <Phone mood="purple">
         <div className="relative z-10 px-6 pt-20 text-center">
@@ -110,22 +115,16 @@ export default function Reveal({ next, go, goSignup }) {
         </div>
         <BottomSheet tall>
           <p className="text-xs font-black uppercase tracking-widest text-black/35">
-            {r.completedCount}/{r.required} finished · {participants.length} joined
+            {status.joined} joined · {status.answered} answered · {status.finished} finished
           </p>
           <h2 className="mt-2 text-4xl font-black leading-[0.95] tracking-tighter text-black">
-            {need > 0 ? `Need ${need} more to finish.` : "Unlocking…"}
+            {needFinish > 0 ? `${needFinish} more to finish.` : "Unlocking…"}
           </h2>
           <p className="mt-2 text-sm font-bold text-black/55">
-            Group rooms unlock at 3. 1:1 rooms unlock at 2. Updating live…
+            Group unlocks at 3 finished. 1:1 at 2. Partial reveals still work — updating live…
           </p>
           <div className="mt-4 rounded-[26px] bg-[#f4f1fa] p-4">
-            <div className="flex flex-wrap gap-2">
-              {participants.map((p) => (
-                <span key={p.id} className="rounded-full bg-[#6b2cff] px-3 py-1 text-xs font-black text-white">
-                  {p.displayName}
-                </span>
-              ))}
-            </div>
+            <PlayerChips participants={participants} statuses={status.statuses} youId={myPid} />
           </div>
           {mode === "group" && participants.length === 2 && (
             <div className="mt-4">
@@ -206,6 +205,13 @@ export default function Reveal({ next, go, goSignup }) {
   const cardNumber = Math.min(pos + 1, cards.length);
   const atGate = !realReady && !app.signedUp && pos >= 2 && pos < cards.length;
   const atEnd = pos >= cards.length - 1;
+  const status = realReady ? roomStatus(real.bundle, need) : null;
+  const notFinished = status ? Math.max(0, status.joined - status.finished) : 0;
+  const round = (app.roundsByGroup || {})[app.activeGroupId] || null;
+  const lateJoiners =
+    realReady && round
+      ? (real.bundle?.participants || []).filter((p) => p.id !== myPid && !round.known.includes(p.id))
+      : [];
   return (
     <Phone mood={revealMood}>
       <BigRevealCard card={card} />
@@ -223,6 +229,17 @@ export default function Reveal({ next, go, goSignup }) {
             Card {cardNumber} of {cards.length} ·{" "}
             {realReady ? "from your group's real answers" : "auto-advancing Wrapped-style moment"}
           </p>
+          {realReady && (
+            <p className="mt-1 text-xs font-bold text-[#6b2cff]">
+              {status.finished} finished. Reveal unlocked.
+              {notFinished > 0 ? ` ${notFinished} more can still make it better.` : ""}
+            </p>
+          )}
+          {lateJoiners.length > 0 && (
+            <p className="mt-1 text-xs font-bold text-[#ff4f9a]">
+              {lateJoiners[0].displayName} joined late — rematch after the reveal.
+            </p>
+          )}
           <p className="mt-1 truncate text-xs font-bold text-black/45">{shareUrl(app.activeGroupId)}</p>
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3">
