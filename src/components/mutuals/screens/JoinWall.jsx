@@ -4,7 +4,7 @@ import Button from "../ui/Button";
 import Avatar from "../ui/Avatar";
 import { members } from "../../../data/mutualsDemoData";
 import { useMutuals } from "../useMutuals";
-import { saveMutualsState, withStep } from "../../../utils/mutualsStorage";
+import { saveMutualsState, withStep, getMutualsState } from "../../../utils/mutualsStorage";
 import { captureJoin } from "../../../lib/mutualsApi";
 import { showToast } from "../../../utils/ui";
 
@@ -30,20 +30,23 @@ export default function JoinWall({ go }) {
     saveMutualsState({ currentUserName: name, groupMembers: nextRoster, completedSteps: withStep("Join") });
     captureJoin(name);
     showToast(`Welcome, ${name}`);
-    go("Answer");
+    const s = getMutualsState();
+    if (!s.selfAnswers || Object.keys(s.selfAnswers).length === 0) go("Answer");
+    else if (!s.revealUnlocked) go("Guess");
+    else go("Reveal");
   };
   return (
     <Phone mood="yellow">
       <div className="relative z-10 px-7 pt-24 text-center">
         <p className="inline-flex rounded-full bg-black px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-white">
-          you were invited
+          you were invited to mutuals
         </p>
         <h2 className="mt-7 text-6xl font-black leading-[0.85] tracking-tighter">
-          {host} wants to test the group.
+          Find out who actually knows who.
         </h2>
-        <p className="mx-auto mt-4 max-w-[260px] text-sm font-bold text-black/60">
-          {invited} friends invited. {finished} finished. Takes about 90 seconds. Your answers stay private until the
-          reveal.
+        <p className="mx-auto mt-4 max-w-[265px] text-sm font-bold text-black/60">
+          {host} started a room. Add your name, answer about you, then guess your friends. {invited} invited ·{" "}
+          {finished} done. Your answers stay private until the reveal.
         </p>
       </div>
       <BottomSheet>

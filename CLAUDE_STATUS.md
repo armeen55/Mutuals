@@ -5,6 +5,36 @@ Newest entry on top.
 
 ---
 
+## Chunk 4 — Mobile-first viral loop (share CTAs, invite/waiting, Eazo vote, real copy)
+
+### Goal
+Make MUTUALS feel instantly usable from a phone-group-chat link and make every screen push invite/vote/share.
+
+### What changed
+- **Share infra:** `src/utils/ui.js` → `shareOrCopy()` (native `navigator.share`, clipboard fallback). `src/config.js` → `EAZO_VOTE_URL` (one place to update).
+- **P1 mobile join:** JoinWall headline = "Find out who actually knows who." (+ host/counts); join routes by state (Answer→Guess→Reveal). Guess "waiting" state now shows joined names, "Need N more to start", Copy + native Share invite, Check again. Reveal locked state shows joined names, "Need N more to finish", Copy + Share, Check again.
+- **P2 share CTAs:** Create ("Share invite" + Copy + Continue), Guess waiting, Reveal card (native Share with the card's real headline), Share screen tiles (native), Today ("Share group" native). Sharp copy ("I made a MUTUALS room. Answer this before I start judging you.", "who knows who better?", etc.).
+- **P3 Eazo vote:** Share screen has "Help MUTUALS win on Eazo" (opens `EAZO_VOTE_URL`) — post-reveal only, never blocks play.
+- **P4 real reveal copy:** already real (engine uses participant names); seeded only as empty fallback. No change needed beyond confirming.
+- **P5 de-prototyped copy:** "Open prototype"→"Open MUTUALS", "Try solo demo"→"Try it solo", "Reset demo"→"Reset", "Skip for demo"→"Skip for now", "next card preview"→"up next", "value preview"→"the payoff", "PNG export coming next"→"Screenshot to save & share", Answer/Guess explainer boxes rewritten. (Internal var `showPrototype` left as-is — not visible.)
+
+### Files changed
+`src/config.js` (new), `src/utils/ui.js`, `MarketingLanding.jsx`, `MutualsMergedFlow.jsx`, screens `Home/Create/JoinWall/Answer/Guess/Reveal/Share/Today/SignupGate`, `desktop/DesktopReveal.jsx`, `desktop/DesktopSignup.jsx`.
+
+### Verified
+`npm run build` → success (543 kB, size warning only). Not visually walked (per "less verifying, more going").
+
+### Known risks
+- `EAZO_VOTE_URL` is a placeholder (`https://eazo.ai`) — update in `src/config.js` when the real link exists.
+- `navigator.share` only fires on HTTPS/mobile; desktop falls back to clipboard.
+- Desktop screens only lightly touched (not the priority).
+- Real-group flows still unwalked end-to-end (need 2–3 devices).
+
+### Next fastest move
+Generate a real share-card IMAGE (canvas/og) for the reveal so shared links carry the visual, and add an OG meta tag in `index.html` so pasted links preview richly in chats.
+
+---
+
 ## Chunk 3 — Real participants in Guess, computed insights in Reveal, 1:1/Group mode
 
 ### Goal

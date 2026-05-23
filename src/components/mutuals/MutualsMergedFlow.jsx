@@ -84,7 +84,7 @@ export default function MutualsMergedFlow() {
               }}
               className="rounded-xl px-3 py-2 text-xs font-black text-black/40 transition hover:text-black/70"
             >
-              Reset demo
+              Reset
             </button>
           </div>
         </div>

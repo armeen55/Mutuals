@@ -51,7 +51,7 @@ export default function Home({ next, go }) {
             tone="white"
             icon={Zap}
           >
-            Try solo demo
+            Try it solo
           </Button>
         </div>
       </BottomSheet>

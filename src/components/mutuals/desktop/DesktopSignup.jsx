@@ -14,7 +14,7 @@ export default function DesktopSignup({ setStep }) {
             signup cliffhanger
           </p>
           <h2 className="mt-10 text-7xl font-black leading-[0.85] tracking-tighter">7 cards are still locked.</h2>
-          <p className="mt-5 text-lg font-bold text-black/60">Signup after value preview. Not before play.</p>
+          <p className="mt-5 text-lg font-bold text-black/60">Sign up after the payoff. Not before play.</p>
         </div>
       </div>
       <div className="rounded-[34px] bg-white p-6">

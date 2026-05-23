@@ -57,7 +57,7 @@ export default function MarketingLanding({ onStart, view, setView }) {
                 onClick={onStart}
                 className="rounded-3xl bg-[#ff4f9a] px-8 py-5 text-left text-base font-black text-white shadow-xl shadow-[#ff4f9a]/25"
               >
-                Open prototype →
+                Open MUTUALS →
               </button>
               <button
                 onClick={() => {

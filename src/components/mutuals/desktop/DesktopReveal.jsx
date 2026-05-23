@@ -56,7 +56,7 @@ export default function DesktopReveal({ cardIndex, setCardIndex, currentCard, Ca
           ))}
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3">
-          <Button tone="lime" icon={Download} onClick={() => showToast("PNG export coming next")}>
+          <Button tone="lime" icon={Download} onClick={() => showToast("Screenshot to save & share")}>
             Save
           </Button>
           <Button tone="pink" icon={Lock} onClick={() => setStep(7)}>

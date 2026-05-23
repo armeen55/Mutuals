@@ -4,7 +4,7 @@ import BottomSheet from "../ui/BottomSheet";
 import Button from "../ui/Button";
 import { useMutuals } from "../useMutuals";
 import { shareUrl } from "../../../utils/mutualsStorage";
-import { showToast } from "../../../utils/ui";
+import { shareOrCopy, showToast } from "../../../utils/ui";
 
 export default function Today({ go }) {
   const app = useMutuals();
@@ -41,10 +41,9 @@ export default function Today({ go }) {
             {played ? "Answer today" : "Start playing"}
           </Button>
           <Button
-            onClick={() => {
-              navigator.clipboard?.writeText(shareUrl(app.activeGroupId));
-              showToast("Link copied");
-            }}
+            onClick={() =>
+              shareOrCopy({ text: "Find out who actually knows who in our group.", url: shareUrl(app.activeGroupId) })
+            }
             tone="white"
             icon={Share2}
           >

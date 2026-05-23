@@ -61,9 +61,9 @@ export default function Answer({ next }) {
           ))}
         </div>
         <div className="mt-5 rounded-[26px] bg-[#e9fff0] p-4">
-          <p className="text-sm font-black">Question density</p>
+          <p className="text-sm font-black">Answer honestly</p>
           <p className="mt-1 text-xs font-bold text-black/50">
-            Real game: 8-10 self answers. Demo shows one card of the flow.
+            Your answers stay private until the reveal. Your friends will try to guess them.
           </p>
         </div>
         <div className="mt-5">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Download, Share2, ChevronLeft, Lock } from "lucide-react";
+import { Download, Share2, ChevronLeft, Lock, Copy } from "lucide-react";
 import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
 import BigRevealCard from "../ui/BigRevealCard";
@@ -8,7 +8,7 @@ import { insightCards, REF_URL } from "../../../data/mutualsDemoData";
 import { useMutuals } from "../useMutuals";
 import { shareUrl } from "../../../utils/mutualsStorage";
 import { getInsights } from "../../../lib/mutualsApi";
-import { cx, showToast } from "../../../utils/ui";
+import { cx, showToast, shareOrCopy } from "../../../utils/ui";
 
 // Seeded fallback order (skips index 3 — the "Full Report" gate card).
 const SEEDED = [0, 1, 2, 4, 5, 6, 7, 8, 9].map((i) => insightCards[i]);
@@ -57,27 +57,34 @@ export default function Reveal({ next, go, goSignup }) {
   // Real group, not enough finished → locked / waiting state.
   if (!app.soloDemo && app.activeGroupId && real && !realReady) {
     const r = real.readiness || { completedCount: 0, required: 3 };
+    const participants = real.bundle?.participants || [];
+    const need = Math.max(0, r.required - r.completedCount);
     return (
       <Phone mood="purple">
         <div className="relative z-10 px-6 pt-24 text-center text-white">
           <p className="text-xs font-black uppercase tracking-[0.25em] text-white/70">reveal locked</p>
           <h2 className="mt-4 text-5xl font-black leading-none tracking-tighter">
-            {r.completedCount}/{r.required} finished.
+            {need > 0 ? `Need ${need} more to finish.` : "Unlocking…"}
           </h2>
           <p className="mx-auto mt-4 max-w-[265px] text-sm font-bold text-white/75">
-            The reveal unlocks when {r.required} friends finish answering and guessing. Nudge the group.
+            {r.completedCount}/{r.required} done. The reveal drops once everyone answers and guesses.
           </p>
         </div>
         <BottomSheet>
           <div className="rounded-[26px] bg-[#f4f1fa] p-4 text-black">
-            <p className="text-xs font-black uppercase tracking-widest text-black/35">progress</p>
-            <p className="mt-2 text-xl font-black">
-              {r.completedCount} of {r.required} done
-            </p>
+            <p className="text-xs font-black uppercase tracking-widest text-black/35">joined ({participants.length})</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {participants.map((p) => (
+                <span key={p.id} className="rounded-full bg-[#6b2cff] px-3 py-1 text-xs font-black text-white">
+                  {p.displayName}
+                </span>
+              ))}
+            </div>
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-3">
+          <div className="mt-4 grid grid-cols-2 gap-3">
             <Button
               tone="lime"
+              icon={Copy}
               onClick={() => {
                 navigator.clipboard?.writeText(shareUrl(app.activeGroupId));
                 showToast("Link copied");
@@ -85,7 +92,21 @@ export default function Reveal({ next, go, goSignup }) {
             >
               Copy invite
             </Button>
-            <Button tone="primary" onClick={refresh}>
+            <Button
+              tone="white"
+              icon={Share2}
+              onClick={() =>
+                shareOrCopy({
+                  text: "Our group is about to find out who the mystery friend is.",
+                  url: shareUrl(app.activeGroupId),
+                })
+              }
+            >
+              Share invite
+            </Button>
+          </div>
+          <div className="mt-3">
+            <Button tone="dark" onClick={refresh}>
               Check again
             </Button>
           </div>
@@ -119,10 +140,16 @@ export default function Reveal({ next, go, goSignup }) {
           <p className="mt-1 truncate text-xs font-bold text-black/45">{REF_URL}</p>
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3">
-          <Button tone="lime" icon={Download} onClick={() => showToast("PNG export coming next")}>
-            Save PNG
+          <Button tone="lime" icon={Download} onClick={() => showToast("Screenshot to save & share")}>
+            Save
           </Button>
-          <Button tone="white" icon={Share2} onClick={() => showToast("Ready to share")}>
+          <Button
+            tone="white"
+            icon={Share2}
+            onClick={() =>
+              shareOrCopy({ text: `${card.headline} See who actually knows who:`, url: shareUrl(app.activeGroupId) })
+            }
+          >
             Share
           </Button>
         </div>

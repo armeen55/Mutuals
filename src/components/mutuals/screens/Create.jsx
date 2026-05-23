@@ -1,4 +1,4 @@
-import { Copy, QrCode } from "lucide-react";
+import { Copy, QrCode, Share2 } from "lucide-react";
 import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
 import Progress from "../ui/Progress";
@@ -7,7 +7,7 @@ import { ROOM_CODE, REF_URL } from "../../../data/mutualsDemoData";
 import { ensureGroup, shareUrl, saveMutualsState } from "../../../utils/mutualsStorage";
 import { useMutuals } from "../useMutuals";
 import { captureGroup } from "../../../lib/mutualsApi";
-import { cx, showToast } from "../../../utils/ui";
+import { cx, showToast, shareOrCopy } from "../../../utils/ui";
 
 export default function Create({ next }) {
   const app = useMutuals();
@@ -87,8 +87,23 @@ export default function Create({ next }) {
           >
             Copy link
           </Button>
+          <Button
+            tone="white"
+            icon={Share2}
+            onClick={() => {
+              const g = ensureGroup();
+              shareOrCopy({
+                text: "I made a MUTUALS room. Answer this before I start judging you.",
+                url: shareUrl(g),
+              });
+            }}
+          >
+            Share invite
+          </Button>
+        </div>
+        <div className="mt-3">
           <Button onClick={next} tone="primary">
-            Preview join wall
+            Continue
           </Button>
         </div>
       </BottomSheet>

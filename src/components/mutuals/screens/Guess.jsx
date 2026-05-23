@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Copy, Share2 } from "lucide-react";
 import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
 import Progress from "../ui/Progress";
@@ -8,7 +9,7 @@ import { members } from "../../../data/mutualsDemoData";
 import { useMutuals } from "../useMutuals";
 import { saveMutualsState, getMutualsState, withStep, shareUrl } from "../../../utils/mutualsStorage";
 import { captureGuesses, captureComplete, getBundle } from "../../../lib/mutualsApi";
-import { cx, showToast } from "../../../utils/ui";
+import { cx, showToast, shareOrCopy } from "../../../utils/ui";
 
 // Real guessing uses the SAME question + options the Answer screen uses, so a
 // guess is scorable against each target's real self-answer.
@@ -69,23 +70,34 @@ export default function Guess({ next }) {
 
   // Real group but nobody else to guess yet → waiting / invite state.
   if (targets.length === 0) {
+    const required = app.groupMode === "duo" ? 2 : 3;
+    const need = Math.max(0, required - participants.length);
     return (
       <Phone mood="purple">
         <div className="relative z-10 px-6 pt-24 text-center text-white">
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-white/70">async guess</p>
-          <h2 className="mt-4 text-5xl font-black leading-none tracking-tighter">Waiting for friends to join.</h2>
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-white/70">your room</p>
+          <h2 className="mt-4 text-5xl font-black leading-none tracking-tighter">
+            {need > 0 ? `Need ${need} more to start.` : "Almost there."}
+          </h2>
           <p className="mx-auto mt-4 max-w-[265px] text-sm font-bold text-white/75">
-            You can guess your friends once at least one more person joins. Send your link.
+            Drop your link in the group chat. The reveal needs everyone in.
           </p>
         </div>
         <BottomSheet>
           <div className="rounded-[26px] bg-[#f4f1fa] p-4 text-black">
-            <p className="text-xs font-black uppercase tracking-widest text-black/35">in this group</p>
-            <p className="mt-2 text-xl font-black">{participants.length} joined</p>
+            <p className="text-xs font-black uppercase tracking-widest text-black/35">joined ({participants.length})</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {participants.map((p) => (
+                <span key={p.id} className="rounded-full bg-[#6b2cff] px-3 py-1 text-xs font-black text-white">
+                  {p.displayName}
+                </span>
+              ))}
+            </div>
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-3">
+          <div className="mt-4 grid grid-cols-2 gap-3">
             <Button
               tone="lime"
+              icon={Copy}
               onClick={() => {
                 navigator.clipboard?.writeText(shareUrl(app.activeGroupId));
                 showToast("Link copied");
@@ -93,7 +105,18 @@ export default function Guess({ next }) {
             >
               Copy invite
             </Button>
-            <Button tone="primary" onClick={refresh}>
+            <Button
+              tone="white"
+              icon={Share2}
+              onClick={() =>
+                shareOrCopy({ text: "Find out who actually knows who in our group.", url: shareUrl(app.activeGroupId) })
+              }
+            >
+              Share invite
+            </Button>
+          </div>
+          <div className="mt-3">
+            <Button tone="dark" onClick={refresh}>
               Check again
             </Button>
           </div>
@@ -200,7 +223,7 @@ function SeededGuess({ next }) {
       <BottomSheet tall>
         <Progress step={5} />
         <p className="mt-4 text-center text-sm font-black text-black/50">
-          Real flow: enough guesses for 10-card report. Demo compresses the round.
+          Guess what your friends actually picked. The closer you are, the better you know them.
         </p>
         <div className="mt-5 space-y-3">
           {SEED_OPTIONS.map((option, i) => (

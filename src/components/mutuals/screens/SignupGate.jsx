@@ -19,7 +19,7 @@ export default function SignupGate({ next }) {
       </div>
       <BottomSheet>
         <div className="rounded-[28px] bg-[#6b2cff] p-4 text-white">
-          <p className="text-xs font-black uppercase tracking-widest text-white/55">next card preview</p>
+          <p className="text-xs font-black uppercase tracking-widest text-white/55">up next</p>
           <p className="mt-2 text-3xl font-black leading-none">Nobody knows Will.</p>
           <p className="mt-2 text-sm text-white/70">This is the card the group will screenshot.</p>
         </div>
@@ -43,7 +43,7 @@ export default function SignupGate({ next }) {
             tone="white"
             icon={Eye}
           >
-            Skip for demo
+            Skip for now
           </Button>
         </div>
       </BottomSheet>
