@@ -5,6 +5,48 @@ Newest entry on top.
 
 ---
 
+## Chunk 14 — Sharper v1 question pack + research-arc reveal (BUILD + PUSH)
+
+### Goal
+Spicier, more adult, more viral — without touching the safe core (MCQ self-answers; friends guess). No open text, no anon messages, no contact sync, no coworker mode, no fake daily/streaks.
+
+### New question pack (`src/data/questions.js`)
+- **8 questions**, adult 18-35 group-chat energy, ~75% spicy / 25% sincere. Each has: first-person `prompt` (Answer screen), `{name}`-templated `about` (Guess + Receipts), 4 guessable options, short `topic`.
+- Topics: group chat fights · a night in jail · toxic social habit · three drinks in · "in my drama I'm secretly…" · red flag I pretend is green · most misunderstood · feeling cared for. Avoids sex-history / mental-health diagnosis / money-debt / family trauma.
+- **Fast game:** `selectQuestions(groupId)` returns a deterministic **6 of 8** (seeded by room id) — short game, packs vary room-to-room. Answer + Guess both call it with the same `activeGroupId` → identical set → **honest scoring**. Added `getQuestion(id)` + `fillName(tpl,name)`.
+
+### Reveal deck reordered around the research arc (`src/lib/insights.js`)
+- Real-room priority: **Card 1 = the miss** (most shareable), then winner → mutual/group score → one-way → most misunderstood → best read → scoreboard (group) → strong closing share card.
+- **Receipts card (Card 1)** — the screenshot. Real question text + real option labels:
+  - 1:1 → `"{guesser} did not know {target}."` + `"In a group chat fight, Sam becomes…" / "Alex guessed: …" / "Real answer: …"`
+  - Group → `"The answer everyone got wrong." (N/N wrong)` + most-common wrong guess vs real answer.
+- **Verified through the real engine** (synthetic run via Vite): duo = **6 cards** (Receipts→Winner→Mutual→One-Way→Best Read→Final Verdict); group = **8 cards** (Receipts→Group Winner→Power Pair→One-Way→Most Misunderstood→Open Book→Scoreboard→Final Roast).
+- Copy de-genericized: dropped "friendship economy" / "guessed vibes"; added "the group chat has receipts now," "send this before they deny it," "loud, confident, and incorrect," "guessing blind," "close enough to be dangerous."
+
+### Receipts rendering (`ui/BigRevealCard.jsx`)
+- When `card.receipts` is present, render the structured **Question / Guessed / Real-answer** block (real answer on lime) instead of stat/headline/detail. `break-words` throughout; Reveal's mood remap keeps it readable.
+
+### Screens
+- `Answer.jsx` / `Guess.jsx` now pull `selectQuestions(activeGroupId)` (the same 6). Guess headline renders the `{name}`-templated `about` text.
+
+### Fake-leftover purge (req 9)
+- **Public flow is clean:** Home→Create→Join→Answer→Guess→Reveal→Share has no fake names (JoinWall routes straight to Answer, skipping the seeded ProgressScreen/Matrix/Today/SignupGate). Real rooms only render real participant names + real computed cards.
+- Genericized the one opt-in-public surface — MarketingLanding (`?landing=1`): "Nobody knows Will." → "Nobody actually knows the quiet one."; fake "Today / Daily" tile → "Modes / 1:1 & Group."
+- Seeded `mutualsDemoData.js`, `Today`/`Matrix`/`SignupGate`/`SeededGuess`, and desktop screens remain **debug/solo-only** (unreachable in normal public play).
+
+### Untouched (req 8)
+Supabase schema, deploy config, room creation/joining, core answer/guess saving, Eazo config.
+
+### Build + verify
+One `npm run build` → green (2226 modules, ~270ms). Verified in the live dev preview: Home generic (no "Will"), Answer shows the new pack with 6 progress dots, engine decks + receipts correct.
+
+### Smoke-test path (live)
+1. Open URL → Home → **Create a room** → **Answer your questions** → name → answer 6 spicy questions.
+2. Phone B → open link → name → Join → answer 6 → guess Phone A.
+3. Phone A → guess Phone B → reveal opens on the **Receipts** card (real question + their wrong guess + real answer), then Winner / Mutual / One-Way / Best Read / Final Verdict (1:1); group adds Power Pair / Most Misunderstood / Open Book / Scoreboard.
+
+---
+
 ## Chunk 13 — Real mobile web app, not a phone mockup (BUILD + PUSH)
 
 ### Goal

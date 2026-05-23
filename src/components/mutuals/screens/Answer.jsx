@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
 import Progress from "../ui/Progress";
@@ -7,17 +7,18 @@ import { useMutuals } from "../useMutuals";
 import { saveMutualsState, getMutualsState, withStep } from "../../../utils/mutualsStorage";
 import { submitAnswers } from "../../../lib/mutualsApi";
 import { cx, showToast } from "../../../utils/ui";
-import { realQuestions } from "../../../data/questions";
+import { selectQuestions } from "../../../data/questions";
 
 export default function Answer({ next }) {
   const app = useMutuals();
+  const questions = useMemo(() => selectQuestions(app.activeGroupId), [app.activeGroupId]);
   const [qi, setQi] = useState(0);
-  const q = realQuestions[qi];
+  const q = questions[qi];
   const [selected, setSelected] = useState(app.selfAnswers?.[q.id] ?? null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setSelected(getMutualsState().selfAnswers?.[realQuestions[qi].id] ?? null);
+    setSelected(getMutualsState().selfAnswers?.[questions[qi].id] ?? null);
   }, [qi]);
 
   const pick = (i) => {
@@ -27,7 +28,7 @@ export default function Answer({ next }) {
 
   const onNext = async () => {
     if (selected == null || saving) return;
-    if (qi < realQuestions.length - 1) {
+    if (qi < questions.length - 1) {
       setQi(qi + 1);
       return;
     }
@@ -47,7 +48,7 @@ export default function Answer({ next }) {
     <Phone mood="cream">
       <div className="relative z-10 px-6 pt-16 text-center">
         <p className="text-xs font-black uppercase tracking-[0.25em] text-black/50">
-          your answers · {qi + 1}/{realQuestions.length}
+          your answers · {qi + 1}/{questions.length}
         </p>
         <h2 className="mt-3 text-4xl font-black leading-none">{q.prompt}</h2>
       </div>
@@ -87,7 +88,7 @@ export default function Answer({ next }) {
             tone="primary"
             className={selected == null || saving ? "pointer-events-none opacity-40" : ""}
           >
-            {saving ? "Saving…" : qi < realQuestions.length - 1 ? "Next question" : "Guess friends"}
+            {saving ? "Saving…" : qi < questions.length - 1 ? "Next question" : "Guess friends"}
           </Button>
         </div>
       </BottomSheet>

@@ -88,7 +88,7 @@ export default function MarketingLanding({ onStart, view, setView, debug }) {
                     <span className="text-sm font-black">MUTUALS.APP</span>
                   </div>
                   <p className="mt-16 text-8xl font-black leading-none text-[#7cdfff]">23%</p>
-                  <h2 className="mt-5 text-5xl font-black leading-[0.9] tracking-tighter">Nobody knows Will.</h2>
+                  <h2 className="mt-5 text-5xl font-black leading-[0.9] tracking-tighter">Nobody actually knows the quiet one.</h2>
                   <p className="mt-4 text-sm font-bold text-white/75">
                     The card your group chat argues about whenever everyone finishes.
                   </p>
@@ -100,8 +100,8 @@ export default function MarketingLanding({ onStart, view, setView, debug }) {
                   <p className="mt-1 text-3xl font-black text-[#6b2cff]">10 cards</p>
                 </div>
                 <div className="rounded-[26px] bg-[#d7ff2f] p-4">
-                  <p className="text-xs font-black uppercase tracking-widest text-black/35">Today</p>
-                  <p className="mt-1 text-3xl font-black">Daily</p>
+                  <p className="text-xs font-black uppercase tracking-widest text-black/35">Modes</p>
+                  <p className="mt-1 text-3xl font-black">1:1 &amp; Group</p>
                 </div>
               </div>
             </div>

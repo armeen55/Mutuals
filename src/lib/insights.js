@@ -1,17 +1,13 @@
-import { Trophy, HeartCrack, Eye, Heart, MessageCircle, Zap, Flame, Sparkles, Users } from "lucide-react";
+import { Trophy, HeartCrack, Eye, Heart, MessageCircle, Sparkles, Flame, Users } from "lucide-react";
+import { getQuestion, fillName } from "../data/questions";
 
 // bundle = { group:{id,mode}, participants:[{id,displayName}], answers:{[pid]:{qid:idx}},
 //            guesses:{[guesserId]:{[targetId]:{qid:idx}}}, completed:{[pid]:bool} }
 
 const pct = (x) => Math.round(x * 100);
 
-// Short, roastable topic per question (used in copy).
-const TOPICS = {
-  q1: "hot takes",
-  q2: "real priorities",
-  q3: "pressure mode",
-  q4: "group-chat trigger",
-};
+// Lead the Receipts/miss card with the spiciest question available, not the first.
+const SPICY_ORDER = ["q5", "q1", "q3", "q6", "q2", "q4", "q7", "q8"];
 
 function card(id, label, stat, headline, detail, accent, icon, mood, shareText) {
   return { id, label, stat, headline, detail, accent, icon, mood, shareText: shareText || headline };
@@ -85,16 +81,42 @@ export function computeInsights(bundle) {
     : groupDeck(participants, answers, guesses, acc);
 }
 
-// -------------------------------- DUO ---------------------------------------
-function biggestMiss(participants, answers, guesses) {
+// ------------------------------ RECEIPTS ------------------------------------
+// The screenshot card: real question text + real option labels for a miss.
+function makeReceipts(r, everyone) {
+  const q = getQuestion(r.qid);
+  if (!q) return null;
+  const question = fillName(q.about, r.target);
+  const guessed = q.options[r.guessIdx];
+  const real = q.options[r.realIdx];
+  if (guessed == null || real == null) return null;
+  const c = card(
+    "receipts",
+    "Receipts",
+    everyone ? `${r.wrongCount}/${r.total} wrong` : "WRONG",
+    everyone ? "The answer everyone got wrong." : `${r.guesser} did not know ${r.target}.`,
+    "Loud, confident, and incorrect. The group chat has receipts now.",
+    "#ff4f9a",
+    MessageCircle,
+    "dark",
+    `${question} The group said "${guessed}." Real answer: "${real}." Send this before they deny it — MUTUALS.`
+  );
+  return {
+    ...c,
+    receipts: { question, guessedLabel: everyone ? "The group guessed" : `${r.guesser} guessed`, guessed, real },
+  };
+}
+
+// Single spiciest miss (used by 1:1).
+function duoReceipt(participants, answers, guesses) {
   for (const g of participants) {
     for (const t of participants) {
       if (g.id === t.id) continue;
       const truth = answers[t.id] || {};
       const guess = (guesses[g.id] || {})[t.id] || {};
-      for (const qid of ["q3", "q1", "q2", "q4"]) {
-        if (truth[qid] != null && guess[qid] != null && guess[qid] !== truth[qid]) {
-          return { guesser: nameOf(participants, g.id), target: nameOf(participants, t.id), qid };
+      for (const qid of SPICY_ORDER) {
+        if (truth[qid] != null && guess[qid] != null && guess[qid] !== truth[qid] && getQuestion(qid)) {
+          return { guesser: nameOf(participants, g.id), target: nameOf(participants, t.id), qid, guessIdx: guess[qid], realIdx: truth[qid] };
         }
       }
     }
@@ -102,13 +124,62 @@ function biggestMiss(participants, answers, guesses) {
   return null;
 }
 
+// The question+person the whole group most collectively whiffed (used by group).
+function groupReceipt(participants, answers, guesses) {
+  let best = null; // { targetId, qid, wrongCount, total, guessIdx, realIdx, rank }
+  for (const t of participants) {
+    const truth = answers[t.id] || {};
+    for (const qid of Object.keys(truth)) {
+      if (!getQuestion(qid)) continue;
+      const realIdx = truth[qid];
+      let wrong = 0;
+      let total = 0;
+      const tally = {};
+      for (const g of participants) {
+        if (g.id === t.id) continue;
+        const gq = (guesses[g.id] || {})[t.id] || {};
+        if (gq[qid] == null) continue;
+        total += 1;
+        if (gq[qid] !== realIdx) {
+          wrong += 1;
+          tally[gq[qid]] = (tally[gq[qid]] || 0) + 1;
+        }
+      }
+      if (total >= 2 && wrong > 0) {
+        const rank = SPICY_ORDER.indexOf(qid);
+        const better =
+          !best ||
+          wrong > best.wrongCount ||
+          (wrong === best.wrongCount && rank !== -1 && (best.rank === -1 || rank < best.rank));
+        if (better) {
+          const wrongIdxs = Object.keys(tally);
+          const guessIdx = Number(wrongIdxs.reduce((hi, k) => (tally[k] > tally[hi] ? k : hi), wrongIdxs[0]));
+          best = { targetId: t.id, qid, wrongCount: wrong, total, guessIdx, realIdx, rank };
+        }
+      }
+    }
+  }
+  return best
+    ? { target: nameOf(participants, best.targetId), qid: best.qid, guessIdx: best.guessIdx, realIdx: best.realIdx, wrongCount: best.wrongCount, total: best.total }
+    : null;
+}
+
+// -------------------------------- DUO ---------------------------------------
+// Best-friend / couple showdown.
 function duoDeck(participants, answers, guesses, acc) {
   const [A, B] = participants;
   const ab = acc[A.id]?.[B.id]; // A guessing B
   const ba = acc[B.id]?.[A.id]; // B guessing A
   const cards = [];
 
-  // Winner
+  // Card 1 — Receipts (the miss). The first screenshot.
+  const rec = duoReceipt(participants, answers, guesses);
+  if (rec) {
+    const c = makeReceipts(rec, false);
+    if (c) cards.push(c);
+  }
+
+  // Card 2 — Winner (who knows who better).
   if (ab && ba) {
     if (ab.acc !== ba.acc) {
       const aWins = ab.acc > ba.acc;
@@ -121,37 +192,26 @@ function duoDeck(participants, answers, guesses, acc) {
           "Winner",
           `${pct(d.acc)}%`,
           `${w.displayName} knows ${l.displayName} better.`,
-          `${w.displayName} got ${d.correct}/${d.total} right. Screenshot it before they get humble.`,
+          `${w.displayName} got ${d.correct}/${d.total} right. Send this before they deny it.`,
           "#d7ff2f",
           Trophy,
           "dark",
-          `${w.displayName} knows ${l.displayName} better. Think you know your person better? Take MUTUALS.`
+          `${w.displayName} knows ${l.displayName} better. Think you know your person better? MUTUALS.`
         )
       );
     } else {
       cards.push(
-        card(
-          "winner",
-          "Dead Heat",
-          `${pct(ab.acc)}%`,
-          `${A.displayName} and ${B.displayName} are dead even.`,
-          "Nobody wins. Nobody loses. Deeply annoying for everyone.",
-          "#7cdfff",
-          Trophy,
-          "purple"
-        )
+        card("winner", "Dead Heat", `${pct(ab.acc)}%`, `${A.displayName} and ${B.displayName} are dead even.`, "Nobody wins. Nobody loses. Deeply annoying for everyone.", "#7cdfff", Trophy, "purple")
       );
     }
   } else if (ab || ba) {
     const w = ab ? A : B;
     const l = ab ? B : A;
     const d = ab || ba;
-    cards.push(
-      card("winner", "Early Read", `${pct(d.acc)}%`, `${w.displayName} read ${l.displayName}.`, `${l.displayName} hasn't guessed back yet — get them in.`, "#d7ff2f", Trophy, "dark")
-    );
+    cards.push(card("winner", "Early Read", `${pct(d.acc)}%`, `${w.displayName} read ${l.displayName}.`, `${l.displayName} hasn't guessed back yet — get them in.`, "#d7ff2f", Trophy, "dark"));
   }
 
-  // Mutual
+  // Card 3 — Mutual Score.
   if (ab && ba) {
     const mutual = (ab.acc + ba.acc) / 2;
     cards.push(
@@ -172,62 +232,27 @@ function duoDeck(participants, answers, guesses, acc) {
       )
     );
 
-    // One-way read
+    // Card 4 — Biggest One-Way Read.
     const gap = Math.abs(ab.acc - ba.acc);
     if (gap >= 0.2) {
       const aWins = ab.acc > ba.acc;
       const reader = aWins ? A : B;
       const other = aWins ? B : A;
       cards.push(
-        card(
-          "oneway",
-          "One-Way Read",
-          `+${pct(gap)}`,
-          `${reader.displayName} read ${other.displayName}. ${other.displayName} guessed vibes.`,
-          "A brutal little asymmetry. The chat will absolutely hear about this.",
-          "#ff4f9a",
-          HeartCrack,
-          "yellow"
-        )
+        card("oneway", "One-Way Read", `+${pct(gap)}`, `${reader.displayName} read ${other.displayName}. ${other.displayName} was guessing blind.`, "A brutal little asymmetry. The chat will hear about this.", "#ff4f9a", HeartCrack, "yellow")
       );
     }
   }
 
-  // Biggest miss
-  const miss = biggestMiss(participants, answers, guesses);
-  if (miss) {
-    cards.push(
-      card(
-        "miss",
-        "Biggest Miss",
-        "whiff",
-        `${miss.guesser} completely misread ${miss.target}'s ${TOPICS[miss.qid] || "answer"}.`,
-        "Confidently. Loudly. Wrong.",
-        "#ff765e",
-        MessageCircle,
-        "cream"
-      )
-    );
-  }
-
-  // Best read (cleanest single direction)
+  // Card 5 — Best Read.
   const best = ab && ba ? (ab.acc >= ba.acc ? { r: A, t: B, d: ab } : { r: B, t: A, d: ba }) : ab ? { r: A, t: B, d: ab } : ba ? { r: B, t: A, d: ba } : null;
   if (best && best.d.correct >= 1) {
     cards.push(
-      card(
-        "bestread",
-        "Best Read",
-        `${best.d.correct}/${best.d.total}`,
-        `${best.r.displayName} had ${best.t.displayName} figured out.`,
-        "At some point this stops being friendship and starts being surveillance.",
-        "#7be495",
-        Sparkles,
-        "purple"
-      )
+      card("bestread", "Best Read", `${best.d.correct}/${best.d.total}`, `${best.r.displayName} had ${best.t.displayName} figured out.`, "At some point this stops being friendship and starts being surveillance.", "#7be495", Sparkles, "purple")
     );
   }
 
-  // Final verdict
+  // Final — Verdict (share climax).
   if (ab && ba) {
     const mutual = (ab.acc + ba.acc) / 2;
     const [h, dt] =
@@ -243,6 +268,7 @@ function duoDeck(participants, answers, guesses, acc) {
 }
 
 // ------------------------------- GROUP --------------------------------------
+// Group-chat drama.
 function bestPair(participants, acc) {
   let best = null;
   for (let i = 0; i < participants.length; i++) {
@@ -274,23 +300,6 @@ function oneWayPair(participants, acc) {
   }
   return ow;
 }
-function biggestBlindSpot(participants, answers, guesses) {
-  const miss = {};
-  for (const g of participants) {
-    for (const t of participants) {
-      if (g.id === t.id) continue;
-      const truth = answers[t.id] || {};
-      const guess = (guesses[g.id] || {})[t.id] || {};
-      for (const qid of Object.keys(guess)) {
-        if (truth[qid] != null && guess[qid] !== truth[qid]) miss[t.id] = (miss[t.id] || 0) + 1;
-      }
-    }
-  }
-  const keys = Object.keys(miss);
-  if (!keys.length) return null;
-  const worst = keys.reduce((hi, k) => (miss[k] > miss[hi] ? k : hi), keys[0]);
-  return { target: nameOf(participants, worst), count: miss[worst] };
-}
 
 function groupDeck(participants, answers, guesses, acc) {
   const { outgoing, incoming } = outgoingIncoming(participants, acc);
@@ -298,55 +307,63 @@ function groupDeck(participants, answers, guesses, acc) {
   const inIds = Object.keys(incoming);
   const cards = [];
 
+  // Card 1 — Receipts (the answer everyone got wrong). The first screenshot.
+  const rec = groupReceipt(participants, answers, guesses);
+  if (rec) {
+    const c = makeReceipts(rec, true);
+    if (c) cards.push(c);
+  }
+
+  // Card 2 — Group Winner (who knows the group best).
   if (outIds.length) {
     const w = outIds.reduce((hi, id) => (outgoing[id] > outgoing[hi] ? id : hi), outIds[0]);
     cards.push(
-      card("winner", "Group Winner", `${pct(outgoing[w])}%`, `${nameOf(participants, w)} knows the group best.`, "Suspiciously well, honestly. We're watching.", "#d7ff2f", Trophy, "dark", `${nameOf(participants, w)} knows our group best. Bet your group has nobody this locked in — MUTUALS.`)
+      card("winner", "Group Winner", `${pct(outgoing[w])}%`, `${nameOf(participants, w)} knows the group best.`, "Suspiciously locked in. We're watching.", "#d7ff2f", Trophy, "dark", `${nameOf(participants, w)} knows our group best. Bet your group has nobody this locked in — MUTUALS.`)
     );
   }
-  if (inIds.length) {
-    const m = inIds.reduce((lo, id) => (incoming[id] < incoming[lo] ? id : lo), inIds[0]);
-    cards.push(
-      card("mystery", "Most Misunderstood", `${pct(incoming[m])}%`, `Nobody actually gets ${nameOf(participants, m)}.`, `That's the group's average score guessing ${nameOf(participants, m)}. You okay?`, "#7cdfff", Eye, "purple", `Nobody in our group gets ${nameOf(participants, m)}. Find your group's mystery friend — MUTUALS.`)
-    );
-  }
-  if (inIds.length >= 2) {
-    const e = inIds.reduce((hi, id) => (incoming[id] > incoming[hi] ? id : hi), inIds[0]);
-    cards.push(card("open", "Open Book", `${pct(incoming[e])}%`, `${nameOf(participants, e)} is an open book.`, "Predictable in the most loving way possible.", "#7be495", Heart, "cream"));
-  }
+
+  // Card 3 — Power Pair (strongest mutual pair = the group score beat).
   const pair = bestPair(participants, acc);
   if (pair) {
     cards.push(
-      card("power", "Power Pair", `${pct(pair.mutual)}%`, `${nameOf(participants, pair.a)} + ${nameOf(participants, pair.b)} are locked in.`, "Highest mutual score in the group. Suspiciously accurate.", "#b794ff", Heart, "purple", `${nameOf(participants, pair.a)} + ${nameOf(participants, pair.b)} are the realest pair in our group — MUTUALS.`)
+      card("power", "Power Pair", `${pct(pair.mutual)}%`, `${nameOf(participants, pair.a)} + ${nameOf(participants, pair.b)} are locked in.`, "Highest mutual score in the group. Send this before they deny it.", "#b794ff", Heart, "purple", `${nameOf(participants, pair.a)} + ${nameOf(participants, pair.b)} are the realest pair in our group — MUTUALS.`)
     );
   }
+
+  // Card 4 — Biggest One-Way Friendship.
   const ow = oneWayPair(participants, acc);
   if (ow) {
     cards.push(
-      card("oneway", "One-Way Friendship", `+${pct(ow.gap)}`, `${nameOf(participants, ow.g)} knows ${nameOf(participants, ow.t)}. ${nameOf(participants, ow.t)}? Not really.`, "A brutal asymmetry. The chat will discuss.", "#ff4f9a", HeartCrack, "yellow")
+      card("oneway", "One-Way Friendship", `+${pct(ow.gap)}`, `${nameOf(participants, ow.g)} knows ${nameOf(participants, ow.t)}. ${nameOf(participants, ow.t)}? Not a clue.`, "A brutal asymmetry. The chat will discuss.", "#ff4f9a", HeartCrack, "yellow")
     );
   }
-  if (outIds.length >= 2) {
-    const w = outIds.reduce((hi, id) => (outgoing[id] > outgoing[hi] ? id : hi), outIds[0]);
-    const c = outIds.reduce((lo, id) => (outgoing[id] < outgoing[lo] ? id : lo), outIds[0]);
-    if (c !== w) {
-      cards.push(card("delusional", "Confidently Wrong", `${pct(outgoing[c])}%`, `${nameOf(participants, c)} thought they knew everyone.`, "Confidence: high. Accuracy: not invited.", "#ffbd00", Zap, "yellow"));
-    }
+
+  // Card 5 — Most Misunderstood (lowest incoming).
+  if (inIds.length) {
+    const m = inIds.reduce((lo, id) => (incoming[id] < incoming[lo] ? id : lo), inIds[0]);
+    cards.push(
+      card("mystery", "Most Misunderstood", `${pct(incoming[m])}%`, `Nobody actually gets ${nameOf(participants, m)}.`, `That's the group's average guessing ${nameOf(participants, m)}. You okay?`, "#7cdfff", Eye, "purple", `Nobody in our group gets ${nameOf(participants, m)}. Find your group's mystery friend — MUTUALS.`)
+    );
   }
-  const blind = biggestBlindSpot(participants, answers, guesses);
-  if (blind) {
-    cards.push(card("blind", "Biggest Blind Spot", `${blind.count} wrong`, `The group totally misread ${blind.target}.`, "Loud, confident, pointing the wrong way.", "#ff765e", MessageCircle, "cream"));
+
+  // Card 6 — Open Book (best-read person, highest incoming).
+  if (inIds.length >= 2) {
+    const e = inIds.reduce((hi, id) => (incoming[id] > incoming[hi] ? id : hi), inIds[0]);
+    cards.push(card("open", "Open Book", `${pct(incoming[e])}%`, `${nameOf(participants, e)} is an open book.`, "Predictable in the most loving way possible.", "#7be495", Sparkles, "cream"));
   }
+
+  // Card 7 — Scoreboard.
   if (outIds.length >= 2) {
     const sorted = [...outIds].sort((a, b) => outgoing[b] - outgoing[a]);
     const ranked = sorted.map((id, i) => `${i + 1}. ${nameOf(participants, id)} ${pct(outgoing[id])}%`);
-    cards.push(
-      card("scoreboard", "Scoreboard", `${pct(outgoing[sorted[0]])}%`, "Who knows the group, ranked.", ranked.join("   ·   "), "#7cdfff", Users, "purple", `Our group's who-knows-who scoreboard is in — MUTUALS.`)
-    );
+    cards.push(card("scoreboard", "Scoreboard", `${pct(outgoing[sorted[0]])}%`, "Who knows the group, ranked.", ranked.join("   ·   "), "#7cdfff", Users, "purple", `Our group's who-knows-who scoreboard is in — MUTUALS.`));
   }
+
+  // Final — Roast (share climax).
   if (outIds.length) {
     const w = outIds.reduce((hi, id) => (outgoing[id] > outgoing[hi] ? id : hi), outIds[0]);
-    cards.push(card("final", "Final Roast", "THE END", `${nameOf(participants, w)} carried. The rest of you — we'll talk.`, "Send this to the group. Then run it back tomorrow.", "#d7ff2f", Flame, "dark", `Find out who actually knows who in your group — MUTUALS.`));
+    cards.push(card("final", "Final Roast", "THE END", `${nameOf(participants, w)} carried. The rest of you — we'll talk.`, "Send this to the group before they deny it. Then run it back.", "#d7ff2f", Flame, "dark", `Find out who actually knows who in your group — MUTUALS.`));
   }
+
   return cards;
 }

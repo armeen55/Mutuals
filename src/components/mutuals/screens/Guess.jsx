@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Copy, Share2 } from "lucide-react";
 import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
@@ -6,7 +6,7 @@ import Progress from "../ui/Progress";
 import Avatar from "../ui/Avatar";
 import Button from "../ui/Button";
 import { members } from "../../../data/mutualsDemoData";
-import { realQuestions } from "../../../data/questions";
+import { selectQuestions, fillName } from "../../../data/questions";
 import { useMutuals } from "../useMutuals";
 import { saveMutualsState, getMutualsState, withStep, shareUrl, repairParticipantId } from "../../../utils/mutualsStorage";
 import { getBundle, submitGuesses, captureGroup } from "../../../lib/mutualsApi";
@@ -34,6 +34,7 @@ function toMember(p, i) {
 
 export default function Guess({ next }) {
   const app = useMutuals();
+  const questions = useMemo(() => selectQuestions(app.activeGroupId), [app.activeGroupId]);
   const [bundle, setBundle] = useState(null);
 
   const [checking, setChecking] = useState(false);
@@ -161,10 +162,10 @@ export default function Guess({ next }) {
   }
 
   const targets = others.slice(0, app.groupMode === "duo" ? 1 : 3);
-  return <RealGuess next={next} targets={targets} />;
+  return <RealGuess next={next} targets={targets} questions={questions} />;
 }
 
-function RealGuess({ next, targets }) {
+function RealGuess({ next, targets, questions }) {
   const acc = useRef({}); // { [targetId]: { q1..q4 } } accumulated locally
   const [ti, setTi] = useState(0);
   const [qi, setQi] = useState(0);
@@ -172,8 +173,8 @@ function RealGuess({ next, targets }) {
   const [saving, setSaving] = useState(false);
   const target = targets[ti];
   const member = toMember(target, ti);
-  const q = realQuestions[qi];
-  const lastQ = qi >= realQuestions.length - 1;
+  const q = questions[qi];
+  const lastQ = qi >= questions.length - 1;
   const lastTarget = ti >= targets.length - 1;
 
   const onNext = async () => {
@@ -213,12 +214,12 @@ function RealGuess({ next, targets }) {
         <div className="mt-3 flex justify-center">
           <Avatar member={member} size="lg" />
         </div>
-        <h2 className="mt-3 text-3xl font-black leading-[0.95]">{q.prompt}</h2>
+        <h2 className="mt-3 break-words text-3xl font-black leading-[0.95]">{fillName(q.about, member.name)}</h2>
       </div>
       <BottomSheet tall>
         <Progress step={5} />
         <p className="mt-4 text-center text-sm font-black text-black/50">
-          What would {member.name} pick? · {qi + 1}/{realQuestions.length}
+          What did {member.name} actually pick? · {qi + 1}/{questions.length}
         </p>
         <div className="mt-4 space-y-3">
           {q.options.map((option, i) => (
