@@ -9,7 +9,7 @@ const DEFAULT_STATE = {
   soloDemo: false,
   currentUserName: "",
   participantIdsByGroup: {}, // { [groupId]: participantId } — scoped per room
-  groupMode: "group", // 'duo' (1:1) | 'group' (3+)
+  groupMode: "duo", // 'duo' (1:1, unlocks at 2) | 'group' (3+)
   createdGroups: [], // [{ id, name, createdBy, createdAt }]
   activeGroupId: null,
   groupMembers: [], // [name, ...]
@@ -94,6 +94,19 @@ export function setParticipantId(groupId, participantId) {
   const map = { ...(getMutualsState().participantIdsByGroup || {}) };
   map[groupId] = participantId;
   saveMutualsState({ participantIdsByGroup: map });
+}
+
+// If our stored participant id for this room is missing or stale (not in the
+// room), re-link it by matching currentUserName to a real participant. Stops
+// stale local identity from making the app think it has no valid target.
+export function repairParticipantId(groupId, participants) {
+  const s = getMutualsState();
+  if (!groupId || !s.currentUserName) return;
+  const current = (s.participantIdsByGroup || {})[groupId];
+  const valid = current && (participants || []).some((p) => p.id === current);
+  if (valid) return;
+  const match = (participants || []).find((p) => p.displayName === s.currentUserName);
+  if (match) setParticipantId(groupId, match.id);
 }
 
 // Create the active group if it does not exist yet. Pass a fresh id from

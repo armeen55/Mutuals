@@ -5,6 +5,30 @@ Newest entry on top.
 
 ---
 
+## Chunk 10 — Fix the stuck/waiting-room experience (BATCH: not built/pushed/deployed)
+
+### Bug
+On the live waiting/locked screens the headline was **white text over the white phone area** → invisible, so the room looked stuck. Combined with group-mode needing 3 people, a 2-phone test stranded users.
+
+### Fixes
+1. **Readable waiting screens** — Guess-waiting and Reveal-locked now put all status on solid surfaces: a black **"1:1 room" / "Group room"** pill badge up top, and inside the white BottomSheet (black text): **"N joined"**, **"Need N more person/people"** or **"Need N more to finish"**, and the explanation **"Group rooms unlock at 3. 1:1 rooms unlock at 2."** No more white-on-white.
+2. **1:1 is the default** — `DEFAULT_STATE.groupMode = "duo"`; Home create sets `groupMode: "duo"`; Create defaults to 1:1 with copy "1:1 unlocks with 2 people. Group unlocks with 3+."
+3. **Escape hatch** — when a room is Group with exactly 2 participants, both the Guess-waiting and Reveal-locked screens show **"Unlock as 1:1 now"**: sets local mode duo, upserts backend group mode to duo, refreshes → unlocks at 2. Rescues accidentally-Group 2-person rooms.
+4. **Participant-id repair** — `repairParticipantId(groupId, participants)` in storage: on JoinWall/Guess/Reveal bundle fetch, if the local participant id is missing/stale (not in room), re-link by matching `currentUserName`. Stops stale identity from breaking targets.
+5. **"Check again" feedback** — shows **"Checking…"** while it refreshes the bundle/insights, then restores; readable explanation stays visible if still blocked.
+6. **No fake data** — seeded Karan remains soloDemo-only; real rooms show "Loading room…" / waiting, never seeded.
+
+### Files changed
+`mutualsStorage.js`, screens `Guess/Reveal/JoinWall/Home/Create`.
+
+### Status
+**BATCH MODE — per instruction: no `npm run build`, no push, no deploy. Local commit only.** Static checks passed (imports aligned, handlers defined, `<Phone>` tags balanced). Live site is unchanged (still Chunk 9 build) until a future deploy.
+
+### Next (when we resume deploying)
+Build → commit as `armeen55` → push (auto-deploys Ready) → 2-phone test in **1:1** mode.
+
+---
+
 ## Chunk 9 — Speed hardening (make the working loop hard to break)
 
 ### Deploy block — ROOT CAUSE FOUND & FIXED

@@ -41,6 +41,7 @@ export default function Home({ next, go }) {
                 revealUnlocked: false,
                 completedSteps: [],
                 soloDemo: false,
+                groupMode: "duo",
               });
               captureGroup();
               next();

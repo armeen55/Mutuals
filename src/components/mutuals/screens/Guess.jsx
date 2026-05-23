@@ -8,8 +8,8 @@ import Button from "../ui/Button";
 import { members } from "../../../data/mutualsDemoData";
 import { realQuestions } from "../../../data/questions";
 import { useMutuals } from "../useMutuals";
-import { saveMutualsState, getMutualsState, withStep, shareUrl } from "../../../utils/mutualsStorage";
-import { getBundle, submitGuesses } from "../../../lib/mutualsApi";
+import { saveMutualsState, getMutualsState, withStep, shareUrl, repairParticipantId } from "../../../utils/mutualsStorage";
+import { getBundle, submitGuesses, captureGroup } from "../../../lib/mutualsApi";
 import { cx, showToast, shareOrCopy } from "../../../utils/ui";
 
 const SEED_OPTIONS = ["Slow walkers", "Loud chewing", "Bad texters", "Overexplaining"];
@@ -36,14 +36,28 @@ export default function Guess({ next }) {
   const app = useMutuals();
   const [bundle, setBundle] = useState(null);
 
+  const [checking, setChecking] = useState(false);
+  const applyBundle = (b) => {
+    setBundle(b);
+    repairParticipantId(app.activeGroupId, b?.participants);
+    if (b?.group?.mode) saveMutualsState({ groupMode: b.group.mode });
+  };
   const refresh = () => {
-    if (app.activeGroupId)
-      getBundle(app.activeGroupId)
-        .then((b) => {
-          setBundle(b);
-          if (b?.group?.mode) saveMutualsState({ groupMode: b.group.mode });
-        })
-        .catch(() => {});
+    if (app.activeGroupId) getBundle(app.activeGroupId).then(applyBundle).catch(() => {});
+  };
+  const checkAgain = () => {
+    setChecking(true);
+    if (!app.activeGroupId) return setChecking(false);
+    getBundle(app.activeGroupId)
+      .then(applyBundle)
+      .catch(() => {})
+      .finally(() => setTimeout(() => setChecking(false), 400));
+  };
+  const unlockAsDuo = () => {
+    saveMutualsState({ groupMode: "duo" });
+    captureGroup();
+    showToast("Switched to 1:1");
+    setTimeout(refresh, 400);
   };
   useEffect(() => {
     if (app.soloDemo) return;
@@ -53,8 +67,7 @@ export default function Guess({ next }) {
       if (!app.activeGroupId) return;
       getBundle(app.activeGroupId)
         .then((b) => {
-          setBundle(b);
-          if (b?.group?.mode) saveMutualsState({ groupMode: b.group.mode });
+          applyBundle(b);
           const mine = (getMutualsState().participantIdsByGroup || {})[app.activeGroupId];
           if ((b?.participants || []).some((p) => p.id !== mine)) clearInterval(id);
         })
@@ -89,19 +102,19 @@ export default function Guess({ next }) {
     const need = Math.max(0, required - participants.length);
     return (
       <Phone mood="purple">
-        <div className="relative z-10 px-6 pt-24 text-center text-white">
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-white/70">your room</p>
-          <h2 className="mt-4 text-5xl font-black leading-none tracking-tighter">
-            {need > 0 ? `Need ${need} more to start.` : "Almost there."}
-          </h2>
-          <p className="mx-auto mt-4 max-w-[265px] text-sm font-bold text-white/75">
-            Drop your link in the group chat. The reveal needs everyone in.
-          </p>
+        <div className="relative z-10 px-6 pt-20 text-center">
+          <span className="inline-flex rounded-full bg-black px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-white">
+            {app.groupMode === "duo" ? "1:1 room" : "Group room"}
+          </span>
         </div>
-        <BottomSheet>
-          <div className="rounded-[26px] bg-[#f4f1fa] p-4 text-black">
-            <p className="text-xs font-black uppercase tracking-widest text-black/35">joined ({participants.length})</p>
-            <div className="mt-2 flex flex-wrap gap-2">
+        <BottomSheet tall>
+          <p className="text-xs font-black uppercase tracking-widest text-black/35">{participants.length} joined</p>
+          <h2 className="mt-2 text-4xl font-black leading-[0.95] tracking-tighter text-black">
+            {need > 0 ? `Need ${need} more ${need === 1 ? "person" : "people"}.` : "Ready to play."}
+          </h2>
+          <p className="mt-2 text-sm font-bold text-black/55">Group rooms unlock at 3. 1:1 rooms unlock at 2.</p>
+          <div className="mt-4 rounded-[26px] bg-[#f4f1fa] p-4">
+            <div className="flex flex-wrap gap-2">
               {participants.map((p) => (
                 <span key={p.id} className="rounded-full bg-[#6b2cff] px-3 py-1 text-xs font-black text-white">
                   {p.displayName}
@@ -109,6 +122,13 @@ export default function Guess({ next }) {
               ))}
             </div>
           </div>
+          {app.groupMode === "group" && participants.length === 2 && (
+            <div className="mt-4">
+              <Button tone="pink" onClick={unlockAsDuo}>
+                Unlock as 1:1 now
+              </Button>
+            </div>
+          )}
           <div className="mt-4 grid grid-cols-2 gap-3">
             <Button
               tone="lime"
@@ -131,8 +151,8 @@ export default function Guess({ next }) {
             </Button>
           </div>
           <div className="mt-3">
-            <Button tone="dark" onClick={refresh}>
-              Check again
+            <Button tone="dark" onClick={checkAgain}>
+              {checking ? "Checking…" : "Check again"}
             </Button>
           </div>
         </BottomSheet>

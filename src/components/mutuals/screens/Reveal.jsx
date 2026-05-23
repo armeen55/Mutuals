@@ -6,8 +6,8 @@ import BigRevealCard from "../ui/BigRevealCard";
 import Button from "../ui/Button";
 import { insightCards } from "../../../data/mutualsDemoData";
 import { useMutuals } from "../useMutuals";
-import { shareUrl } from "../../../utils/mutualsStorage";
-import { getInsights } from "../../../lib/mutualsApi";
+import { shareUrl, saveMutualsState, repairParticipantId } from "../../../utils/mutualsStorage";
+import { getInsights, captureGroup } from "../../../lib/mutualsApi";
 import { cx, showToast, shareOrCopy } from "../../../utils/ui";
 
 // Seeded fallback order (skips index 3 — the "Full Report" gate card).
@@ -20,15 +20,34 @@ export default function Reveal({ next, go, goSignup }) {
   const [pos, setPos] = useState(0);
   const myPid = (app.participantIdsByGroup || {})[app.activeGroupId];
 
+  const [checking, setChecking] = useState(false);
+  const applyReal = (r) => {
+    setReal(r);
+    repairParticipantId(app.activeGroupId, r?.bundle?.participants);
+  };
   const refresh = () => {
     if (app.soloDemo || !app.activeGroupId) {
       setLoading(false);
       return;
     }
     getInsights(app.activeGroupId)
-      .then((r) => setReal(r))
+      .then(applyReal)
       .catch(() => {})
       .finally(() => setLoading(false));
+  };
+  const checkAgain = () => {
+    setChecking(true);
+    if (app.soloDemo || !app.activeGroupId) return setChecking(false);
+    getInsights(app.activeGroupId)
+      .then(applyReal)
+      .catch(() => {})
+      .finally(() => setTimeout(() => setChecking(false), 400));
+  };
+  const unlockAsDuo = () => {
+    saveMutualsState({ groupMode: "duo" });
+    captureGroup();
+    showToast("Switched to 1:1");
+    setTimeout(refresh, 400);
   };
 
   // Initial fetch + lightweight auto-refresh until the reveal is ready.
@@ -42,7 +61,7 @@ export default function Reveal({ next, go, goSignup }) {
     const id = setInterval(() => {
       getInsights(app.activeGroupId)
         .then((r) => {
-          setReal(r);
+          applyReal(r);
           if (r?.readiness?.unlocked && r.cards?.length > 0) clearInterval(id);
         })
         .catch(() => {});
@@ -80,22 +99,27 @@ export default function Reveal({ next, go, goSignup }) {
   if (!app.soloDemo && app.activeGroupId && real && !unlocked) {
     const r = real.readiness || { completedCount: 0, required: 3 };
     const participants = real.bundle?.participants || [];
+    const mode = real.bundle?.group?.mode || app.groupMode || "duo";
     const need = Math.max(0, r.required - r.completedCount);
     return (
       <Phone mood="purple">
-        <div className="relative z-10 px-6 pt-24 text-center text-white">
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-white/70">reveal locked</p>
-          <h2 className="mt-4 text-5xl font-black leading-none tracking-tighter">
+        <div className="relative z-10 px-6 pt-20 text-center">
+          <span className="inline-flex rounded-full bg-black px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-white">
+            {mode === "duo" ? "1:1 room" : "Group room"}
+          </span>
+        </div>
+        <BottomSheet tall>
+          <p className="text-xs font-black uppercase tracking-widest text-black/35">
+            {r.completedCount}/{r.required} finished · {participants.length} joined
+          </p>
+          <h2 className="mt-2 text-4xl font-black leading-[0.95] tracking-tighter text-black">
             {need > 0 ? `Need ${need} more to finish.` : "Unlocking…"}
           </h2>
-          <p className="mx-auto mt-4 max-w-[265px] text-sm font-bold text-white/75">
-            {r.completedCount}/{r.required} done. The reveal drops once everyone answers and guesses. Updating live…
+          <p className="mt-2 text-sm font-bold text-black/55">
+            Group rooms unlock at 3. 1:1 rooms unlock at 2. Updating live…
           </p>
-        </div>
-        <BottomSheet>
-          <div className="rounded-[26px] bg-[#f4f1fa] p-4 text-black">
-            <p className="text-xs font-black uppercase tracking-widest text-black/35">joined ({participants.length})</p>
-            <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-4 rounded-[26px] bg-[#f4f1fa] p-4">
+            <div className="flex flex-wrap gap-2">
               {participants.map((p) => (
                 <span key={p.id} className="rounded-full bg-[#6b2cff] px-3 py-1 text-xs font-black text-white">
                   {p.displayName}
@@ -103,6 +127,13 @@ export default function Reveal({ next, go, goSignup }) {
               ))}
             </div>
           </div>
+          {mode === "group" && participants.length === 2 && (
+            <div className="mt-4">
+              <Button tone="pink" onClick={unlockAsDuo}>
+                Unlock as 1:1 now
+              </Button>
+            </div>
+          )}
           <div className="mt-4 grid grid-cols-2 gap-3">
             <Button
               tone="lime"
@@ -128,8 +159,8 @@ export default function Reveal({ next, go, goSignup }) {
             </Button>
           </div>
           <div className="mt-3">
-            <Button tone="dark" onClick={refresh}>
-              Check again
+            <Button tone="dark" onClick={checkAgain}>
+              {checking ? "Checking…" : "Check again"}
             </Button>
           </div>
         </BottomSheet>

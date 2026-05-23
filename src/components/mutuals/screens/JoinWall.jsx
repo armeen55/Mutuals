@@ -3,7 +3,7 @@ import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
 import Button from "../ui/Button";
 import { useMutuals } from "../useMutuals";
-import { saveMutualsState, withStep, getMutualsState } from "../../../utils/mutualsStorage";
+import { saveMutualsState, withStep, getMutualsState, repairParticipantId } from "../../../utils/mutualsStorage";
 import { captureJoin, getBundle } from "../../../lib/mutualsApi";
 import { showToast } from "../../../utils/ui";
 
@@ -17,6 +17,7 @@ export default function JoinWall({ go }) {
       getBundle(app.activeGroupId)
         .then((b) => {
           setBundle(b);
+          repairParticipantId(app.activeGroupId, b?.participants);
           if (b?.group?.mode) saveMutualsState({ groupMode: b.group.mode });
         })
         .catch(() => {});
