@@ -78,8 +78,13 @@ function prettyName(id) {
   return id.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-// Create the active group if it does not exist yet. Defaults to "chaotic-six"
-// so the displayed demo link stays consistent.
+// Fresh, shareable room id for every new real room (never "chaotic-six").
+export function newRoomId() {
+  return "m-" + Math.random().toString(36).slice(2, 9);
+}
+
+// Create the active group if it does not exist yet. Pass a fresh id from
+// newRoomId() for real rooms; "chaotic-six" is reserved for the solo fallback.
 export function ensureGroup(id) {
   const s = getMutualsState();
   const gid = id || s.activeGroupId || "chaotic-six";

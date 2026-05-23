@@ -118,7 +118,7 @@ export default function Reveal({ next, go, goSignup }) {
   const cards = realReady ? real.cards : SEEDED;
   const card = cards[Math.min(pos, cards.length - 1)];
   const cardNumber = Math.min(pos + 1, cards.length);
-  const atGate = !app.signedUp && pos >= 2 && pos < cards.length;
+  const atGate = !realReady && !app.signedUp && pos >= 2 && pos < cards.length;
   const atEnd = pos >= cards.length - 1;
   return (
     <Phone mood={card.mood}>

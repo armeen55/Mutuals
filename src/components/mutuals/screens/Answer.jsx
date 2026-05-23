@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
 import Progress from "../ui/Progress";
@@ -7,39 +7,47 @@ import { useMutuals } from "../useMutuals";
 import { saveMutualsState, getMutualsState, withStep } from "../../../utils/mutualsStorage";
 import { captureAnswers } from "../../../lib/mutualsApi";
 import { cx, showToast } from "../../../utils/ui";
-
-const ANSWER_OPTIONS = ["My biggest ick", "My toxic trait", "My ideal trip", "My hidden hot take"];
+import { realQuestions } from "../../../data/questions";
 
 export default function Answer({ next }) {
   const app = useMutuals();
-  const saved = app.selfAnswers?.q1;
-  const [selected, setSelected] = useState(saved ?? 0);
-  const answeredCount = Math.min(8, Object.keys(app.selfAnswers || {}).length);
+  const [qi, setQi] = useState(0);
+  const q = realQuestions[qi];
+  const [selected, setSelected] = useState(app.selfAnswers?.[q.id] ?? null);
+
+  useEffect(() => {
+    setSelected(getMutualsState().selfAnswers?.[realQuestions[qi].id] ?? null);
+  }, [qi]);
+
   const pick = (i) => {
     setSelected(i);
-    saveMutualsState({ selfAnswers: { ...getMutualsState().selfAnswers, q1: i } });
+    saveMutualsState({ selfAnswers: { ...getMutualsState().selfAnswers, [q.id]: i } });
   };
-  const onContinue = () => {
-    const cur = { ...getMutualsState().selfAnswers, q1: selected };
-    for (let q = 2; q <= 8; q++) {
-      const k = "q" + q;
-      if (cur[k] == null) cur[k] = q % ANSWER_OPTIONS.length;
+
+  const onNext = () => {
+    if (selected == null) return;
+    if (qi < realQuestions.length - 1) {
+      setQi(qi + 1);
+      return;
     }
-    saveMutualsState({ selfAnswers: cur, completedSteps: withStep("Answer") });
-    captureAnswers(cur);
+    captureAnswers(getMutualsState().selfAnswers);
+    saveMutualsState({ completedSteps: withStep("Answer") });
     showToast("Answers saved");
     next();
   };
+
   return (
     <Phone mood="cream">
       <div className="relative z-10 px-6 pt-16 text-center">
-        <p className="text-xs font-black uppercase tracking-[0.25em] text-black/50">your answers · {answeredCount}/8</p>
-        <h2 className="mt-3 text-4xl font-black leading-none">What would the group be most wrong about?</h2>
+        <p className="text-xs font-black uppercase tracking-[0.25em] text-black/50">
+          your answers · {qi + 1}/{realQuestions.length}
+        </p>
+        <h2 className="mt-3 text-4xl font-black leading-none">{q.prompt}</h2>
       </div>
       <BottomSheet tall>
         <Progress step={4} />
         <div className="mt-5 space-y-3">
-          {ANSWER_OPTIONS.map((option, i) => (
+          {q.options.map((option, i) => (
             <button
               key={option}
               onClick={() => pick(i)}
@@ -67,8 +75,8 @@ export default function Answer({ next }) {
           </p>
         </div>
         <div className="mt-5">
-          <Button onClick={onContinue} tone="primary">
-            Save and guess friends
+          <Button onClick={onNext} tone="primary" className={selected == null ? "pointer-events-none opacity-40" : ""}>
+            {qi < realQuestions.length - 1 ? "Next question" : "Guess friends"}
           </Button>
         </div>
       </BottomSheet>

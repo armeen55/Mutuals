@@ -20,7 +20,7 @@ export default function Today({ go }) {
         </h2>
         <p className="mx-auto mt-4 max-w-[260px] text-sm font-bold text-black/60">
           {played
-            ? "Default screen for returning users. Daily is the retention chassis after the main test."
+            ? "A new group question drops here every day. Keep your streak alive."
             : "Play one reveal, then a fresh group question lands here every day."}
         </p>
       </div>

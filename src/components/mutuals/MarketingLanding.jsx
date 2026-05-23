@@ -97,7 +97,7 @@ export default function MarketingLanding({ onStart, view, setView }) {
                 </div>
                 <div className="rounded-[26px] bg-[#d7ff2f] p-4">
                   <p className="text-xs font-black uppercase tracking-widest text-black/35">Today</p>
-                  <p className="mt-1 text-3xl font-black">D+1</p>
+                  <p className="mt-1 text-3xl font-black">Daily</p>
                 </div>
               </div>
             </div>

@@ -14,7 +14,7 @@ import Matrix from "./screens/Matrix";
 import Share from "./screens/Share";
 import Today from "./screens/Today";
 
-export default function MobileFlow({ step, setStep }) {
+export default function MobileFlow({ step, setStep, debug }) {
   const next = () => setStep((s) => Math.min(steps.length - 1, s + 1));
   const back = () => setStep((s) => Math.max(0, s - 1));
   const go = (name) => setStep(Math.max(0, steps.indexOf(name)));
@@ -44,6 +44,7 @@ export default function MobileFlow({ step, setStep }) {
           {screens[step]}
         </motion.div>
       </AnimatePresence>
+      {debug && (
       <div className="mx-auto mt-5 flex max-w-[390px] items-center gap-3 px-2">
         <button onClick={back} className="grid h-12 w-12 place-items-center rounded-2xl bg-black text-white shadow-lg">
           <ChevronLeft className="h-5 w-5" />
@@ -62,6 +63,7 @@ export default function MobileFlow({ step, setStep }) {
           <ArrowRight className="h-5 w-5" />
         </button>
       </div>
+      )}
     </div>
   );
 }

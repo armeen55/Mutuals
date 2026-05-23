@@ -6,16 +6,12 @@ import Progress from "../ui/Progress";
 import Avatar from "../ui/Avatar";
 import Button from "../ui/Button";
 import { members } from "../../../data/mutualsDemoData";
+import { realQuestions } from "../../../data/questions";
 import { useMutuals } from "../useMutuals";
 import { saveMutualsState, getMutualsState, withStep, shareUrl } from "../../../utils/mutualsStorage";
 import { captureGuesses, captureComplete, getBundle } from "../../../lib/mutualsApi";
 import { cx, showToast, shareOrCopy } from "../../../utils/ui";
 
-// Real guessing uses the SAME question + options the Answer screen uses, so a
-// guess is scorable against each target's real self-answer.
-const OPTIONS = ["My biggest ick", "My toxic trait", "My ideal trip", "My hidden hot take"];
-
-// Seeded fallback (solo demo / no real data yet).
 const SEED_OPTIONS = ["Slow walkers", "Loud chewing", "Bad texters", "Overexplaining"];
 
 const AV = [
@@ -39,37 +35,22 @@ function toMember(p, i) {
 export default function Guess({ next }) {
   const app = useMutuals();
   const [bundle, setBundle] = useState(null);
-  const [loading, setLoading] = useState(!app.soloDemo);
 
   const refresh = () => {
-    if (!app.activeGroupId) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    getBundle(app.activeGroupId)
-      .then((b) => setBundle(b))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    if (app.activeGroupId) getBundle(app.activeGroupId).then(setBundle).catch(() => {});
   };
   useEffect(() => {
-    if (app.soloDemo) {
-      setLoading(false);
-      return;
-    }
-    refresh();
+    if (!app.soloDemo) refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app.activeGroupId, app.soloDemo]);
 
   const participants = bundle?.participants || [];
-  const targets = participants.filter((p) => p.id !== app.currentParticipantId);
+  const others = participants.filter((p) => p.id !== app.currentParticipantId);
   const hasRealData = !app.soloDemo && participants.length > 0;
 
-  // Seeded fallback only when there is no real group data at all.
   if (!hasRealData) return <SeededGuess next={next} />;
 
-  // Real group but nobody else to guess yet → waiting / invite state.
-  if (targets.length === 0) {
+  if (others.length === 0) {
     const required = app.groupMode === "duo" ? 2 : 3;
     const need = Math.max(0, required - participants.length);
     return (
@@ -125,46 +106,58 @@ export default function Guess({ next }) {
     );
   }
 
+  const targets = others.slice(0, app.groupMode === "duo" ? 1 : 3);
   return <RealGuess next={next} targets={targets} />;
 }
 
 function RealGuess({ next, targets }) {
   const [ti, setTi] = useState(0);
+  const [qi, setQi] = useState(0);
   const [selected, setSelected] = useState(null);
   const target = targets[ti];
   const member = toMember(target, ti);
-  const isLast = ti >= targets.length - 1;
-  const onContinue = () => {
+  const q = realQuestions[qi];
+  const lastQ = qi >= realQuestions.length - 1;
+  const lastTarget = ti >= targets.length - 1;
+
+  const onNext = () => {
     if (selected == null) return;
-    captureGuesses({ [target.id]: { q1: selected } });
-    if (isLast) {
-      saveMutualsState({ revealUnlocked: true, completedSteps: withStep("Guess") });
-      captureComplete();
-      showToast("Guesses saved");
-      next();
-    } else {
-      setTi(ti + 1);
+    captureGuesses({ [target.id]: { [q.id]: selected } });
+    if (!lastQ) {
+      setQi(qi + 1);
       setSelected(null);
+      return;
     }
+    if (!lastTarget) {
+      setTi(ti + 1);
+      setQi(0);
+      setSelected(null);
+      return;
+    }
+    saveMutualsState({ revealUnlocked: true, completedSteps: withStep("Guess") });
+    captureComplete();
+    showToast("Guesses saved");
+    next();
   };
+
   return (
     <Phone mood="purple">
-      <div className="relative z-10 px-6 pt-14 text-center text-white">
+      <div className="relative z-10 px-6 pt-12 text-center text-white">
         <p className="text-xs font-black uppercase tracking-[0.25em] text-white/70">
-          async guess · {ti + 1}/{targets.length}
+          guessing {member.name} · {ti + 1}/{targets.length}
         </p>
-        <div className="mt-4 flex justify-center">
+        <div className="mt-3 flex justify-center">
           <Avatar member={member} size="lg" />
         </div>
-        <h2 className="mt-4 text-4xl font-black leading-none">What did {member.name} pick?</h2>
+        <h2 className="mt-3 text-3xl font-black leading-[0.95]">{q.prompt}</h2>
       </div>
       <BottomSheet tall>
         <Progress step={5} />
         <p className="mt-4 text-center text-sm font-black text-black/50">
-          Guess what {member.name} actually answered. The closer you are, the better you know them.
+          What would {member.name} pick? · {qi + 1}/{realQuestions.length}
         </p>
-        <div className="mt-5 space-y-3">
-          {OPTIONS.map((option, i) => (
+        <div className="mt-4 space-y-3">
+          {q.options.map((option, i) => (
             <button
               key={option}
               onClick={() => setSelected(i)}
@@ -186,8 +179,8 @@ function RealGuess({ next, targets }) {
           ))}
         </div>
         <div className="mt-5">
-          <Button onClick={onContinue} tone="primary">
-            {isLast ? "Start reveal moment" : "Next friend"}
+          <Button onClick={onNext} tone="primary" className={selected == null ? "pointer-events-none opacity-40" : ""}>
+            {lastQ && lastTarget ? "See the reveal" : "Next"}
           </Button>
         </div>
       </BottomSheet>
@@ -214,7 +207,7 @@ function SeededGuess({ next }) {
   return (
     <Phone mood="purple">
       <div className="relative z-10 px-6 pt-14 text-center text-white">
-        <p className="text-xs font-black uppercase tracking-[0.25em] text-white/70">async guess · 7/30</p>
+        <p className="text-xs font-black uppercase tracking-[0.25em] text-white/70">guess your friend</p>
         <div className="mt-4 flex justify-center">
           <Avatar member={members[2]} size="lg" />
         </div>
@@ -249,7 +242,7 @@ function SeededGuess({ next }) {
         </div>
         <div className="mt-5">
           <Button onClick={onContinue} tone="primary">
-            Start reveal moment
+            See the reveal
           </Button>
         </div>
       </BottomSheet>

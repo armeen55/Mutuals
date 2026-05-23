@@ -2,7 +2,7 @@ import { Zap } from "lucide-react";
 import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
 import Button from "../ui/Button";
-import { ensureGroup, saveMutualsState } from "../../../utils/mutualsStorage";
+import { ensureGroup, saveMutualsState, newRoomId } from "../../../utils/mutualsStorage";
 import { captureGroup } from "../../../lib/mutualsApi";
 
 export default function Home({ next, go }) {
@@ -19,7 +19,7 @@ export default function Home({ next, go }) {
       </div>
       <BottomSheet>
         <div className="grid grid-cols-3 gap-2">
-          {["Send link", "Answer async", "Reveal"].map((x, i) => (
+          {["Create a room", "Send the link", "Reveal who knows who"].map((x, i) => (
             <div key={x} className="rounded-2xl bg-[#f3efff] p-3 text-center">
               <p className="text-xl font-black text-[#6b2cff]">{i + 1}</p>
               <p className="text-[11px] font-black text-black/50">{x}</p>
@@ -27,20 +27,20 @@ export default function Home({ next, go }) {
           ))}
         </div>
         <div className="mt-5 rounded-[28px] bg-[#6b2cff] p-4 text-white">
-          <p className="text-xs font-black uppercase tracking-widest text-white/60">sample reveal</p>
+          <p className="text-xs font-black uppercase tracking-widest text-white/60">the reveal</p>
           <p className="mt-2 text-3xl font-black leading-none">Nobody knows Will.</p>
           <p className="mt-2 text-sm text-white/70">23% average score guessing his answers.</p>
         </div>
         <div className="mt-5 space-y-3">
           <Button
             onClick={() => {
-              ensureGroup();
+              ensureGroup(newRoomId());
               captureGroup();
               next();
             }}
             tone="pink"
           >
-            Create async group
+            Create a room
           </Button>
           <Button
             onClick={() => {

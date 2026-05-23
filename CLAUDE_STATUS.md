@@ -5,6 +5,39 @@ Newest entry on top.
 
 ---
 
+## Chunk 5 — Production mobile room flow
+
+### Goal
+Phone A creates a unique room → shares link → phone B opens it, joins with an in-app name field,
+answers real questions, guesses real friends → room produces real reveal cards. No prototype DNA.
+
+### What changed
+- **Unique rooms (P1):** `newRoomId()` (`m-` + 7 lowercase chars) in `mutualsStorage`. Home "Create a room" now mints a fresh id (no more `chaotic-six` collisions); `chaotic-six` kept only for the solo fallback. `shareUrl` + invite `?group=<id>` use the real id.
+- **Public shell + debug (P2):** `?debug=1` shows the old toggles/step buttons/Reset. Public (default) shows a minimal centered header (**MUTUALS · who actually knows who?**), forces mobile view, and hides the bottom step-controller in `MobileFlow`.
+- **Real Join (P3):** `JoinWall` replaced `window.prompt` with an in-app name input (CTA disabled until non-empty), fetches the room bundle, shows **real** joined participants (or "No one has joined yet"), routes by state (Answer→Guess→Reveal). No seeded Armeen/Will/Karan in real rooms.
+- **Real question pack (P4):** `src/data/questions.js` (`realQuestions`, 4 Qs). `Answer` shows one at a time, saves each, **no hidden auto-fill**. Same pack used for guessing.
+- **Real guess (P5):** `Guess` asks q1–q4 per target; group caps at first 3 others, duo = the one other; excludes self; waiting state shows joined names + "Need N more" + Copy/Share/Check again. Seeded Karan only as solo fallback.
+- **Real reveal (P6):** computed reveals never hit the signup gate (`atGate` excludes `realReady`); user walks all computed cards → Share. SignupGate remains for the seeded solo path only.
+- **Copy cleanup (P7):** Home ("Create a room / Send the link / Reveal who knows who"), Create ("Your room is ready / Share this with your group chat / Choose your room", removed Live code/QR/tracked link/Pack/Tahoe), Today (no "retention chassis"), landing ("D+1"→"Daily").
+- **OG (P8):** static OG/Twitter meta + real title in `index.html`.
+
+### Files changed
+`mutualsStorage.js`, new `data/questions.js`, `MutualsMergedFlow.jsx`, `MobileFlow.jsx`, screens `Home/Create/JoinWall/Answer/Guess/Reveal/Today`, `MarketingLanding.jsx`, `index.html`.
+
+### Verified
+`npm run build` → success (544 kB, size warning only). Not phone-tested yet.
+
+### Known risks
+- **Not run on 2 real phones yet** — that's the next step. Host-alone correctly stops at Guess waiting.
+- No realtime; Join/Guess/Reveal rely on "Check again" to refetch.
+- `EAZO_VOTE_URL` still placeholder; dev server must be restarted for `.env.local`.
+- Group mode caps guessing at 3 targets (speed); insights still strongest in duo.
+
+### Next fastest move
+Real 2-phone test (create on A, open link on B, both finish) and fix only blockers — then sharpen the share/vote loop with the real Eazo link, then deploy a public URL.
+
+---
+
 ## Chunk 4 — Mobile-first viral loop (share CTAs, invite/waiting, Eazo vote, real copy)
 
 ### Goal
