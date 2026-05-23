@@ -1,0 +1,18 @@
+# dependencies
+node_modules
+
+# build output
+dist
+dist-ssr
+
+# local env — NEVER commit secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# logs / os
+*.log
+logs
+.DS_Store
+.vite
