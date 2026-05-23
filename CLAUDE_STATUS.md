@@ -5,6 +5,30 @@ Newest entry on top.
 
 ---
 
+## Chunk 12 — Stronger post-reveal share / challenge / vote loop (BUILD + PUSH)
+
+### What changed (`src/components/mutuals/screens/Share.jsx`)
+- **Sharper copy:** "the verdict is in" → **"Your group has receipts."** → "Send it before they deny it." (dropped generic "Keep the group alive").
+- **Clear CTA hierarchy:** primary **"Share the reveal"** (native share: *"We just played MUTUALS and found out who actually knows who."* + room link); then **"Challenge a friend"** (fresh 1:1) and **"Challenge a group"** (fresh group); then the Eazo vote CTA; then **"Today's question"**.
+- **Challenge flows start FRESH rooms** — `newRoom(mode)` mints a new `newRoomId()`, clears `selfAnswers/guesses/revealUnlocked/completedSteps/soloDemo`, sets the chosen mode, upserts the backend group, and routes to Create with a fresh invite. No stale data reused.
+- **Eazo CTA** stays the single source (`src/config.js`): while it's the placeholder it's disabled/soft ("Eazo vote link coming"); set a real `EAZO_VOTE_URL` and it activates as "Help MUTUALS win on Eazo" (never opens eazo.ai).
+- **Reveal Share** already uses `card.shareText || card.headline` + the room link (Chunk 11).
+- **Weak language audit:** grep confirms no visible "soon/demo/prototype/preview/coming/retention" except the intentional disabled-Eazo "coming".
+
+### Files changed
+`src/components/mutuals/screens/Share.jsx`. (Reveal share wiring was Chunk 11.) No schema/deploy/room-flow changes.
+
+### Build + deploy
+This chunk ends batch mode: one `npm run build`, then push Chunks 10+11+12 to `main` as `armeen55` → Vercel auto-deploys Ready. (Filled in below after running.)
+
+### Final smoke-test path (live)
+1. Phone A → live URL → **Create a room** (defaults to **1:1**) → **Share invite**.
+2. Phone B → open link → name → Join → answer q1–q4 → guess A.
+3. Phone A → answer → guess B → reveal computes (duo deck: Winner / Mutual / One-Way Read / Biggest Miss / Best Read / Final Verdict).
+4. On the reveal, tap **Share** (per-card hook). On the Share screen, tap **Share the reveal**, then **Challenge a friend** (should open a brand-new 1:1 room link).
+
+---
+
 ## Chunk 11 — Viral reveal decks (duo vs group) (BATCH: local commit only)
 
 ### Goal
