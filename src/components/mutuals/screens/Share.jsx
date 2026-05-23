@@ -1,4 +1,4 @@
-import { Share2, Users, Trophy, Flame } from "lucide-react";
+import { Share2, Users, Trophy } from "lucide-react";
 import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
 import Button from "../ui/Button";
@@ -67,11 +67,6 @@ export default function Share({ go }) {
             onClick={eazoReady ? () => window.open(EAZO_VOTE_URL, "_blank", "noopener") : undefined}
           >
             {eazoReady ? "Help MUTUALS win on Eazo" : "Eazo vote link coming"}
-          </Button>
-        </div>
-        <div className="mt-3">
-          <Button tone="dark" icon={Flame} onClick={() => go("Today")}>
-            Today's question
           </Button>
         </div>
       </BottomSheet>

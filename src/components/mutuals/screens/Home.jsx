@@ -1,11 +1,10 @@
-import { Zap } from "lucide-react";
 import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
 import Button from "../ui/Button";
 import { ensureGroup, saveMutualsState, newRoomId } from "../../../utils/mutualsStorage";
 import { captureGroup } from "../../../lib/mutualsApi";
 
-export default function Home({ next, go }) {
+export default function Home({ next }) {
   return (
     <Phone mood="cream">
       <div className="relative z-10 px-8 pt-32 text-center">
@@ -28,10 +27,10 @@ export default function Home({ next, go }) {
         </div>
         <div className="mt-5 rounded-[28px] bg-[#6b2cff] p-4 text-white">
           <p className="text-xs font-black uppercase tracking-widest text-white/60">the reveal</p>
-          <p className="mt-2 text-3xl font-black leading-none">Nobody knows Will.</p>
-          <p className="mt-2 text-sm text-white/70">23% average score guessing his answers.</p>
+          <p className="mt-2 text-3xl font-black leading-none">Who's the mystery friend?</p>
+          <p className="mt-2 text-sm text-white/70">Find out who your group actually knows.</p>
         </div>
-        <div className="mt-5 space-y-3">
+        <div className="mt-5">
           <Button
             onClick={() => {
               ensureGroup(newRoomId());
@@ -49,17 +48,6 @@ export default function Home({ next, go }) {
             tone="pink"
           >
             Create a room
-          </Button>
-          <Button
-            onClick={() => {
-              ensureGroup();
-              saveMutualsState({ soloDemo: true, revealUnlocked: true });
-              go("Reveal");
-            }}
-            tone="white"
-            icon={Zap}
-          >
-            Try it solo
           </Button>
         </div>
       </BottomSheet>

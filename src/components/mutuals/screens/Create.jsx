@@ -46,7 +46,7 @@ export default function Create({ next }) {
               </button>
             ))}
           </div>
-          <p className="mt-2 text-[11px] font-bold text-black/45">1:1 unlocks with 2 people. Group unlocks with 3+.</p>
+          <p className="mt-2 text-[11px] font-bold text-black/45">1:1 is best for a fast test. Group needs 3+ people.</p>
         </div>
         <div className="mt-4 rounded-[26px] bg-[#fff3c4] p-4">
           <p className="text-xs font-black uppercase tracking-widest text-black/35">2 · share your link</p>
@@ -75,7 +75,7 @@ export default function Create({ next }) {
         </div>
         <div className="mt-3">
           <Button onClick={next} tone="primary">
-            Continue
+            Answer your questions
           </Button>
         </div>
       </BottomSheet>

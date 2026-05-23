@@ -192,7 +192,13 @@ function RealGuess({ next, targets }) {
     }
     // Last question of last target: write everything, await, then complete.
     setSaving(true);
-    await submitGuesses(acc.current);
+    try {
+      await submitGuesses(acc.current);
+    } catch {
+      showToast("Couldn't save — try again");
+      setSaving(false);
+      return;
+    }
     saveMutualsState({ revealUnlocked: true, completedSteps: withStep("Guess") });
     showToast("Guesses saved");
     next();

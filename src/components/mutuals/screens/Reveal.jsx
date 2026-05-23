@@ -201,11 +201,13 @@ export default function Reveal({ next, go, goSignup }) {
 
   const cards = realReady ? real.cards : SEEDED;
   const card = cards[Math.min(pos, cards.length - 1)];
+  // BigRevealCard text is white; cream/yellow moods would wash it out, so use strong bgs.
+  const revealMood = card.mood === "cream" ? "purple" : card.mood === "yellow" ? "dark" : card.mood;
   const cardNumber = Math.min(pos + 1, cards.length);
   const atGate = !realReady && !app.signedUp && pos >= 2 && pos < cards.length;
   const atEnd = pos >= cards.length - 1;
   return (
-    <Phone mood={card.mood}>
+    <Phone mood={revealMood}>
       <BigRevealCard card={card} />
       <BottomSheet>
         <div className="flex gap-1">

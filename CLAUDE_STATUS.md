@@ -5,6 +5,54 @@ Newest entry on top.
 
 ---
 
+## Chunk 13 — Real mobile web app, not a phone mockup (BUILD + PUSH)
+
+### Goal
+Kill the phone-inside-a-phone demo feel. Public visitors should land in a real, full-bleed mobile web app — no fake device chrome, no marketing detour, no fake people.
+
+### Native shell (`ui/Phone.jsx`)
+- Removed the fake dark device frame, the **"9:41"** clock, the **"MUTUALS"** status pill, and the decorative status dots.
+- Phone is now a **full-bleed mood background** (`min-h-[100dvh] flex flex-col`, per-mood color) so white headers stay readable and it reads like a real screen. `AbstractBg` kept behind `z-10` content.
+
+### Bottom panel (`ui/BottomSheet.jsx`)
+- No longer an `absolute inset-x-2 bottom-2` fixed mockup with `min-h-[390/520px]`. Now a real flow panel: `mt-auto` pins it to the bottom of the Phone flex column, `max-h-[88dvh] overflow-y-auto` so it scrolls internally, `min-h-[58dvh]`/`[42dvh]` for presence. When content exceeds the viewport the page scrolls — **CTAs stay reachable on iPhone**.
+
+### Reveal card resilience (`ui/BigRevealCard.jsx`)
+- Responsive + `break-words` everywhere: stat `text-6xl sm:text-[78px]`, headline `text-3xl sm:text-4xl`, detail `text-white/85`, icon tile `h-20→24`. Long names/headlines wrap instead of overflowing behind the sheet.
+- **Reveal mood remap** (`Reveal.jsx`): card text is white, so `cream→purple` and `yellow→dark` for readable reveal backgrounds.
+
+### Skip landing + full-bleed public (`MutualsMergedFlow.jsx`)
+- Public root **opens directly into Home** (`showPrototype` defaults true). MarketingLanding is now opt-in: **`?landing=1`** or `?debug=1`.
+- Public render is **full-bleed** — a centered `max-w-md` column only matters on desktop (dark surround), no boxed phone shell, no big desktop padding, and the old public "MUTUALS" header bar is gone.
+- Debug (`?debug=1`) keeps the boxed mobile/desktop + step-nav shell. Invite links (`?group=`) still route to **Join**.
+
+### Purged fake public surfaces
+- Removed Home **"Try it solo"** — it was the only public entry into `soloDemo`/the seeded **Karan** path. Solo + seeded `SeededGuess` are now unreachable in normal public flow (real rooms always have an `activeGroupId`).
+- Home sample reveal genericized: ~~"Nobody knows Will." / "23% average score…"~~ → **"Who's the mystery friend?" / "Find out who your group actually knows."**
+- Share **"Today's question"** CTA removed (Today isn't real yet). Today is now unreachable from the public flow.
+
+### Real-room error handling
+- `Guess.jsx`: final `submitGuesses()` wrapped in try/catch like Answer — on failure: toast **"Couldn't save — try again"**, `saving=false`, **don't advance**.
+- `mutualsApi.js`: `sb.createGroup` now checks `{ error }` and throws; `sb.getBundle` checks errors from **all four** reads (groups/participants/answers/guesses) and throws on a real failure instead of returning empty fake-looking state (a missing group row via `maybeSingle()` is **not** an error). All callers `.catch` → stay on loading/waiting rather than render fake state. **Local fallback unchanged.**
+
+### Create copy (`Create.jsx`)
+- Hint → **"1:1 is best for a fast test. Group needs 3+ people."**; primary CTA **"Continue" → "Answer your questions"**.
+
+### Files changed
+`ui/Phone.jsx`, `ui/BottomSheet.jsx`, `ui/BigRevealCard.jsx`, `MutualsMergedFlow.jsx`, `screens/Home.jsx`, `screens/Share.jsx`, `screens/Reveal.jsx`, `screens/Create.jsx`, `screens/Guess.jsx`, `lib/mutualsApi.js`. **No** schema, insight-engine, or route-order changes (only landing-skip + public full-bleed).
+
+### Build + deploy
+One `npm run build` → green (2226 modules, ~261ms). Pushed to `main` as `armeen55` → Vercel auto-deploys Ready.
+
+### Final smoke-test path (live)
+1. Open live URL on a phone → lands **directly on Home** (no landing, no fake device frame, no "Will"). Tap **Create a room** (1:1 default).
+2. On Create → **Share invite**, then **Answer your questions** → enter name (Join) → answer q1–q4.
+3. Phone B → open the link → name → Join → answer q1–q4 → guess Phone A.
+4. Phone A → guess Phone B → reveal unlocks (duo deck). Swipe cards — long names wrap, text readable on every mood. Tap **Share**.
+5. On Share: **Share the reveal** + **Challenge a friend** (fresh 1:1). No "Today's question" button.
+
+---
+
 ## Chunk 12 — Stronger post-reveal share / challenge / vote loop (BUILD + PUSH)
 
 ### What changed (`src/components/mutuals/screens/Share.jsx`)

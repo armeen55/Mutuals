@@ -103,7 +103,8 @@ const local = {
 // ---------------- Supabase backend ----------------
 const sb = {
   async createGroup({ id, mode, createdBy }) {
-    await supabase.from("groups").upsert({ id, mode: mode || "group", created_by: createdBy || "Host" });
+    const { error } = await supabase.from("groups").upsert({ id, mode: mode || "group", created_by: createdBy || "Host" });
+    if (error) throw error;
     return { id, mode: mode || "group", createdBy };
   },
   async getGroup(id) {
@@ -157,12 +158,20 @@ const sb = {
     if (error) throw error;
   },
   async getBundle(groupId) {
-    const [{ data: group }, { data: participants }, { data: answersRows }, { data: guessRows }] = await Promise.all([
+    const [groupRes, partRes, ansRes, guessRes] = await Promise.all([
       supabase.from("groups").select("*").eq("id", groupId).maybeSingle(),
       supabase.from("participants").select("*").eq("group_id", groupId),
       supabase.from("answers").select("*").eq("group_id", groupId),
       supabase.from("guesses").select("*").eq("group_id", groupId),
     ]);
+    // Surface real query failures (don't return empty fake-looking state). A missing
+    // group row is not an error — maybeSingle() yields data:null with error:null.
+    const failure = groupRes.error || partRes.error || ansRes.error || guessRes.error;
+    if (failure) throw failure;
+    const group = groupRes.data;
+    const participants = partRes.data;
+    const answersRows = ansRes.data;
+    const guessRows = guessRes.data;
     const answers = {};
     (answersRows || []).forEach((r) => {
       answers[r.participant_id] = answers[r.participant_id] || {};

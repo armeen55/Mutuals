@@ -1,17 +1,17 @@
 import AbstractBg from "./AbstractBg";
 
+// Full-bleed mood background so white-on-screen headers stay readable and the
+// reveal reads like a real screen — not a phone-inside-a-phone mockup.
+const BG = { purple: "#6b2cff", dark: "#17112b", cream: "#fff2df", yellow: "#ffbd00" };
+
 export default function Phone({ children, mood = "purple" }) {
   return (
-    <div className="mx-auto w-full max-w-[390px] rounded-[42px] bg-[#2b2540] p-3 shadow-2xl shadow-black/30">
-      <div className="relative min-h-[760px] overflow-hidden rounded-[34px] bg-white text-black">
-        <AbstractBg mood={mood} />
-        <div className="relative z-10 flex items-center justify-between px-5 pt-4 text-[11px] font-black text-white">
-          <span>9:41</span>
-          <span className="rounded-full bg-white/20 px-3 py-1 backdrop-blur">MUTUALS</span>
-          <span>●●●</span>
-        </div>
-        {children}
-      </div>
+    <div
+      className="relative flex min-h-[100dvh] flex-col overflow-hidden text-black"
+      style={{ background: BG[mood] || BG.purple }}
+    >
+      <AbstractBg mood={mood} />
+      {children}
     </div>
   );
 }

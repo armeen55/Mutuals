@@ -13,19 +13,23 @@ import MobileFlow from "./MobileFlow";
 import DesktopApp from "./desktop/DesktopApp";
 import Toast from "./ui/Toast";
 
-const isDebug = () => {
+const param = (k) => {
   try {
-    return new URLSearchParams(window.location.search).get("debug") === "1";
+    return new URLSearchParams(window.location.search).get(k);
   } catch {
-    return false;
+    return null;
   }
 };
+const isDebug = () => param("debug") === "1";
 
 export default function MutualsMergedFlow() {
-  const [showPrototype, setShowPrototype] = useState(false);
+  const debug = isDebug();
+  // Public visitors drop straight into the live app. The marketing landing is
+  // opt-in via ?landing=1 (and always available in ?debug=1).
+  const wantsLanding = debug || param("landing") === "1";
+  const [showPrototype, setShowPrototype] = useState(!wantsLanding);
   const [view, setView] = useState("mobile");
   const [step, setStep] = useState(0);
-  const debug = isDebug();
 
   useEffect(() => {
     saveMutualsState({ lastVisitedAt: Date.now() });
@@ -46,12 +50,25 @@ export default function MutualsMergedFlow() {
     return <MarketingLanding onStart={() => setShowPrototype(true)} view={view} setView={setView} debug={debug} />;
   }
 
-  const effectiveView = debug ? view : "mobile";
+  // PUBLIC: full-bleed mobile web app. The centered max-w-md column only matters on
+  // desktop, where a dark surround frames the screen instead of a fake phone bezel.
+  if (!debug) {
+    return (
+      <div className="min-h-[100dvh] bg-[#17112b]">
+        <div className="mx-auto w-full max-w-md">
+          <MobileFlow step={step} setStep={setStep} debug={false} />
+        </div>
+        <Toast />
+      </div>
+    );
+  }
+
+  // DEBUG: boxed shell with mobile/desktop + step controls.
+  const effectiveView = view;
 
   return (
     <div className="min-h-screen overflow-hidden bg-[#f5f0e8] text-black">
-      {debug ? (
-        <div className="sticky top-0 z-50 border-b border-black/5 bg-white/85 px-4 py-4 shadow-lg backdrop-blur">
+      <div className="sticky top-0 z-50 border-b border-black/5 bg-white/85 px-4 py-4 shadow-lg backdrop-blur">
           <div className="mx-auto flex max-w-7xl flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center justify-between gap-4">
               <button
@@ -120,14 +137,6 @@ export default function MutualsMergedFlow() {
             ))}
           </div>
         </div>
-      ) : (
-        <div className="sticky top-0 z-50 border-b border-black/5 bg-white/85 px-4 py-3 shadow-sm backdrop-blur">
-          <div className="mx-auto flex max-w-lg items-center justify-center gap-2">
-            <span className="text-lg font-black leading-none tracking-tight">MUTUALS</span>
-            <span className="text-xs font-bold uppercase tracking-widest text-black/35">who actually knows who?</span>
-          </div>
-        </div>
-      )}
 
       <div
         className={cx(
