@@ -8,7 +8,7 @@ const DEFAULT_STATE = {
   demoSkippedSignup: false,
   soloDemo: false,
   currentUserName: "",
-  currentParticipantId: null, // backend participant id (mutualsApi)
+  participantIdsByGroup: {}, // { [groupId]: participantId } — scoped per room
   groupMode: "group", // 'duo' (1:1) | 'group' (3+)
   createdGroups: [], // [{ id, name, createdBy, createdAt }]
   activeGroupId: null,
@@ -81,6 +81,19 @@ function prettyName(id) {
 // Fresh, shareable room id for every new real room (never "chaotic-six").
 export function newRoomId() {
   return "m-" + Math.random().toString(36).slice(2, 9);
+}
+
+// Participant identity is scoped per room so playing multiple rooms never
+// cross-contaminates answers/guesses.
+export function getParticipantId(groupId) {
+  if (!groupId) return null;
+  return (getMutualsState().participantIdsByGroup || {})[groupId] || null;
+}
+export function setParticipantId(groupId, participantId) {
+  if (!groupId) return;
+  const map = { ...(getMutualsState().participantIdsByGroup || {}) };
+  map[groupId] = participantId;
+  saveMutualsState({ participantIdsByGroup: map });
 }
 
 // Create the active group if it does not exist yet. Pass a fresh id from

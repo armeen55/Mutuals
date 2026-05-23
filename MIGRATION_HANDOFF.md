@@ -1,5 +1,8 @@
 # MUTUALS — Migration Handoff
 
+> **STATUS (current):** This doc describes how to copy the UI. For live product state see `CLAUDE_STATUS.md`.
+> Corrections to older sections below: the app now has a **real Supabase backend** (not localStorage-only), rooms get **unique ids** via `newRoomId()` (`chaotic-six` is only the solo fallback), Join uses an **in-app name field** (not `window.prompt`), and Answer/Guess use a **real 4-question pack with no hidden auto-fill**. Participant identity is **scoped per room** (`participantIdsByGroup`).
+
 The UI now lives in **one self-contained feature folder** (`src/components/mutuals/`) plus 2 shared data/util files. Everything else is standard scaffolding.
 
 ## 1. Files to copy (to move the UI anywhere)

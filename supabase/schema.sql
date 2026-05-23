@@ -14,7 +14,8 @@ create table if not exists participants (
   group_id text not null references groups (id) on delete cascade,
   display_name text not null,
   completed boolean not null default false,
-  joined_at timestamptz not null default now()
+  joined_at timestamptz not null default now(),
+  unique (group_id, display_name)
 );
 
 create table if not exists answers (
@@ -23,7 +24,7 @@ create table if not exists answers (
   participant_id uuid not null references participants (id) on delete cascade,
   question_id text not null,
   option_index int not null,
-  unique (participant_id, question_id)
+  unique (group_id, participant_id, question_id)
 );
 
 create table if not exists guesses (
@@ -33,7 +34,7 @@ create table if not exists guesses (
   target_id text not null,                      -- participant id (or seed name in demo data)
   question_id text not null,
   option_index int not null,
-  unique (guesser_id, target_id, question_id)
+  unique (group_id, guesser_id, target_id, question_id)
 );
 
 create index if not exists participants_group_idx on participants (group_id);

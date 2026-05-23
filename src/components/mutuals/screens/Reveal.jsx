@@ -4,7 +4,7 @@ import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
 import BigRevealCard from "../ui/BigRevealCard";
 import Button from "../ui/Button";
-import { insightCards, REF_URL } from "../../../data/mutualsDemoData";
+import { insightCards } from "../../../data/mutualsDemoData";
 import { useMutuals } from "../useMutuals";
 import { shareUrl } from "../../../utils/mutualsStorage";
 import { getInsights } from "../../../lib/mutualsApi";
@@ -137,7 +137,7 @@ export default function Reveal({ next, go, goSignup }) {
             Card {cardNumber} of {cards.length} ·{" "}
             {realReady ? "from your group's real answers" : "auto-advancing Wrapped-style moment"}
           </p>
-          <p className="mt-1 truncate text-xs font-bold text-black/45">{REF_URL}</p>
+          <p className="mt-1 truncate text-xs font-bold text-black/45">{shareUrl(app.activeGroupId)}</p>
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3">
           <Button tone="lime" icon={Download} onClick={() => showToast("Screenshot to save & share")}>

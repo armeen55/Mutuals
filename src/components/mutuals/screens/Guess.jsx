@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Copy, Share2 } from "lucide-react";
 import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
@@ -9,7 +9,7 @@ import { members } from "../../../data/mutualsDemoData";
 import { realQuestions } from "../../../data/questions";
 import { useMutuals } from "../useMutuals";
 import { saveMutualsState, getMutualsState, withStep, shareUrl } from "../../../utils/mutualsStorage";
-import { captureGuesses, captureComplete, getBundle } from "../../../lib/mutualsApi";
+import { getBundle, submitGuesses } from "../../../lib/mutualsApi";
 import { cx, showToast, shareOrCopy } from "../../../utils/ui";
 
 const SEED_OPTIONS = ["Slow walkers", "Loud chewing", "Bad texters", "Overexplaining"];
@@ -37,7 +37,13 @@ export default function Guess({ next }) {
   const [bundle, setBundle] = useState(null);
 
   const refresh = () => {
-    if (app.activeGroupId) getBundle(app.activeGroupId).then(setBundle).catch(() => {});
+    if (app.activeGroupId)
+      getBundle(app.activeGroupId)
+        .then((b) => {
+          setBundle(b);
+          if (b?.group?.mode) saveMutualsState({ groupMode: b.group.mode });
+        })
+        .catch(() => {});
   };
   useEffect(() => {
     if (!app.soloDemo) refresh();
@@ -45,7 +51,8 @@ export default function Guess({ next }) {
   }, [app.activeGroupId, app.soloDemo]);
 
   const participants = bundle?.participants || [];
-  const others = participants.filter((p) => p.id !== app.currentParticipantId);
+  const myPid = (app.participantIdsByGroup || {})[app.activeGroupId];
+  const others = participants.filter((p) => p.id !== myPid);
   const hasRealData = !app.soloDemo && participants.length > 0;
 
   if (!hasRealData) return <SeededGuess next={next} />;
@@ -111,18 +118,20 @@ export default function Guess({ next }) {
 }
 
 function RealGuess({ next, targets }) {
+  const acc = useRef({}); // { [targetId]: { q1..q4 } } accumulated locally
   const [ti, setTi] = useState(0);
   const [qi, setQi] = useState(0);
   const [selected, setSelected] = useState(null);
+  const [saving, setSaving] = useState(false);
   const target = targets[ti];
   const member = toMember(target, ti);
   const q = realQuestions[qi];
   const lastQ = qi >= realQuestions.length - 1;
   const lastTarget = ti >= targets.length - 1;
 
-  const onNext = () => {
-    if (selected == null) return;
-    captureGuesses({ [target.id]: { [q.id]: selected } });
+  const onNext = async () => {
+    if (selected == null || saving) return;
+    acc.current[target.id] = { ...(acc.current[target.id] || {}), [q.id]: selected };
     if (!lastQ) {
       setQi(qi + 1);
       setSelected(null);
@@ -134,8 +143,10 @@ function RealGuess({ next, targets }) {
       setSelected(null);
       return;
     }
+    // Last question of last target: write everything, await, then complete.
+    setSaving(true);
+    await submitGuesses(acc.current);
     saveMutualsState({ revealUnlocked: true, completedSteps: withStep("Guess") });
-    captureComplete();
     showToast("Guesses saved");
     next();
   };
@@ -179,8 +190,12 @@ function RealGuess({ next, targets }) {
           ))}
         </div>
         <div className="mt-5">
-          <Button onClick={onNext} tone="primary" className={selected == null ? "pointer-events-none opacity-40" : ""}>
-            {lastQ && lastTarget ? "See the reveal" : "Next"}
+          <Button
+            onClick={onNext}
+            tone="primary"
+            className={selected == null || saving ? "pointer-events-none opacity-40" : ""}
+          >
+            {saving ? "Saving…" : lastQ && lastTarget ? "See the reveal" : "Next"}
           </Button>
         </div>
       </BottomSheet>

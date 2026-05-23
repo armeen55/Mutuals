@@ -5,6 +5,36 @@ Newest entry on top.
 
 ---
 
+## Chunk 6 — Real room identity + data integrity (pre-deploy blocker)
+
+### Goal
+Make room + participant identity correct so users can play multiple rooms without corruption.
+
+### Fixes
+1. **Per-room participant identity** — replaced single `currentParticipantId` with `participantIdsByGroup: { [groupId]: participantId }` (`getParticipantId`/`setParticipantId` in `mutualsStorage`). `ensureParticipant()` reads/writes the active room's id only; new rooms / invite links never reuse another room's participant.
+2. **Join no longer overwrites mode/host** — `captureJoin()` and `ensureParticipant()` only `createGroup()` as a fallback when the group is missing; they never upsert the room with a local default mode. `captureGroup()` (host-only) still owns mode. JoinWall/Guess **sync local `groupMode` from `bundle.group.mode`**.
+3. **Room-scoped schema uniqueness** — migration `supabase/migrations/0001_room_scoped_identity.sql` applied to project `lgzfptunoyljwyucishq`: `answers (group_id, participant_id, question_id)`, `guesses (group_id, guesser_id, target_id, question_id)`. `onConflict` in `mutualsApi` updated to match. (Verified the new constraints exist; old global ones dropped.)
+4. **Participant join idempotency** — added `participants unique (group_id, display_name)`; `joinGroup()` now upserts on that key (race-safe). `schema.sql` updated for fresh setups.
+5. **Reliable guess writes** — real Guess now accumulates q1–q4 per target locally and calls the awaitable `submitGuesses()` (writes all guesses, then marks complete) once at the end. No fire-and-forget completion race; button shows "Saving…".
+6. **Real reveal link** — Reveal shows `shareUrl(activeGroupId)`, never `chaotic-six`/`REF_URL`.
+7. **Docs** — `MIGRATION_HANDOFF.md` corrected (backend live, unique rooms, name input, real questions).
+
+### Files changed
+`mutualsStorage.js`, `mutualsApi.js`, screens `Guess/Reveal/JoinWall`, `supabase/schema.sql`, new `supabase/migrations/0001_room_scoped_identity.sql`, `MIGRATION_HANDOFF.md`.
+
+### Verified
+`npm run build` → success (544 kB). Migration applied + constraints confirmed via Management API. Pre-launch test data truncated (clean slate). Not 2-phone tested yet.
+
+### Known risks
+- `truncate groups cascade` ran on Supabase — all prior test rows cleared (intended; no real users yet).
+- Still single-region localStorage fallback when no env; dev server must restart for `.env.local`.
+- Group mode still caps guessing at 3 targets.
+
+### Next fastest move
+**Deploy a public URL** (so a second phone can reach it — `localhost` can't), then run the real 2-phone test and fix only blockers.
+
+---
+
 ## Chunk 5 — Production mobile room flow
 
 ### Goal

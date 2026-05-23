@@ -13,7 +13,13 @@ export default function JoinWall({ go }) {
   const [bundle, setBundle] = useState(null);
 
   useEffect(() => {
-    if (app.activeGroupId) getBundle(app.activeGroupId).then(setBundle).catch(() => {});
+    if (app.activeGroupId)
+      getBundle(app.activeGroupId)
+        .then((b) => {
+          setBundle(b);
+          if (b?.group?.mode) saveMutualsState({ groupMode: b.group.mode });
+        })
+        .catch(() => {});
   }, [app.activeGroupId]);
 
   const participants = bundle?.participants || [];

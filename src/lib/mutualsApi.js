@@ -1,5 +1,5 @@
 import { isSupabaseEnabled, supabase } from "./supabaseClient";
-import { getMutualsState, saveMutualsState } from "../utils/mutualsStorage";
+import { getMutualsState, saveMutualsState, getParticipantId, setParticipantId } from "../utils/mutualsStorage";
 import { computeInsights, computeReadiness } from "./insights";
 
 // =============================================================================
@@ -111,16 +111,10 @@ const sb = {
     return data ? { id: data.id, mode: data.mode, createdBy: data.created_by } : null;
   },
   async joinGroup(groupId, displayName) {
-    const { data: existing } = await supabase
-      .from("participants")
-      .select("*")
-      .eq("group_id", groupId)
-      .eq("display_name", displayName)
-      .maybeSingle();
-    if (existing) return { id: existing.id, groupId, displayName };
+    // Idempotent per (group_id, display_name) — race-safe.
     const { data } = await supabase
       .from("participants")
-      .insert({ group_id: groupId, display_name: displayName })
+      .upsert({ group_id: groupId, display_name: displayName }, { onConflict: "group_id,display_name" })
       .select()
       .single();
     return { id: data.id, groupId, displayName };
@@ -132,7 +126,8 @@ const sb = {
       question_id: qid,
       option_index: answersObj[qid],
     }));
-    if (rows.length) await supabase.from("answers").upsert(rows, { onConflict: "participant_id,question_id" });
+    if (rows.length)
+      await supabase.from("answers").upsert(rows, { onConflict: "group_id,participant_id,question_id" });
   },
   async saveGuesses(groupId, guesserId, byTarget) {
     const rows = [];
@@ -147,7 +142,8 @@ const sb = {
         });
       }
     }
-    if (rows.length) await supabase.from("guesses").upsert(rows, { onConflict: "guesser_id,target_id,question_id" });
+    if (rows.length)
+      await supabase.from("guesses").upsert(rows, { onConflict: "group_id,guesser_id,target_id,question_id" });
   },
   async setCompleted(groupId, participantId, value) {
     await supabase.from("participants").update({ completed: value }).eq("id", participantId);
@@ -203,17 +199,23 @@ export async function getInsights(groupId) {
 // ---------------- fire-and-forget capture helpers (used by screens) ----------------
 // These never throw and never block the UI; the localStorage demo flow is the
 // source of truth for rendering. This just mirrors real data into the backend.
+// Resolve THIS browser's participant id for the ACTIVE room only. Never reuses
+// another room's id, and never overwrites an existing room's mode/host.
 async function ensureParticipant() {
   const s = getMutualsState();
-  if (!s.activeGroupId) return null;
-  if (s.currentParticipantId) return s.currentParticipantId;
+  const gid = s.activeGroupId;
+  if (!gid) return null;
+  const existing = getParticipantId(gid);
+  if (existing) return existing;
   const name = s.currentUserName || "You";
-  await createGroup({ id: s.activeGroupId, mode: s.groupMode || "group", createdBy: name });
-  const p = await joinGroup(s.activeGroupId, name);
-  if (p?.id) saveMutualsState({ currentParticipantId: p.id });
+  const grp = await getGroup(gid);
+  if (!grp) await createGroup({ id: gid, mode: s.groupMode || "group", createdBy: name });
+  const p = await joinGroup(gid, name);
+  if (p?.id) setParticipantId(gid, p.id);
   return p?.id || null;
 }
 
+// Host-only: create/configure the room. Safe to upsert mode (the host owns it).
 export function captureGroup() {
   const s = getMutualsState();
   if (!s.activeGroupId) return;
@@ -222,15 +224,17 @@ export function captureGroup() {
   );
 }
 
+// Invitee-safe join: only creates the group as a fallback, never overwrites mode/host.
 export function captureJoin(name) {
   const s = getMutualsState();
-  if (!s.activeGroupId) return;
-  createGroup({ id: s.activeGroupId, mode: s.groupMode || "group", createdBy: name })
-    .then(() => joinGroup(s.activeGroupId, name))
-    .then((p) => {
-      if (p?.id) saveMutualsState({ currentParticipantId: p.id });
-    })
-    .catch(() => {});
+  const gid = s.activeGroupId;
+  if (!gid) return;
+  (async () => {
+    const grp = await getGroup(gid);
+    if (!grp) await createGroup({ id: gid, mode: s.groupMode || "group", createdBy: name });
+    const p = await joinGroup(gid, name);
+    if (p?.id) setParticipantId(gid, p.id);
+  })().catch(() => {});
 }
 
 export function captureAnswers(answersObj) {
@@ -255,4 +259,14 @@ export function captureComplete() {
       if (pid) return setCompleted(getMutualsState().activeGroupId, pid, true);
     })
     .catch(() => {});
+}
+
+// Awaitable: write ALL of this user's guesses for the active room, then mark
+// them complete. Used by the real Guess flow so completion never races writes.
+export async function submitGuesses(byTarget) {
+  const gid = getMutualsState().activeGroupId;
+  const pid = await ensureParticipant();
+  if (!gid || !pid) return;
+  await saveGuesses(gid, pid, byTarget);
+  await setCompleted(gid, pid, true);
 }
