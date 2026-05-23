@@ -29,12 +29,8 @@ export default function Create({ next }) {
       </div>
       <BottomSheet tall>
         <Progress step={1} />
-        <div className="mt-5 rounded-[26px] bg-[#fff3c4] p-4">
-          <p className="text-xs font-black uppercase tracking-widest text-black/35">your link</p>
-          <p className="mt-2 break-all text-sm font-black">{link}</p>
-        </div>
-        <div className="mt-4">
-          <p className="text-xs font-black uppercase tracking-widest text-black/35">choose your room</p>
+        <div className="mt-5">
+          <p className="text-xs font-black uppercase tracking-widest text-black/35">1 · pick your room type</p>
           <div className="mt-2 grid grid-cols-2 gap-2">
             {MODES.map((opt) => (
               <button
@@ -50,6 +46,10 @@ export default function Create({ next }) {
               </button>
             ))}
           </div>
+        </div>
+        <div className="mt-4 rounded-[26px] bg-[#fff3c4] p-4">
+          <p className="text-xs font-black uppercase tracking-widest text-black/35">2 · share your link</p>
+          <p className="mt-2 break-all text-sm font-black">{link}</p>
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3">
           <Button

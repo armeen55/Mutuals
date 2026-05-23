@@ -35,6 +35,13 @@ export default function Home({ next, go }) {
           <Button
             onClick={() => {
               ensureGroup(newRoomId());
+              saveMutualsState({
+                selfAnswers: {},
+                guesses: {},
+                revealUnlocked: false,
+                completedSteps: [],
+                soloDemo: false,
+              });
               captureGroup();
               next();
             }}

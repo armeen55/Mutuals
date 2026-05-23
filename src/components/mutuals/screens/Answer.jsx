@@ -5,7 +5,7 @@ import Progress from "../ui/Progress";
 import Button from "../ui/Button";
 import { useMutuals } from "../useMutuals";
 import { saveMutualsState, getMutualsState, withStep } from "../../../utils/mutualsStorage";
-import { captureAnswers } from "../../../lib/mutualsApi";
+import { submitAnswers } from "../../../lib/mutualsApi";
 import { cx, showToast } from "../../../utils/ui";
 import { realQuestions } from "../../../data/questions";
 
@@ -14,6 +14,7 @@ export default function Answer({ next }) {
   const [qi, setQi] = useState(0);
   const q = realQuestions[qi];
   const [selected, setSelected] = useState(app.selfAnswers?.[q.id] ?? null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setSelected(getMutualsState().selfAnswers?.[realQuestions[qi].id] ?? null);
@@ -24,16 +25,22 @@ export default function Answer({ next }) {
     saveMutualsState({ selfAnswers: { ...getMutualsState().selfAnswers, [q.id]: i } });
   };
 
-  const onNext = () => {
-    if (selected == null) return;
+  const onNext = async () => {
+    if (selected == null || saving) return;
     if (qi < realQuestions.length - 1) {
       setQi(qi + 1);
       return;
     }
-    captureAnswers(getMutualsState().selfAnswers);
-    saveMutualsState({ completedSteps: withStep("Answer") });
-    showToast("Answers saved");
-    next();
+    setSaving(true);
+    try {
+      await submitAnswers(getMutualsState().selfAnswers);
+      saveMutualsState({ completedSteps: withStep("Answer") });
+      showToast("Answers saved");
+      next();
+    } catch {
+      showToast("Couldn't save — try again");
+      setSaving(false);
+    }
   };
 
   return (
@@ -75,8 +82,12 @@ export default function Answer({ next }) {
           </p>
         </div>
         <div className="mt-5">
-          <Button onClick={onNext} tone="primary" className={selected == null ? "pointer-events-none opacity-40" : ""}>
-            {qi < realQuestions.length - 1 ? "Next question" : "Guess friends"}
+          <Button
+            onClick={onNext}
+            tone="primary"
+            className={selected == null || saving ? "pointer-events-none opacity-40" : ""}
+          >
+            {saving ? "Saving…" : qi < realQuestions.length - 1 ? "Next question" : "Guess friends"}
           </Button>
         </div>
       </BottomSheet>

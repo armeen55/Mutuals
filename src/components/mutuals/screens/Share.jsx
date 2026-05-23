@@ -66,8 +66,13 @@ export default function Share({ next, go }) {
           >
             Share this result
           </Button>
-          <Button tone="white" icon={Trophy} onClick={() => window.open(EAZO_VOTE_URL, "_blank", "noopener")}>
-            {eazoReady ? "Help MUTUALS win on Eazo" : "Vote for MUTUALS on Eazo (soon)"}
+          <Button
+            tone="white"
+            icon={Trophy}
+            className={eazoReady ? "" : "pointer-events-none opacity-40"}
+            onClick={eazoReady ? () => window.open(EAZO_VOTE_URL, "_blank", "noopener") : undefined}
+          >
+            {eazoReady ? "Help MUTUALS win on Eazo" : "Eazo vote link coming"}
           </Button>
         </div>
       </BottomSheet>

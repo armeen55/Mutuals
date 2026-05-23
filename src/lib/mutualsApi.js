@@ -112,11 +112,12 @@ const sb = {
   },
   async joinGroup(groupId, displayName) {
     // Idempotent per (group_id, display_name) — race-safe.
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("participants")
       .upsert({ group_id: groupId, display_name: displayName }, { onConflict: "group_id,display_name" })
       .select()
       .single();
+    if (error) throw error;
     return { id: data.id, groupId, displayName };
   },
   async saveAnswers(groupId, participantId, answersObj) {
@@ -126,8 +127,10 @@ const sb = {
       question_id: qid,
       option_index: answersObj[qid],
     }));
-    if (rows.length)
-      await supabase.from("answers").upsert(rows, { onConflict: "group_id,participant_id,question_id" });
+    if (rows.length) {
+      const { error } = await supabase.from("answers").upsert(rows, { onConflict: "group_id,participant_id,question_id" });
+      if (error) throw error;
+    }
   },
   async saveGuesses(groupId, guesserId, byTarget) {
     const rows = [];
@@ -142,11 +145,16 @@ const sb = {
         });
       }
     }
-    if (rows.length)
-      await supabase.from("guesses").upsert(rows, { onConflict: "group_id,guesser_id,target_id,question_id" });
+    if (rows.length) {
+      const { error } = await supabase
+        .from("guesses")
+        .upsert(rows, { onConflict: "group_id,guesser_id,target_id,question_id" });
+      if (error) throw error;
+    }
   },
   async setCompleted(groupId, participantId, value) {
-    await supabase.from("participants").update({ completed: value }).eq("id", participantId);
+    const { error } = await supabase.from("participants").update({ completed: value }).eq("id", participantId);
+    if (error) throw error;
   },
   async getBundle(groupId) {
     const [{ data: group }, { data: participants }, { data: answersRows }, { data: guessRows }] = await Promise.all([
@@ -259,6 +267,17 @@ export function captureComplete() {
       if (pid) return setCompleted(getMutualsState().activeGroupId, pid, true);
     })
     .catch(() => {});
+}
+
+// Awaitable: write this user's self-answers for the active room. Throws on failure
+// so the Answer screen can keep the user there instead of advancing with no data.
+export async function submitAnswers(answersObj) {
+  const s = getMutualsState();
+  if (s.soloDemo) return; // solo: local only
+  const gid = s.activeGroupId;
+  const pid = await ensureParticipant();
+  if (!gid || !pid) return;
+  await saveAnswers(gid, pid, answersObj);
 }
 
 // Awaitable: write ALL of this user's guesses for the active room, then mark

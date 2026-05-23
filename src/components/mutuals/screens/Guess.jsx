@@ -64,12 +64,25 @@ export default function Guess({ next }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app.activeGroupId, app.soloDemo]);
 
+  const realRoom = !app.soloDemo && !!app.activeGroupId;
   const participants = bundle?.participants || [];
   const myPid = (app.participantIdsByGroup || {})[app.activeGroupId];
   const others = participants.filter((p) => p.id !== myPid);
-  const hasRealData = !app.soloDemo && participants.length > 0;
 
-  if (!hasRealData) return <SeededGuess next={next} />;
+  // Real room whose data hasn't loaded yet — never show seeded/fake data.
+  if (realRoom && bundle === null) {
+    return (
+      <Phone mood="purple">
+        <div className="relative z-10 px-6 pt-32 text-center text-white">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-white/70">your room</p>
+          <h2 className="mt-4 text-5xl font-black leading-none tracking-tighter">Loading room…</h2>
+        </div>
+      </Phone>
+    );
+  }
+
+  // Seeded flow only for solo demo / no real room.
+  if (!realRoom) return <SeededGuess next={next} />;
 
   if (others.length === 0) {
     const required = app.groupMode === "duo" ? 2 : 3;

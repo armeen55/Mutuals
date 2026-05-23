@@ -6,6 +6,7 @@ import {
   resetMutualsState,
   readGroupFromUrl,
   ensureGroup,
+  getMutualsState,
 } from "../../utils/mutualsStorage";
 import MarketingLanding from "./MarketingLanding";
 import MobileFlow from "./MobileFlow";
@@ -30,7 +31,12 @@ export default function MutualsMergedFlow() {
     saveMutualsState({ lastVisitedAt: Date.now() });
     const gid = readGroupFromUrl();
     if (gid) {
+      const prev = getMutualsState().activeGroupId;
       ensureGroup(gid);
+      if (gid !== prev) {
+        // Opening a different room — drop the previous room's local play state.
+        saveMutualsState({ selfAnswers: {}, guesses: {}, revealUnlocked: false, completedSteps: [], soloDemo: false });
+      }
       setShowPrototype(true);
       setStep(steps.indexOf("Join"));
     }

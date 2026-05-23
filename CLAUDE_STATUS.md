@@ -5,6 +5,36 @@ Newest entry on top.
 
 ---
 
+## Chunk 9 — Speed hardening (make the working loop hard to break)
+
+### Deploy block — ROOT CAUSE FOUND & FIXED
+Vercel "Deployment Blocked" was **not** the Hobby plan — it was the **git commit author email**. Commits authored as `iranopedia5@gmail.com` (the "Persian5" identity) aren't a Vercel member, so on Hobby + private repo every git-triggered deploy was blocked. Fix: set the **local** repo author to `armeen55 <278262837+armeen55@users.noreply.github.com>` (a recognized member). New commits deploy Ready. No Pro upgrade, no CLI scope juggling. (Local git config was previously unset → fell back to the global `iranopedia5` email.)
+
+### Fixes
+1. **No seeded data while a real room loads** — `Guess` shows **"Loading room…"** when `!soloDemo && activeGroupId && bundle === null`; seeded Karan flow only renders for solo / no real group; real room with no other participants → waiting.
+2. **Awaitable answers** — new `submitAnswers()` (awaited, throws on failure). Final Answer button shows **"Saving…"**, only advances to Guess on success; on failure it toasts and stays put.
+3. **Real Supabase errors** — `joinGroup/saveAnswers/saveGuesses/setCompleted` now check `{ error }` and throw. `submitGuesses()` therefore never marks completed if the guess write failed.
+4. **Room-scoped local state** — creating a new room (Home) and opening a different invite (`?group=`) now clear `selfAnswers/guesses/revealUnlocked/completedSteps/soloDemo` (preserve `participantIdsByGroup`). No carry-over between rooms.
+5. **Create: pick mode before sharing** — 1:1 / Group choice moved **above** the link, numbered "1 · pick your room type" → "2 · share your link".
+6. **Eazo CTA safety** — while `EAZO_VOTE_URL` is the placeholder, the button is disabled/soft and reads "Eazo vote link coming" (won't open eazo.ai). Activates when a real URL is set in `src/config.js`.
+
+### Files changed
+`mutualsApi.js`, screens `Answer/Guess/Home/Create/Share`, `MutualsMergedFlow.jsx`. Local git author config.
+
+### Build
+`npm run build` → success (size warning only). Deploy: push as `armeen55` → git auto-deploy.
+
+### Exact 2-phone test (after deploy is Ready)
+1. Phone A → https://mutuals-dun.vercel.app → **Create a room** → **pick 1:1** (for a 2-phone test! Group needs 3 to unlock) → Share invite.
+2. Phone B → open link → name → Join → answer q1–q4 ("Saving…") → guess A.
+3. Phone A → answer → guess B → reveal. First finisher sees "Need 1 more", auto-updates ~6s when the other finishes → real cards.
+
+### Known risks
+- **Group mode needs 3 completed** to unlock — a 2-phone test must use **1:1** (this was the "stuck on waiting" screen you hit).
+- Open RLS + public URL (demo-grade). Eazo link still placeholder.
+
+---
+
 ## Chunk 8 — Post-answer / reveal / share blocker pass
 
 ### Deploy identity fix
