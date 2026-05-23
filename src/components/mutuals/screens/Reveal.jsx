@@ -6,33 +6,116 @@ import BigRevealCard from "../ui/BigRevealCard";
 import Button from "../ui/Button";
 import { insightCards, REF_URL } from "../../../data/mutualsDemoData";
 import { useMutuals } from "../useMutuals";
+import { shareUrl } from "../../../utils/mutualsStorage";
+import { getInsights } from "../../../lib/mutualsApi";
 import { cx, showToast } from "../../../utils/ui";
 
-// Card display order for the reveal (skips index 3 — the "Full Report" gate card).
-const REVEAL_ORDER = [0, 1, 2, 4, 5, 6, 7, 8, 9];
+// Seeded fallback order (skips index 3 — the "Full Report" gate card).
+const SEEDED = [0, 1, 2, 4, 5, 6, 7, 8, 9].map((i) => insightCards[i]);
 
 export default function Reveal({ next, go, goSignup }) {
   const app = useMutuals();
+  const [real, setReal] = useState(null); // { readiness, cards }
+  const [loading, setLoading] = useState(!app.soloDemo);
   const [pos, setPos] = useState(0);
+
   useEffect(() => {
     if (!app.revealUnlocked && !app.soloDemo) go("Answer");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const card = insightCards[REVEAL_ORDER[Math.min(pos, REVEAL_ORDER.length - 1)]];
-  const cardNumber = Math.min(pos + 1, 10);
-  const atGate = !app.signedUp && pos >= 2;
-  const atEnd = pos >= REVEAL_ORDER.length - 1;
+
+  const refresh = () => {
+    if (app.soloDemo || !app.activeGroupId) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    getInsights(app.activeGroupId)
+      .then((r) => setReal(r))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  };
+  useEffect(() => {
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [app.activeGroupId, app.soloDemo]);
+
+  // Real group still computing / loading.
+  if (!app.soloDemo && app.activeGroupId && loading && !real) {
+    return (
+      <Phone mood="purple">
+        <div className="relative z-10 px-6 pt-32 text-center text-white">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-white/70">reveal</p>
+          <h2 className="mt-4 text-5xl font-black leading-none tracking-tighter">Tallying the group…</h2>
+        </div>
+      </Phone>
+    );
+  }
+
+  const realReady = !app.soloDemo && real && real.readiness?.unlocked && real.cards?.length > 0;
+
+  // Real group, not enough finished → locked / waiting state.
+  if (!app.soloDemo && app.activeGroupId && real && !realReady) {
+    const r = real.readiness || { completedCount: 0, required: 3 };
+    return (
+      <Phone mood="purple">
+        <div className="relative z-10 px-6 pt-24 text-center text-white">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-white/70">reveal locked</p>
+          <h2 className="mt-4 text-5xl font-black leading-none tracking-tighter">
+            {r.completedCount}/{r.required} finished.
+          </h2>
+          <p className="mx-auto mt-4 max-w-[265px] text-sm font-bold text-white/75">
+            The reveal unlocks when {r.required} friends finish answering and guessing. Nudge the group.
+          </p>
+        </div>
+        <BottomSheet>
+          <div className="rounded-[26px] bg-[#f4f1fa] p-4 text-black">
+            <p className="text-xs font-black uppercase tracking-widest text-black/35">progress</p>
+            <p className="mt-2 text-xl font-black">
+              {r.completedCount} of {r.required} done
+            </p>
+          </div>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <Button
+              tone="lime"
+              onClick={() => {
+                navigator.clipboard?.writeText(shareUrl(app.activeGroupId));
+                showToast("Link copied");
+              }}
+            >
+              Copy invite
+            </Button>
+            <Button tone="primary" onClick={refresh}>
+              Check again
+            </Button>
+          </div>
+        </BottomSheet>
+      </Phone>
+    );
+  }
+
+  const cards = realReady ? real.cards : SEEDED;
+  const card = cards[Math.min(pos, cards.length - 1)];
+  const cardNumber = Math.min(pos + 1, cards.length);
+  const atGate = !app.signedUp && pos >= 2 && pos < cards.length;
+  const atEnd = pos >= cards.length - 1;
   return (
     <Phone mood={card.mood}>
       <BigRevealCard card={card} />
       <BottomSheet>
         <div className="flex gap-1">
-          {Array.from({ length: 10 }).map((_, i) => (
+          {cards.map((_, i) => (
             <div key={i} className={cx("h-2 flex-1 rounded-full", i <= pos ? "bg-[#ff4f9a]" : "bg-black/10")} />
           ))}
         </div>
         <div className="mt-5 rounded-[26px] bg-[#f4f1fa] p-4">
-          <p className="text-xs font-black uppercase tracking-widest text-black/35">reveal sequence</p>
-          <p className="mt-2 text-sm font-black">Card {cardNumber} of 10 · auto-advancing Wrapped-style moment</p>
+          <p className="text-xs font-black uppercase tracking-widest text-black/35">
+            {realReady ? "live reveal" : "reveal sequence"}
+          </p>
+          <p className="mt-2 text-sm font-black">
+            Card {cardNumber} of {cards.length} ·{" "}
+            {realReady ? "from your group's real answers" : "auto-advancing Wrapped-style moment"}
+          </p>
           <p className="mt-1 truncate text-xs font-bold text-black/45">{REF_URL}</p>
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3">

@@ -5,6 +5,47 @@ Newest entry on top.
 
 ---
 
+## Chunk 3 — Real participants in Guess, computed insights in Reveal, 1:1/Group mode
+
+### Goal
+Make the real game real: guess actual joined participants, show insights computed from real
+answers/guesses, and let the host pick 1:1 vs Group mode (with matching unlock thresholds).
+
+### Supabase status
+- **Schema applied** to `lgzfptunoyljwyucishq` (4 tables live; PostgREST cache reloaded via `NOTIFY pgrst`).
+- Access token persisted to `~/.zshenv` (`SUPABASE_ACCESS_TOKEN`) for future migrations.
+- **Verified anon CRUD** (the app's exact path, publishable key, under RLS): group/participant/answer/guess inserts → 201, read-back correct, cascade delete → 204.
+
+### Files changed
+- `src/components/mutuals/screens/Create.jsx` — **C**: 1:1 vs Group toggle; stores `groupMode` + upserts the backend group.
+- `src/components/mutuals/screens/Guess.jsx` — **A**: targets real joined participants (excludes self), cycles through them using the same options as Answer (so guesses are scorable); waiting/invite state when alone; **seeded Karan fallback only when there's no real group data / solo demo**.
+- `src/components/mutuals/screens/Reveal.jsx` — **B**: fetches `getInsights(activeGroupId)`; shows **real computed cards** when readiness is unlocked; "X/N finished" locked state otherwise; seeded cards only as fallback / solo demo. Card UI + signup gate unchanged.
+
+### User-facing behavior changed
+- Create lets you choose **1:1 ("Who knows who better?")** or **Group ("Who actually knows the group?")**.
+- Real groups: Guess shows real friends; Reveal shows insights built from real answers; reveal unlocks at **2 completed (duo)** / **3 completed (group)**.
+- Solo-demo path (the "Try solo demo" button) is **unchanged** — seeded Karan + seeded 10 cards, full walkthrough.
+
+### Verified
+- `npm run build` → success (541 kB, size warning only). Supabase anon CRUD via REST (above). Insight engine math (prior Chunk-1 node test).
+
+### Known risks
+- **Dev server must be restarted** to load `.env.local` (Vite reads env at startup) — until then the app uses the localStorage fallback.
+- Real-group Reveal not visually verified end-to-end (needs 2–3 real participants on separate devices). Logic + data path are verified.
+- Single-user "Create" path now intentionally **waits at Guess** ("waiting for friends"); use **Try solo demo** for a solo walkthrough.
+- Guess currently captures **q1 only** per target (sparse but scorable); "Unlock 7 more" label is literal even when there are fewer real cards; permissive RLS (anon all) — demo-grade.
+- No realtime — Guess/Reveal have a "Check again" button to re-fetch.
+
+### What Codex should review next
+- Async fetch in `Guess`/`Reveal` (effect deps, the `alive`-less promise→setState, "Check again" path).
+- `realReady` gating + the seeded-fallback boundary (`hasRealData`, `soloDemo`).
+- `chooseMode` upsert overwriting `created_by`; gate behavior when real cards < 3.
+
+### Suggested next task
+Participant nudge/notify + multi-question guessing (more signal for insights), then the share-card image and the post-reveal Eazo vote prompt.
+
+---
+
 ## Chunk 2 — Real Supabase + GitHub infrastructure
 
 ### Supabase status
