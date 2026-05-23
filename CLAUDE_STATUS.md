@@ -5,6 +5,36 @@ Newest entry on top.
 
 ---
 
+## Chunk 2 — Real Supabase + GitHub infrastructure
+
+### Supabase status
+- Project **Mutuals** (ref `lgzfptunoyljwyucishq`, us-west-1) connected via `.env.local`.
+- Using the new **publishable** key (`sb_publishable_…`) as `VITE_SUPABASE_ANON_KEY` (browser-safe with RLS). The **secret** key is NOT used or stored anywhere.
+- Key + URL **validated** against the live REST API — a `groups` query authenticated and returned PostgREST `PGRST205` (table missing), not `401`, so the credential is good.
+- **Schema NOT yet applied** — `public.groups` does not exist. Blocked: no Supabase access token locally, CLI not logged in, `psql` absent. Needs `supabase/schema.sql` run in the SQL Editor (or a token).
+
+### GitHub status
+- Private repo created + pushed: **https://github.com/armeen55/Mutuals** (branch `main` → `origin/main`).
+- Baseline commit `284f3af` (58 files). `.env.local` is gitignored and was NOT committed; verified no keys/project-ref in tracked source.
+- Commit author name passed per-command ("Armeen" + existing global email); no persistent git-config change.
+
+### Files changed
+- New: `.env.local` (gitignored — real URL + publishable key), `.gitignore`.
+- Initialized git, baseline commit, remote `origin`. No app/source code changed this chunk.
+
+### What was verified
+- Publishable key authenticates to PostgREST (valid). `.env.local` excluded from git. Push succeeded.
+
+### Known risks
+- Real multiplayer is **inactive until the schema is applied** (capture calls fail silently; app keeps running on the localStorage fallback).
+- The **secret** key was visible in chat earlier — rotate it in Supabase → API Keys if this transcript is shared.
+- Permissive RLS (anon all) — demo-grade. Commit email may not match GitHub account `armeen55` (cosmetic attribution).
+
+### Next recommended task
+Apply `supabase/schema.sql`, then run functional verification (create → join → answer → guess → confirm rows via REST), then wire `getInsights()` into the Reveal screen.
+
+---
+
 ## Chunk 1 — Real multiplayer data layer + insight engine (Supabase-ready, localStorage fallback)
 
 ### 1. Goal of the edit
