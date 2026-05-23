@@ -21,8 +21,8 @@ Vercel "Deployment Blocked" was **not** the Hobby plan — it was the **git comm
 ### Files changed
 `mutualsApi.js`, screens `Answer/Guess/Home/Create/Share`, `MutualsMergedFlow.jsx`. Local git author config.
 
-### Build
-`npm run build` → success (size warning only). Deploy: push as `armeen55` → git auto-deploy.
+### Build & deploy — FIXED + LIVE
+`npm run build` → success. Root cause of "Deployment Blocked" was the **commit-author email** (`iranopedia5@gmail.com`/Persian5, not a Vercel member) — on Hobby + private repo Vercel blocks deploys whose author isn't a member. Fix: set **local** repo author to `armeen55 <278262837+armeen55@users.noreply.github.com>`. Also reconnected the GitHub integration (I'd disconnected it in Chunk 8). Push as `armeen55` → deploy **READY** (no block). Verified live: https://mutuals-dun.vercel.app serves the Chunk 8+9 build (markers present), Supabase baked in, `/` + `/?debug=1` → 200. **Going forward: keep commits authored as `armeen55`; push → auto-deploys Ready.**
 
 ### Exact 2-phone test (after deploy is Ready)
 1. Phone A → https://mutuals-dun.vercel.app → **Create a room** → **pick 1:1** (for a 2-phone test! Group needs 3 to unlock) → Share invite.
