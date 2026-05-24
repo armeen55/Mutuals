@@ -49,13 +49,16 @@ export default function Home({ next, go }) {
       <div
         className="relative z-10 flex flex-1 flex-col px-6 text-[#17112B]"
         style={{
-          paddingTop: "clamp(36px, 7svh, 70px)",
+          paddingTop: "clamp(28px, 5svh, 56px)",
           paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + clamp(18px, 4svh, 32px))",
         }}
       >
-        {/* Zone 1 — brand */}
-        <div className="text-center" style={{ marginBottom: "clamp(20px, 5svh, 48px)" }}>
-          <h1 className="font-black leading-none tracking-tighter" style={{ fontSize: "clamp(3.4rem, 14.5vw, 5rem)" }}>
+        {/* upper framing (smaller, so the cluster sits in the upper-middle) */}
+        <div style={{ flexGrow: 0.7 }} />
+
+        {/* brand */}
+        <div className="text-center">
+          <h1 className="font-black leading-none tracking-tighter" style={{ fontSize: "clamp(4rem, 15vw, 5.5rem)" }}>
             MUTUALS
           </h1>
           <p className="mt-2 font-bold text-black/55" style={{ fontSize: "clamp(1rem, 4.4vw, 1.2rem)" }}>
@@ -63,17 +66,10 @@ export default function Home({ next, go }) {
           </p>
         </div>
 
-        {/* Zone 2 — payoff preview, centered in the middle */}
-        <div className="grid flex-1 place-items-center">
-          <div className="mx-auto max-w-[320px] rounded-[24px] bg-white/70 px-5 py-4 text-center shadow-sm">
-            <p className="text-[11px] font-black uppercase tracking-widest text-[#6B2CFF]">tonight's receipts</p>
-            <p className="mt-1.5 text-sm font-bold leading-snug text-black/70">
-              Who knows who, who missed what, and who's secretly paying attention.
-            </p>
-          </div>
-        </div>
+        {/* modest gap so logo + actions meet near the middle */}
+        <div style={{ height: "clamp(26px, 5svh, 56px)" }} />
 
-        {/* Zone 3 — action */}
+        {/* actions */}
         <div className="space-y-3">
           <button
             onClick={() => startRoom("duo")}
@@ -110,13 +106,19 @@ export default function Home({ next, go }) {
             <UserPlus className="h-5 w-5" /> Join a room
           </button>
 
+          <p className="px-2 pt-1 text-center text-xs font-bold leading-relaxed text-black/45">
+            Answer about yourself. Guess your friends. Reveal the receipts.
+          </p>
           <button
             onClick={() => setHow(true)}
-            className="mx-auto block pt-1 text-center text-xs font-black uppercase tracking-widest text-black/45 underline-offset-4 hover:underline"
+            className="mx-auto block text-center text-xs font-black uppercase tracking-widest text-black/45 underline-offset-4 hover:underline"
           >
             How it works
           </button>
         </div>
+
+        {/* lower framing */}
+        <div style={{ flexGrow: 1 }} />
       </div>
 
       {how && <HowItWorks onClose={() => setHow(false)} />}

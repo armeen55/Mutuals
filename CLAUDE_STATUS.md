@@ -5,6 +5,28 @@ Newest entry on top.
 
 ---
 
+## Chunk 20B — Home + 1:1 Create spacing correction (BUILD + PUSH)
+
+### Goal
+Spacing-only fix on two screens. No logic/schema/group-Create changes.
+
+### Home (`Home.jsx`)
+- **Removed the floating "tonight's receipts" preview card** and its middle zone (the dead-space culprit).
+- Rebalanced vertical rhythm: the brand (MUTUALS `clamp(4rem,15vw,5.5rem)` + subtitle `mt-2`) and the CTA stack are now a **centered cluster** (weighted spacers: `flexGrow 0.7` top / `1` bottom → logo sits upper-middle, actions rise to meet it) with only a modest `clamp(26px,5svh,56px)` gap between them — no empty desert.
+- Restored the support line **"Answer about yourself. Guess your friends. Reveal the receipts."** below Join, with **How it works** below it (both clear of the safe area). Mode cards / Join / typography unchanged.
+
+### Create — 1:1 only (`Create.jsx`)
+- For `mode === "duo"` the header now `flex flex-1 flex-col justify-end` (bottom-aligned just above the sheet, `paddingTop clamp(40px,6svh,64px)` + `paddingBottom clamp(16px,3svh,28px)`) so the title/subcopy drop **lower** and the big empty gap before the sheet is gone; duo sheet uses the **`compact`** variant.
+- **Group Create is untouched** (top-aligned header, `standard` sheet, same copy + unlock rule).
+
+### Files changed
+`screens/Home.jsx`, `screens/Create.jsx`. **Untouched:** all logic, Supabase schema, group Create, other screens, shared components.
+
+### Build
+One `npm run build` → green (2230 modules, ~371ms). Sized for 390×844 with no scroll; nothing clipped by the bottom bar. No manual preview per request.
+
+---
+
 ## Chunk 20 — Mobile spacing + invite-lobby conversion pass (BUILD + PUSH)
 
 ### Goal
