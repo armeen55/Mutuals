@@ -1,13 +1,10 @@
 import { Trophy, HeartCrack, Eye, Heart, MessageCircle, Sparkles, Flame, Users } from "lucide-react";
-import { getQuestion, fillName } from "../data/questions";
+import { getQuestion, fillName, spiceScore } from "../data/questions";
 
 // bundle = { group:{id,mode}, participants:[{id,displayName}], answers:{[pid]:{qid:idx}},
 //            guesses:{[guesserId]:{[targetId]:{qid:idx}}}, completed:{[pid]:bool} }
 
 const pct = (x) => Math.round(x * 100);
-
-// Lead the Receipts/miss card with the spiciest question available, not the first.
-const SPICY_ORDER = ["q3", "q1", "q2", "q8", "q4", "q5", "q6", "q7"];
 
 function card(id, label, stat, headline, detail, accent, icon, mood, shareText) {
   return { id, label, stat, headline, detail, accent, icon, mood, shareText: shareText || headline };
@@ -142,10 +139,12 @@ function duoReceipt(participants, answers, guesses) {
       if (g.id === t.id) continue;
       const truth = answers[t.id] || {};
       const guess = (guesses[g.id] || {})[t.id] || {};
-      for (const qid of SPICY_ORDER) {
-        if (truth[qid] != null && guess[qid] != null && guess[qid] !== truth[qid] && getQuestion(qid)) {
-          return { guesser: nameOf(participants, g.id), target: nameOf(participants, t.id), qid, guessIdx: guess[qid], realIdx: truth[qid] };
-        }
+      const misses = Object.keys(guess)
+        .filter((qid) => truth[qid] != null && guess[qid] !== truth[qid] && getQuestion(qid))
+        .sort((a, b) => spiceScore(getQuestion(b)) - spiceScore(getQuestion(a)));
+      if (misses.length) {
+        const qid = misses[0];
+        return { guesser: nameOf(participants, g.id), target: nameOf(participants, t.id), qid, guessIdx: guess[qid], realIdx: truth[qid] };
       }
     }
   }
@@ -174,15 +173,12 @@ function groupReceipt(participants, answers, guesses) {
         }
       }
       if (total >= 2 && wrong > 0) {
-        const rank = SPICY_ORDER.indexOf(qid);
-        const better =
-          !best ||
-          wrong > best.wrongCount ||
-          (wrong === best.wrongCount && rank !== -1 && (best.rank === -1 || rank < best.rank));
+        const sp = spiceScore(getQuestion(qid));
+        const better = !best || wrong > best.wrongCount || (wrong === best.wrongCount && sp > best.sp);
         if (better) {
           const wrongIdxs = Object.keys(tally);
           const guessIdx = Number(wrongIdxs.reduce((hi, k) => (tally[k] > tally[hi] ? k : hi), wrongIdxs[0]));
-          best = { targetId: t.id, qid, wrongCount: wrong, total, guessIdx, realIdx, rank };
+          best = { targetId: t.id, qid, wrongCount: wrong, total, guessIdx, realIdx, sp };
         }
       }
     }

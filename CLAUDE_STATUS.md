@@ -5,6 +5,30 @@ Newest entry on top.
 
 ---
 
+## Chunk 22 — Question Bank 3.0 + variable episode length (BUILD + PUSH)
+
+### Variable question count (kills the hardcoded 6)
+- `roomQuestionCount(groupId)` returns a **deterministic 5–8** per room (seeded apart from the content shuffle). `selectQuestions(groupId, mode, count?, opts?)` defaults to it, so a room runs 5–8 questions and a new room id varies both the set and the length. Answer / Guess / Reveal already derive everything from `selectQuestions(...).length`, so no per-screen hardcoding remains and all three stay in lockstep (scoring is qid-based and unaffected).
+
+### Bank 3.0 (`data/questions.js`)
+- Rewrote the bank to a **group-chat game** voice (roast / receipts / status / ego / flirt / money / tension), dropping the therapy-adjacent/AI-ish tone. Forbidden phrases (love language, attachment, healing, therapy, safe space, "dog", zombie…) scrubbed and guarded by the validator.
+- Rich metadata per question: `pack, lean, slot, heat (1–5), audience (all|adult), shareable, prompt, about, options`.
+- **96 playable** + **16 namepick** (metadata-only, `enabled:false`, excluded from selection until name-pick UI exists). Two lanes: **64 all-audience** (works HS→adult, savage but clean) + **32 adult after-dark** (dating/party/money/status; excluded from default rooms via the audience filter).
+- Distribution: duo 20 / group 42 / both 34 · heat4 59 / heat5 7 · shareable 89 · sincere 6 · soft (quiet/misunderstood/etc.) 8 · validator issues **0**.
+- **Rhythm selector**: each episode builds warmup/roast → receipt → ego/status/money → tension/flirt/party → sincere → chaos/shareable, with caps (≤2 sincere, ≤2 heat-5, ≥3 shareable) — deterministic per room, mode only re-orders (duo leads intimate, group leads social).
+- `validateQuestionBank()`, `spiceScore()`, `roomQuestionCount()` exported.
+
+### Receipt priority (`lib/insights.js`)
+- Replaced the hardcoded `SPICY_ORDER` with metadata-driven `spiceScore` (shareable + heat + slot weight). The Receipts card now features the **spiciest actual miss**; group receipts tie-break on spice. Avoids sincere unless nothing better.
+
+### Files changed
+`data/questions.js`, `lib/insights.js`. **Untouched:** answer/guess/reveal logic + components (they read `selectQuestions().length`), Supabase schema, scoring. Adult lane built but dormant (no adult-room toggle yet); namepick dormant.
+
+### Build
+One `npm run build` → green (~265ms). No manual preview per request.
+
+---
+
 ## Chunk 20D — Copy tweaks (BUILD + PUSH)
 
 - Home subtitle: "Find out who knows who." → **"Prove which of your friends actually knows you, and which ones are faking."** (eased the size + max-width so the longer line reads as a supporting subhead).
