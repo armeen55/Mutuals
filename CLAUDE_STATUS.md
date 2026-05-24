@@ -5,6 +5,43 @@ Newest entry on top.
 
 ---
 
+## Chunk 16 — Brand, mode separation, reveal artifact, social-graph loop (BUILD + PUSH)
+
+### Goal
+Make MUTUALS feel like a real mobile social game (Jackbox + Wrapped + group-chat receipts), not a product demo. Built on Chunk 15 — round logic, late joiners, answer editing, waiting status, partial reveal, aftermath all preserved. No schema change, no deploy change, engine reused (added one pure helper).
+
+### 1. Home is now a game landing (`Home.jsx`)
+- Dark base, big **MUTUALS** wordmark (lime "U"), "Find out who knows who." Two huge doors — **Challenge 1 Friend** (purple, 1:1) and **Start Group Room** (pink, group) — plus **Join a Room** (→ Join). Tiny helper "Answer about yourself. Guess your friends. Reveal the receipts." and a **How it works** bottom-sheet (3 short steps). Removed "async group chat test," the 3-step card grid, and all PM language.
+
+### 2. 1:1 vs Group are different products (`Create.jsx`)
+- The mode now defines the screen. **1:1** (`dark`): "1:1 showdown / Prove who knows who better." → CTA **Send challenge**. **Group** (`purple`): "group chaos / Put the group chat on the record." + "Group unlocks at 3 finished. Bigger groups make better receipts." → CTA **Send to group chat**. Segmented 1:1/Group toggle stays; the primary CTA shares the link **and** advances.
+
+### 3. Polished Answer/Guess (`Answer.jsx`, `Guess.jsx`)
+- Dark/purple base + a **white question card**, big answer buttons, obvious selected state. Chunk 15 logic untouched (Answer Back button, Guess round targets / late-joiner banner / status). Verified: Answer shows "about you · 1/6" + white card.
+
+### 4. Receipts artifact (`ui/BigRevealCard.jsx`)
+- The card is now a standalone, screenshot-ready composition: `min-h-[54dvh]`, **MUTUALS** wordmark up top, big stat/headline (or the Question / Guessed / Real-answer receipts block), and a `mutuals.app · find out who knows who` watermark pinned at the bottom.
+
+### 5. Who-Knows-Who map (`Matrix.jsx` repurposed + `insights.pairScores`)
+- New pure `pairScores(bundle)` derives directed pair accuracy + best mutual pair from existing data (no schema). The old fake Matrix is now the real **"Who knows who map / The receipts, but visual."** — player chips, **best mutual pair** (lime), and a sorted **"who reads who"** list ("Alex → Sam 75%"). Graceful empty state. Verified via the live engine.
+
+### 6. Post-reveal loop
+- Reveal's last real card → **See the map** (`go("Matrix")`) → Continue → Share. **Share** CTAs: **Share the receipts** (primary) · **Run it back · new questions** (fresh room ⇒ a new deterministic 6-of-8) · **View who-knows-who map** · **Challenge a friend / a group** · Eazo. Late-joiner rematch nudge from Chunk 15 retained ("Run it back with Ava").
+
+### 7. Color / language cleanup
+- Public surfaces moved off beige/cream to the dark-navy + electric-purple + pink/lime accents palette. Scrubbed product-y words ("async / test / Wrapped-style") from reachable copy ("Wrapped-style" → "your highlight reel"). `async progress` remains only in debug-only ProgressScreen.
+
+### Files changed
+`lib/insights.js`, `screens/Home.jsx`, `screens/Create.jsx`, `screens/Answer.jsx`, `screens/Guess.jsx`, `screens/Matrix.jsx`, `screens/Reveal.jsx`, `screens/Share.jsx`, `ui/BigRevealCard.jsx`. **Untouched:** Supabase schema, deploy config, Chunk 15 round/late-join/answer-edit logic, Eazo config.
+
+### Build + verify
+One `npm run build` → green (2227 modules, ~288ms). Preview-verified: Home (dark, two doors), Create (1:1 vs Group copy distinct), Answer (dark + white card), and `pairScores`/`roomStatus`/questions via the live modules.
+
+### Smoke-test path (live)
+1. Open URL → dark Home → **Challenge 1 Friend** (or **Start Group Room**). 2. Create shows mode-specific copy → **Send challenge / Send to group chat** (shares link + advances) → name → answer 6 (Back to edit). 3. Friends join + guess (group: up to 3 targets; late joiners surface). 4. Reveal cards (Receipts artifact with watermark) → **See the map** → who-knows-who map → **Continue**. 5. **Share**: Share the receipts / Run it back · new questions / View map / Challenge.
+
+---
+
 ## Chunk 15 — Round logic, late joiners, answer editing, non-abrupt ending (BUILD + PUSH)
 
 ### Goal

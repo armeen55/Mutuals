@@ -227,7 +227,7 @@ export default function Reveal({ next, go, goSignup }) {
           </p>
           <p className="mt-2 text-sm font-black">
             Card {cardNumber} of {cards.length} ·{" "}
-            {realReady ? "from your group's real answers" : "auto-advancing Wrapped-style moment"}
+            {realReady ? "from your group's real answers" : "your highlight reel"}
           </p>
           {realReady && (
             <p className="mt-1 text-xs font-bold text-[#6b2cff]">
@@ -263,9 +263,15 @@ export default function Reveal({ next, go, goSignup }) {
               Unlock 7 more
             </Button>
           ) : atEnd ? (
-            <Button onClick={() => go("Share")} tone="primary">
-              Finish
-            </Button>
+            realReady ? (
+              <Button onClick={() => go("Matrix")} tone="primary">
+                See the map
+              </Button>
+            ) : (
+              <Button onClick={() => go("Share")} tone="primary">
+                Finish
+              </Button>
+            )
           ) : (
             <Button onClick={() => setPos(pos + 1)} tone="primary">
               Next card

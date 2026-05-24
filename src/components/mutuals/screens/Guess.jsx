@@ -262,7 +262,9 @@ function RealGuess({ next, targets, questions, isGroup, lateJoiners = [], onAddL
         <div className="mt-3 flex justify-center">
           <Avatar member={member} size="lg" />
         </div>
-        <h2 className="mt-3 break-words text-3xl font-black leading-[0.95]">{fillName(q.about, member.name)}</h2>
+        <div className="mt-4 rounded-[28px] bg-white p-5 shadow-xl">
+          <h2 className="break-words text-2xl font-black leading-tight text-black">{fillName(q.about, member.name)}</h2>
+        </div>
       </div>
       <BottomSheet tall>
         {isGroup && (

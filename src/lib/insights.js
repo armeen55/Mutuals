@@ -192,6 +192,38 @@ function groupReceipt(participants, answers, guesses) {
     : null;
 }
 
+// Directed pair scores + best mutual pair, for the "who knows who" map.
+// Pure: derived from the existing bundle (no schema change).
+export function pairScores(bundle) {
+  const { participants = [], answers = {}, guesses = {} } = bundle || {};
+  if (participants.length < 2) return { players: participants, edges: [], best: null };
+  const acc = buildMatrix(participants, answers, guesses);
+  const edges = [];
+  for (const g of participants) {
+    for (const t of participants) {
+      if (g.id === t.id) continue;
+      const r = acc[g.id]?.[t.id];
+      if (r) {
+        edges.push({
+          from: g.id,
+          fromName: nameOf(participants, g.id),
+          to: t.id,
+          toName: nameOf(participants, t.id),
+          acc: r.acc,
+          correct: r.correct,
+          total: r.total,
+        });
+      }
+    }
+  }
+  edges.sort((a, b) => b.acc - a.acc);
+  const bp = bestPair(participants, acc);
+  const best = bp
+    ? { a: bp.a, b: bp.b, aName: nameOf(participants, bp.a), bName: nameOf(participants, bp.b), mutual: bp.mutual }
+    : null;
+  return { players: participants, edges, best };
+}
+
 // -------------------------------- DUO ---------------------------------------
 // Best-friend / couple showdown.
 function duoDeck(participants, answers, guesses, acc) {

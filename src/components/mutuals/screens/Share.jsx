@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Share2, Users, Trophy, RotateCcw } from "lucide-react";
+import { Share2, Users, Trophy, RotateCcw, Map as MapIcon } from "lucide-react";
 import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
 import Button from "../ui/Button";
@@ -83,7 +83,12 @@ export default function Share({ go }) {
         </div>
         <div className="mt-3">
           <Button tone="lime" icon={RotateCcw} onClick={() => newRoom(app.groupMode || "group")}>
-            {late ? `Run it back with ${late.displayName}` : "Run it back with this room"}
+            {late ? `Run it back with ${late.displayName}` : "Run it back · new questions"}
+          </Button>
+        </div>
+        <div className="mt-3">
+          <Button tone="white" icon={MapIcon} onClick={() => go("Matrix")}>
+            View who-knows-who map
           </Button>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-3">

@@ -46,12 +46,14 @@ export default function Answer({ next }) {
   };
 
   return (
-    <Phone mood="cream">
-      <div className="relative z-10 px-6 pt-16 text-center">
-        <p className="text-xs font-black uppercase tracking-[0.25em] text-black/50">
-          your answers · {qi + 1}/{questions.length}
+    <Phone mood="dark">
+      <div className="relative z-10 px-6 pt-16">
+        <p className="text-center text-xs font-black uppercase tracking-[0.25em] text-white/60">
+          about you · {qi + 1}/{questions.length}
         </p>
-        <h2 className="mt-3 text-4xl font-black leading-none">{q.prompt}</h2>
+        <div className="mt-4 rounded-[28px] bg-white p-6 text-center shadow-xl">
+          <h2 className="text-3xl font-black leading-tight text-black">{q.prompt}</h2>
+        </div>
       </div>
       <BottomSheet tall>
         <Progress step={4} />
