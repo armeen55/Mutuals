@@ -4,6 +4,7 @@ import Phone from "../ui/Phone";
 import { ensureGroup, saveMutualsState, newRoomId } from "../../../utils/mutualsStorage";
 import { captureGroup } from "../../../lib/mutualsApi";
 import { cx, showToast } from "../../../utils/ui";
+import { track } from "../../../utils/analytics";
 
 // Pull a room id out of a pasted MUTUALS invite link (or a raw id).
 function parseInvite(text) {
@@ -36,8 +37,10 @@ export default function Home({ next, go }) {
       revealUnlocked: false,
       completedSteps: [],
       soloDemo: false,
+      roundsByGroup: {},
     });
     captureGroup();
+    track("room_created", { mode });
     next();
   };
 
@@ -163,7 +166,7 @@ function JoinPanel({ onClose, go }) {
       return;
     }
     ensureGroup(id);
-    saveMutualsState({ selfAnswers: {}, guesses: {}, revealUnlocked: false, completedSteps: [], soloDemo: false });
+    saveMutualsState({ selfAnswers: {}, guesses: {}, revealUnlocked: false, completedSteps: [], soloDemo: false, roundsByGroup: {} });
     go("Join");
   };
   return (

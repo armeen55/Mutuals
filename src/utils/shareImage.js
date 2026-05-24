@@ -204,77 +204,94 @@ export async function createRevealShareImage(card, { index = 0 } = {}) {
   return toBlob(canvas);
 }
 
-// ---- Map image ----
+// ---- Map image (friendly cream, matches Home/Create) ----
 export async function createMapShareImage(graph, _opts = {}) {
-  const { canvas, ctx } = baseCanvas();
-  const cx = 90;
-  const cy = 300;
-  const cw = W - 180;
-  const ch = 1360;
-  const pad = 70;
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#FFF3DF";
+  ctx.fillRect(0, 0, W, H);
+  confetti(ctx);
+
+  ctx.fillStyle = "#17112B";
+  ctx.textAlign = "center";
+  ctx.font = `900 60px ${FONT}`;
+  ctx.fillText("MUTUALS", W / 2, 150);
+
+  const cx = 80;
+  const cy = 280;
+  const cw = W - 160;
+  const ch = 1390;
+  const pad = 60;
   const innerW = cw - pad * 2;
 
-  ctx.fillStyle = "#1f1736";
+  // white content card on cream
+  ctx.fillStyle = "#ffffff";
   roundRect(ctx, cx, cy, cw, ch, 56);
   ctx.fill();
 
   ctx.textAlign = "left";
-  ctx.fillStyle = "rgba(255,255,255,0.6)";
+  ctx.fillStyle = "#7B3CFF";
   ctx.font = `900 30px ${FONT}`;
-  ctx.fillText("WHO KNOWS WHO MAP", cx + pad, cy + pad + 30);
-  ctx.fillStyle = "#ffffff";
-  ctx.font = `900 80px ${FONT}`;
-  ctx.fillText("The receipts,", cx + pad, cy + pad + 130);
-  ctx.fillText("but visual.", cx + pad, cy + pad + 215);
+  ctx.fillText("THE GROUP-CHAT MAP", cx + pad, cy + pad + 30);
+  ctx.fillStyle = "#17112B";
+  ctx.font = `900 90px ${FONT}`;
+  ctx.fillText("Who knows", cx + pad, cy + pad + 150);
+  ctx.fillText("who?", cx + pad, cy + pad + 240);
 
-  let y = cy + pad + 320;
+  let y = cy + pad + 350;
   const best = graph && graph.best;
   if (best) {
     ctx.fillStyle = "#FFD23F";
-    roundRect(ctx, cx + pad, y, innerW, 170, 28);
+    roundRect(ctx, cx + pad, y, innerW, 180, 28);
     ctx.fill();
-    ctx.fillStyle = "rgba(0,0,0,0.5)";
+    ctx.fillStyle = "rgba(23,17,43,0.5)";
     ctx.font = `900 26px ${FONT}`;
-    ctx.fillText("BEST MUTUAL PAIR", cx + pad + 36, y + 50);
-    ctx.fillStyle = "#000000";
+    ctx.fillText("STRONGEST MUTUAL PAIR", cx + pad + 36, y + 50);
+    ctx.fillStyle = "#17112B";
     ctx.font = `900 56px ${FONT}`;
     ctx.fillText(`${best.aName} ↔ ${best.bName}`, cx + pad + 36, y + 118);
     ctx.font = `800 36px ${FONT}`;
-    ctx.fillText(`${Math.round(best.mutual * 100)}% mutual`, cx + pad + 36, y + 158);
-    y += 210;
+    ctx.fillText(`${Math.round(best.mutual * 100)}% mutual`, cx + pad + 36, y + 162);
+    y += 222;
   }
 
-  ctx.fillStyle = "rgba(255,255,255,0.6)";
+  ctx.fillStyle = "rgba(23,17,43,0.45)";
   ctx.font = `900 28px ${FONT}`;
   ctx.fillText("WHO READS WHO", cx + pad, y + 20);
   y += 60;
 
   const edges = (graph && graph.edges ? graph.edges : []).slice(0, 5);
   edges.forEach((e) => {
-    ctx.fillStyle = "rgba(255,255,255,0.1)";
+    ctx.fillStyle = "#F3EFFF";
     roundRect(ctx, cx + pad, y, innerW, 96, 22);
     ctx.fill();
-    // score bar
-    const barW = (innerW - 72) * Math.max(0.06, e.acc);
-    ctx.fillStyle = "rgba(124,44,255,0.55)";
-    roundRect(ctx, cx + pad, y, Math.max(60, barW), 96, 22);
+    const barW = innerW * Math.max(0.08, e.acc);
+    ctx.fillStyle = "rgba(107,44,255,0.2)";
+    roundRect(ctx, cx + pad, y, Math.max(70, barW), 96, 22);
     ctx.fill();
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = "#17112B";
     ctx.font = `900 42px ${FONT}`;
-    ctx.fillText(`${e.fromName}  →  ${e.toName}`, cx + pad + 36, y + 60);
+    ctx.fillText(`${e.fromName}  →  ${e.toName}`, cx + pad + 32, y + 60);
     ctx.textAlign = "right";
-    ctx.fillText(`${Math.round(e.acc * 100)}%`, cx + cw - pad - 36, y + 60);
+    ctx.fillText(`${Math.round(e.acc * 100)}%`, cx + cw - pad - 32, y + 60);
     ctx.textAlign = "left";
     y += 116;
   });
 
   if (!edges.length) {
-    ctx.fillStyle = "rgba(255,255,255,0.6)";
+    ctx.fillStyle = "rgba(23,17,43,0.55)";
     ctx.font = `800 40px ${FONT}`;
-    ctx.fillText("Not enough guesses yet. Run it back.", cx + pad, y + 40);
+    ctx.fillText("Not enough guesses yet.", cx + pad, y + 40);
+    ctx.fillText("Run it back with more people.", cx + pad, y + 95);
   }
 
-  footer(ctx);
+  ctx.fillStyle = "rgba(23,17,43,0.55)";
+  ctx.textAlign = "center";
+  ctx.font = `800 34px ${FONT}`;
+  ctx.fillText(`Who knows who? · ${origin()}`, W / 2, H - 80);
+
   return toBlob(canvas);
 }
 

@@ -154,7 +154,7 @@ export function ensureGroup(id) {
     ? s.createdGroups
     : [
         ...(s.createdGroups || []),
-        { id: gid, name: prettyName(gid), createdBy: "Armeen", createdAt: Date.now() },
+        { id: gid, name: prettyName(gid), createdBy: s.currentUserName || "Host", createdAt: Date.now() },
       ];
   saveMutualsState({ createdGroups, activeGroupId: gid });
   return gid;
@@ -163,8 +163,8 @@ export function ensureGroup(id) {
 // Real, openable share link (query param so invite detection works on paste).
 export function shareUrl(groupId) {
   const id = groupId || getMutualsState().activeGroupId || "chaotic-six";
-  if (typeof window === "undefined") return `mutuals.app/g/${id}?ref=EAZO-ARMEEN`;
-  return `${window.location.origin}${window.location.pathname}?group=${id}&ref=EAZO-ARMEEN`;
+  if (typeof window === "undefined") return `mutuals.app/g/${id}?ref=eazo`;
+  return `${window.location.origin}${window.location.pathname}?group=${id}&ref=eazo`;
 }
 
 // Read an invite group id from ?group=... or #/g/...

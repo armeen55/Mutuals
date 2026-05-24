@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Share2, ChevronLeft, Lock, Copy, Image as ImageIcon, Link2, MoreHorizontal } from "lucide-react";
 import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
@@ -14,6 +14,7 @@ import { getInsights, captureGroup } from "../../../lib/mutualsApi";
 import { roomStatus } from "../../../lib/insights";
 import { cx, showToast, shareOrCopy } from "../../../utils/ui";
 import { createRevealShareImage, shareImageBlob } from "../../../utils/shareImage";
+import { track } from "../../../utils/analytics";
 
 // Seeded fallback order (skips index 3 — the "Full Report" gate card).
 const SEEDED = [0, 1, 2, 4, 5, 6, 7, 8, 9].map((i) => insightCards[i]);
@@ -23,6 +24,7 @@ export default function Reveal({ next, go, goSignup }) {
   const [real, setReal] = useState(null); // { readiness, cards, bundle }
   const [loading, setLoading] = useState(!app.soloDemo);
   const [pos, setPos] = useState(0);
+  const viewedRef = useRef(false);
   const myPid = (app.participantIdsByGroup || {})[app.activeGroupId];
   const need = useMemo(() => selectQuestions(app.activeGroupId).length, [app.activeGroupId]);
 
@@ -88,6 +90,13 @@ export default function Reveal({ next, go, goSignup }) {
 
   const unlocked = !app.soloDemo && real && real.readiness?.unlocked;
   const realReady = unlocked && real.cards?.length > 0;
+  useEffect(() => {
+    if (realReady && !viewedRef.current) {
+      viewedRef.current = true;
+      track("reveal_viewed");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [realReady]);
 
   // Real room still loading.
   if (!app.soloDemo && app.activeGroupId && loading && !real) {
@@ -222,6 +231,7 @@ export default function Reveal({ next, go, goSignup }) {
   const mode = real?.bundle?.group?.mode || app.groupMode || "duo";
   const advance = () => (atEnd ? (realReady ? go("Matrix") : go("Share")) : setPos(pos + 1));
   const shareImage = async () => {
+    track("share_image_clicked");
     try {
       const blob = await createRevealShareImage(card, { index: pos });
       const res = await shareImageBlob({ blob, text: card.shareText || card.headline, url: roomUrl, fileName: "mutuals-reveal.png" });

@@ -9,6 +9,7 @@ import { saveMutualsState, getMutualsState, withStep } from "../../../utils/mutu
 import { submitAnswers } from "../../../lib/mutualsApi";
 import { cx, showToast } from "../../../utils/ui";
 import { selectQuestions } from "../../../data/questions";
+import { track } from "../../../utils/analytics";
 
 export default function Answer({ next }) {
   const app = useMutuals();
@@ -37,6 +38,7 @@ export default function Answer({ next }) {
     try {
       await submitAnswers(getMutualsState().selfAnswers);
       saveMutualsState({ completedSteps: withStep("Answer") });
+      track("answers_saved");
       showToast("Answers saved");
       next();
     } catch {

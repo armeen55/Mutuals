@@ -6,6 +6,7 @@ import { useMutuals } from "../useMutuals";
 import { saveMutualsState, withStep, getMutualsState, repairParticipantId } from "../../../utils/mutualsStorage";
 import { captureJoin, getBundle } from "../../../lib/mutualsApi";
 import { showToast } from "../../../utils/ui";
+import { track } from "../../../utils/analytics";
 
 export default function JoinWall({ go }) {
   const app = useMutuals();
@@ -30,6 +31,7 @@ export default function JoinWall({ go }) {
     if (!n) return;
     saveMutualsState({ currentUserName: n, completedSteps: withStep("Join") });
     captureJoin(n);
+    track("joined_room");
     showToast(`Welcome, ${n}`);
     const s = getMutualsState();
     if (!s.selfAnswers || Object.keys(s.selfAnswers).length === 0) go("Answer");

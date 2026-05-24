@@ -8,6 +8,7 @@ import { shareUrl, saveMutualsState, newRoomId, ensureGroup } from "../../../uti
 import { getInsights, captureGroup } from "../../../lib/mutualsApi";
 import { cx, shareOrCopy, showToast } from "../../../utils/ui";
 import { createRevealShareImage, shareImageBlob } from "../../../utils/shareImage";
+import { track } from "../../../utils/analytics";
 import { EAZO_VOTE_URL } from "../../../config";
 
 // Only treat the vote CTA as live once a real link replaces the placeholder.
@@ -30,6 +31,9 @@ export default function Share({ go }) {
     ["receipts", "power", "mystery", "winner"].map((id) => cards.find((c) => c.id === id)).find(Boolean) ||
     cards[0] ||
     null;
+  const roomMode = data?.bundle?.group?.mode || app.groupMode || "duo";
+  const HERO_LABELS = { receipts: "receipt of the round", power: "strongest mutual", mystery: "mystery friend", winner: "top knower" };
+  const heroLabel = (hero && HERO_LABELS[hero.id]) || "result";
   const myPid = (app.participantIdsByGroup || {})[app.activeGroupId];
   const round = (app.roundsByGroup || {})[app.activeGroupId] || null;
   const lateJoiners = round ? participants.filter((p) => p.id !== myPid && !round.known.includes(p.id)) : [];
@@ -45,13 +49,16 @@ export default function Share({ go }) {
       revealUnlocked: false,
       completedSteps: [],
       soloDemo: false,
+      roundsByGroup: {},
     });
     captureGroup();
-    showToast(mode === "duo" ? "New 1:1 room" : "New group room");
+    track("rematch_clicked", { mode, from: "share" });
+    showToast(mode === "duo" ? "New 1:1 room ready" : "New group room ready");
     go("Create");
   };
 
   const shareImage = async () => {
+    track("share_image_clicked", { from: "share" });
     try {
       if (!hero) throw new Error("no card");
       const blob = await createRevealShareImage(hero, { index: 0 });
@@ -83,7 +90,7 @@ export default function Share({ go }) {
         <div className="text-center">
           <p className="text-xs font-black uppercase tracking-[0.25em] text-white/60">that was fun</p>
           <h2 className="mt-2 font-black leading-[0.95] tracking-tighter" style={{ fontSize: "clamp(2rem, 8.5vw, 3rem)" }}>
-            The receipts are in.
+            {roomMode === "duo" ? "The verdict is in." : "The receipts are in."}
           </h2>
           <p className="mx-auto mt-2 max-w-[280px] text-sm font-bold text-white/60">Share this before they deny it.</p>
         </div>
@@ -92,7 +99,7 @@ export default function Share({ go }) {
           <div className="rounded-[26px] bg-[#7B3CFF] p-5 shadow-xl">
             <div className="flex items-center gap-2 text-white/70">
               <Trophy className="h-4 w-4" />
-              <p className="text-[11px] font-black uppercase tracking-widest">top knower</p>
+              <p className="text-[11px] font-black uppercase tracking-widest">{heroLabel}</p>
             </div>
             <p className="mt-2 break-words text-2xl font-black leading-tight">
               {hero ? hero.headline : "Who actually knows who."}
@@ -138,7 +145,7 @@ export default function Share({ go }) {
 
         <div className="mt-2 flex items-center justify-center gap-4">
           <button onClick={() => go("Matrix")} className="flex items-center gap-1.5 text-xs font-black text-white/55">
-            <MapIcon className="h-4 w-4" /> View map
+            <MapIcon className="h-4 w-4" /> {roomMode === "duo" ? "View breakdown" : "View map"}
           </button>
           <button onClick={() => go("Home")} className="text-xs font-black text-white/45">
             Back to start
@@ -147,7 +154,7 @@ export default function Share({ go }) {
             onClick={eazoReady ? () => window.open(EAZO_VOTE_URL, "_blank", "noopener") : undefined}
             className={cx("text-xs font-black", eazoReady ? "text-[#FFD23F]" : "pointer-events-none text-white/40")}
           >
-            {eazoReady ? "Help MUTUALS win on Eazo" : "Eazo soon"}
+            {eazoReady ? "Help MUTUALS win on Eazo" : "Eazo vote link coming"}
           </button>
         </div>
       </div>

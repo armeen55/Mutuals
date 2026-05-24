@@ -5,6 +5,33 @@ Newest entry on top.
 
 ---
 
+## Chunk 19 — Replayable, viral, finished (BUILD + PUSH)
+
+### Goal
+Make MUTUALS feel like a real, replayable viral game. No schema change, no deps, no deploy change; Chunk 18 flow preserved.
+
+1. **Question bank 8 → 36** (`data/questions.js`). Same shape (`id/lean/prompt/about/options`), 4 options each, ids q1–q36 (q1–q8 unchanged). Balance: **14 duo / 14 group / 8 both**. Adult, real, slightly dangerous; no therapy/HR/filler. `selectQuestions(groupId, mode)` still serves a deterministic 6 — now from 36, so a new room id ⇒ a genuinely fresh set; the SET stays groupId-stable (scoring-safe). Added `questionCountByLean()` + `previewQuestionsForMode()`.
+2. **Duo breakdown is its own friendly screen** (`Matrix.jsx`, lavender, ink text — no "map" language): Winner · Mutual score · Biggest miss · Best read · Final verdict, with **"Share the verdict"** + **"Run it back."** Eyebrow "the 1:1 verdict", title "The verdict is in."
+3. **Group map is friendly + screenshot-worthy** (`Matrix.jsx`, cream/white cards, ink text, violet/pink/yellow): "Who knows who? / The group-chat map," strongest-pair badge, top-5 directed reads with bars, the SVG graph on a white card. Empty state: "Not enough guesses to draw the map yet. Run it back with more people." CTAs **Share the map** + **Run it back**.
+4. **Map share image** (`utils/shareImage.js`) redone to the friendly **cream** system (white content card, ink text, violet/pink/yellow) instead of dark navy; still 1080×1920, no deps. Reveal-card image stays the colored-on-navy stage.
+5. **Share = afterparty** (`Share.jsx`): mode-aware headline (duo "The verdict is in." / group "The receipts are in."); hero label from `hero.id` (receipt of the round / strongest mutual / mystery friend / top knower / result); duo shows **"View breakdown"** not map; CTA order Share image → Run it back → Challenge → Eazo. Eazo: disabled "Eazo vote link coming", live "Help MUTUALS win on Eazo."
+6. **Rematch feels fresh**: new room resets `selfAnswers/guesses/revealUnlocked/completedSteps` **and clears `roundsByGroup`** so the old round can't leak; keeps `currentUserName`; toast "New 1:1/group room ready"; copy "Run it back · new questions" + "Same chaos, new receipts."
+7. **Prototype smells removed from public paths**: `ensureGroup` `createdBy` now `currentUserName || "Host"` (was "Armeen"); share-link ref `EAZO-ARMEEN → eazo`. Fake names (Will/Maya/Karan) remain only in debug/solo screens unreachable from the public flow.
+8. **Reveal copy** (`insights.js`, copy-only, formulas untouched): "Loud, confident, and wrong. This is why the group chat needs evidence.", "One of you was reading. One of you was projecting."
+9. **Local analytics** (`utils/analytics.js`, new): console + capped localStorage buffer, no backend. Tracks room_created, invite_shared, joined_room, answers_saved, guesses_saved, reveal_viewed, share_image_clicked, rematch_clicked.
+
+### Files changed
+`data/questions.js`, `utils/analytics.js` (new), `utils/shareImage.js`, `utils/mutualsStorage.js`, `lib/insights.js`, `screens/Matrix.jsx`, `screens/Share.jsx`, `screens/Home.jsx`, `screens/Create.jsx`, `screens/JoinWall.jsx`, `screens/Answer.jsx`, `screens/Guess.jsx`, `screens/Reveal.jsx`. **Untouched:** Supabase schema, deploy config, insight formulas, scoring (qid-based, stable), no fake phone bezel.
+
+### Build
+One `npm run build` → green (2230 modules, ~335ms). Question count = **36** (14/14/8). No manual preview per request.
+
+### Smoke paths (live)
+1. **1:1:** Home → Challenge 1 Friend → Send invite → name → Answer → Guess → Reveal → **See the breakdown** (lavender verdict) → Share.
+2. **Group:** Home → Start Group Room → Send invite → 3 players → Answer → Guess → Reveal → **See the map** (cream group-chat map) → Share map.
+
+---
+
 ## Chunk 18 — Conversion + clarity sweep (BUILD + PUSH)
 
 ### Goal

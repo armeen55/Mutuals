@@ -6,6 +6,7 @@ import { shareUrl, saveMutualsState } from "../../../utils/mutualsStorage";
 import { useMutuals } from "../useMutuals";
 import { captureGroup } from "../../../lib/mutualsApi";
 import { cx, showToast, shareOrCopy } from "../../../utils/ui";
+import { track } from "../../../utils/analytics";
 
 // The mode defines the screen: 1:1 is a tight showdown, Group is social chaos.
 const COPY = {
@@ -40,7 +41,10 @@ export default function Create({ next }) {
     navigator.clipboard?.writeText(link);
     showToast("Link copied");
   };
-  const sendInvite = () => shareOrCopy({ text: c.shareText, url: link });
+  const sendInvite = () => {
+    shareOrCopy({ text: c.shareText, url: link });
+    track("invite_shared", { mode });
+  };
 
   return (
     <Phone mood={c.mood}>

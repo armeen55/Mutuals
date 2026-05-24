@@ -123,7 +123,7 @@ function makeReceipts(r, everyone) {
     "Receipts",
     everyone ? `${r.wrongCount}/${r.total} wrong` : "WRONG",
     everyone ? "The answer everyone got wrong." : `${r.guesser} did not know ${r.target}.`,
-    "Loud, confident, and incorrect. The group chat has receipts now.",
+    "Loud, confident, and wrong. This is why the group chat needs evidence.",
     "#ff4f9a",
     MessageCircle,
     "dark",
@@ -299,7 +299,7 @@ function duoDeck(participants, answers, guesses, acc) {
       const reader = aWins ? A : B;
       const other = aWins ? B : A;
       cards.push(
-        card("oneway", "One-Way Read", `+${pct(gap)}`, `${reader.displayName} read ${other.displayName}. ${other.displayName} was guessing blind.`, "A brutal little asymmetry. The chat will hear about this.", "#ff4f9a", HeartCrack, "yellow")
+        card("oneway", "One-Way Read", `+${pct(gap)}`, `${reader.displayName} read ${other.displayName}. ${other.displayName} was guessing blind.`, "One of you was reading. One of you was projecting.", "#ff4f9a", HeartCrack, "yellow")
       );
     }
   }
@@ -394,7 +394,7 @@ function groupDeck(participants, answers, guesses, acc) {
   const ow = oneWayPair(participants, acc);
   if (ow) {
     cards.push(
-      card("oneway", "One-Way Friendship", `+${pct(ow.gap)}`, `${nameOf(participants, ow.g)} knows ${nameOf(participants, ow.t)}. ${nameOf(participants, ow.t)}? Not a clue.`, "A brutal asymmetry. The chat will discuss.", "#ff4f9a", HeartCrack, "yellow")
+      card("oneway", "One-Way Friendship", `+${pct(ow.gap)}`, `${nameOf(participants, ow.g)} knows ${nameOf(participants, ow.t)}. ${nameOf(participants, ow.t)}? Not a clue.`, "One was reading. The other was projecting.", "#ff4f9a", HeartCrack, "yellow")
     );
   }
 

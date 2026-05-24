@@ -22,6 +22,7 @@ import {
 import { getBundle, submitGuesses, captureGroup } from "../../../lib/mutualsApi";
 import { roomStatus } from "../../../lib/insights";
 import { cx, showToast, shareOrCopy } from "../../../utils/ui";
+import { track } from "../../../utils/analytics";
 
 const SEED_OPTIONS = ["Slow walkers", "Loud chewing", "Bad texters", "Overexplaining"];
 
@@ -268,6 +269,7 @@ function RealGuess({ next, targets, questions, isGroup, lateJoiners = [], onAddL
       return;
     }
     saveMutualsState({ revealUnlocked: true, completedSteps: withStep("Guess") });
+    track("guesses_saved");
     showToast("Guesses saved");
     next();
   };
