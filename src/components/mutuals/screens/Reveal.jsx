@@ -7,7 +7,7 @@ import PlayerChips from "../ui/PlayerChips";
 import ShareActionTile from "../ui/ShareActionTile";
 import Button from "../ui/Button";
 import { insightCards } from "../../../data/mutualsDemoData";
-import { selectQuestions } from "../../../data/questions";
+import { selectQuestions, pendingNamePicks } from "../../../data/questions";
 import { useMutuals } from "../useMutuals";
 import { shareUrl, saveMutualsState, repairParticipantId } from "../../../utils/mutualsStorage";
 import { getInsights, captureGroup } from "../../../lib/mutualsApi";
@@ -118,6 +118,7 @@ export default function Reveal({ next, go, goSignup }) {
     const r = real.readiness || { completedCount: 0, required: 3 };
     const participants = real.bundle?.participants || [];
     const mode = real.bundle?.group?.mode || app.groupMode || "duo";
+    const pendingNP = pendingNamePicks(app.activeGroupId, mode, participants, app.selfAnswers);
     const needFinish = Math.max(0, r.required - r.completedCount);
     const status = roomStatus(real.bundle, need);
     const unfinishedNames = participants
@@ -145,6 +146,14 @@ export default function Reveal({ next, go, goSignup }) {
           <div className="mt-4 rounded-[26px] bg-[#f4f1fa] p-4 short:mt-3 short:p-3">
             <PlayerChips participants={participants} statuses={status.statuses} youId={myPid} />
           </div>
+          {pendingNP.length > 0 && (
+            <div className="mt-4">
+              <Button tone="primary" onClick={() => go("Answer")}>
+                Cast your group votes ({pendingNP.length})
+              </Button>
+              <p className="mt-1.5 text-center text-[11px] font-bold text-black/45">The room filled up — vote on the rest.</p>
+            </div>
+          )}
           {mode === "group" && participants.length === 2 && (
             <div className="mt-4">
               <Button tone="pink" onClick={unlockAsDuo}>
@@ -235,6 +244,7 @@ export default function Reveal({ next, go, goSignup }) {
       : [];
   const roomUrl = shareUrl(app.activeGroupId);
   const mode = real?.bundle?.group?.mode || app.groupMode || "duo";
+  const pendingNPDeck = realReady ? pendingNamePicks(app.activeGroupId, mode, real?.bundle?.participants || [], app.selfAnswers) : [];
   const advance = () => (atEnd ? (realReady ? go("Matrix") : go("Share")) : setPos(pos + 1));
   const shareImage = async () => {
     track("share_image_clicked");
@@ -284,6 +294,15 @@ export default function Reveal({ next, go, goSignup }) {
             {status.finished} finished{notFinished > 0 ? ` · ${notFinished} more can make it better` : ""}
             {lateJoiners.length > 0 ? ` · ${lateJoiners[0].displayName} joined late` : ""}
           </p>
+        )}
+
+        {pendingNPDeck.length > 0 && (
+          <button
+            onClick={() => go("Answer")}
+            className="mt-2 w-full rounded-2xl bg-[#7B3CFF] py-2.5 text-center text-xs font-black text-white active:scale-[0.98]"
+          >
+            + Cast your {pendingNPDeck.length} group {pendingNPDeck.length === 1 ? "vote" : "votes"}
+          </button>
         )}
 
         <div className="mt-3 flex gap-2">

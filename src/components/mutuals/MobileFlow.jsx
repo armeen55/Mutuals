@@ -23,7 +23,7 @@ export default function MobileFlow({ step, setStep, debug }) {
     <Create next={next} />,
     <JoinWall go={go} />,
     <ProgressScreen next={next} />,
-    <Answer next={next} />,
+    <Answer next={next} go={go} />,
     <Guess next={next} />,
     <Reveal next={next} go={go} goSignup={() => setStep(7)} />,
     <SignupGate next={next} />,

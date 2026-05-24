@@ -5,6 +5,34 @@ Newest entry on top.
 
 ---
 
+## Chunk 26 — Group mode = Most-Likely-To (name-pick votes + savage receipts) (BUILD + PUSH)
+
+1:1 stays "who knows who better." Group becomes a real party game: vote a PERSON for each "most likely to," guess what friends voted, reveal who got crowned. **No Supabase schema change** — name-pick answers/guesses reuse `option_index` (the index points at a participant instead of a fixed option).
+
+### Question types (`data/questions.js`)
+- Every question now has `type`. The 96 self-MCQ are `type:"self"`; added **40 `type:"namepick"`** group questions (money / drama / texting / loyalty / chaos / screenshots / ego), each with `prompt`, `about` ("Who did {name} pick…"), `revealTitle`, `detailTemplates`, `shareText`, `minPlayers:3`, `excludeSelf:false`, and **no fixed options**. Disabled 3 weak introspective self-Qs (q23/q45/q63); fixed a forbidden-phrase option.
+- Helpers: `isNamePick`, `orderedParticipants` (joinedAt asc, id tiebreak), `participantOptionsForQuestion` (the **frozen earliest-≤4 by join time** — appending a 5th never shifts indices 0–2, so every player & late joiner maps `option_index`→person identically), `labelForOption`, `pendingNamePicks`, `fillWinner`.
+- `selectQuestions(groupId,mode,count)` rewritten: **duo = self only**; **group = hybrid** (~60% name-pick, ≥3 name-pick + ≥2 self, ≥4 shareable, ≤1 sincere, ≤2 same-slot run), interleaved so name-picks never run 3+. The SET is **seed-deterministic — identical for every player** (lockstep), independent of live participant count. `validateQuestionBank` updated (type-aware, new forbidden list with word-boundary `hr`/`valid`, selected-episode assertions). Node: **0 issues**.
+
+### Answer / Guess (`screens/Answer.jsx`, `Guess.jsx`, `lib/mutualsApi.js`)
+- `getBundle` now returns participants ordered by `joined_at` and includes `joinedAt`.
+- Answer fetches the bundle for group rooms; **name-pick renders participant chips**; a name-pick is **deferred** when <3 players are in (shows only answerable questions, starts at first unanswered). Save path unchanged (`submitAnswers`). Eyebrow "group vote".
+- Guess renders the same frozen participant options for name-picks ("Who do you think {target} picked?"); only guesses answerable questions; index saved as before.
+
+### Late joiners / host-answered-alone ("answer it later")
+- The host who answered before the room had 3 people gets name-picks deferred. When the room fills, Reveal (waiting **and** deck) shows **"Cast your group votes (N)"** → re-enters Answer for just the pending name-picks, then returns to the reveal. Verified end-to-end.
+
+### Reveal (`lib/insights.js`, `ui/BigRevealCard.jsx`, `utils/shareImage.js`)
+- `namePickTallies` / `namePickCards` / `bestNamePickReceipt`: map each vote's index→person, tally, and emit screenshot cards that **name a person** — Group Vote crown, Self-Incrimination ("X picked themselves"), Everybody Knew, Split Decision, plus a Guess Receipt ("Ava knew Mason would pick…"). Group deck **leads with the name-pick verdict**, then weaves in who-knows-who. Duo deck unchanged. Guarded `makeReceipts`/`groupReceipt`/`duoReceipt` to skip name-picks (no crash). `BigRevealCard` + share canvas render a name-pick receipt (GROUP VOTE label, big winner, big stat, prompt, voter chips).
+
+### Testing (no manual preview)
+- Node smoke tests: questions layer **13/13** (duo has 0 name-pick, group ≥3, option order identical regardless of input order, indices stable when a 4th joins, <3 defers, validator clean) + insights **12/12** (tally winner, deck leads name-pick, split/guess-receipt cards, wrong-guess regression no-crash, duo 0 name-pick). **Live DB audit 6/6**: real room, 3 players answer+guess a name-pick via anon REST, bundle round-trips `option_index`, insights crowns the right person — no schema change.
+
+### Files changed
+`data/questions.js`, `lib/mutualsApi.js`, `lib/insights.js`, `screens/Answer.jsx`, `Guess.jsx`, `Reveal.jsx`, `Share.jsx`, `MobileFlow.jsx`, `ui/BigRevealCard.jsx`, `utils/shareImage.js`. **Untouched:** Supabase schema, scoring math, save paths, 1:1 flow.
+
+---
+
 ## Chunk 25 — Database hardening (no gameplay change) (BUILD + PUSH)
 
 Correctness/security only. No UI redesign, no scoring/selection/flow change.

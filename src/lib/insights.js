@@ -1,5 +1,5 @@
 import { Trophy, HeartCrack, Eye, Heart, MessageCircle, Sparkles, Flame, Users } from "lucide-react";
-import { getQuestion, fillName, spiceScore } from "../data/questions";
+import { getQuestion, fillName, fillWinner, spiceScore, isNamePick, participantOptionsForQuestion } from "../data/questions";
 
 // bundle = { group:{id,mode}, participants:[{id,displayName}], answers:{[pid]:{qid:idx}},
 //            guesses:{[guesserId]:{[targetId]:{qid:idx}}}, completed:{[pid]:bool} }
@@ -103,14 +103,148 @@ export function computeInsights(bundle) {
   const mode = group?.mode || (participants.length <= 2 ? "duo" : "group");
   return mode === "duo"
     ? duoDeck(participants, answers, guesses, acc)
-    : groupDeck(participants, answers, guesses, acc);
+    : groupDeck(participants, answers, guesses, acc, bundle);
+}
+
+// --------------------------- NAME-PICK (group votes) ------------------------
+// Tally each name-pick question: map every answer's option_index back to the
+// participant it points at (via the same frozen earliest-≤4 option list every
+// player saw), then count votes. No schema change — pure read of answers.
+export function namePickTallies(bundle) {
+  const { participants = [], answers = {}, group } = bundle || {};
+  const gid = group?.id;
+  const qids = new Set();
+  for (const pid of Object.keys(answers)) for (const qid of Object.keys(answers[pid] || {})) qids.add(qid);
+  const out = [];
+  for (const qid of qids) {
+    const q = getQuestion(qid);
+    if (!q || !isNamePick(q)) continue;
+    const opts = participantOptionsForQuestion(q, participants, gid); // [{id,name}]
+    if (opts.length < 3) continue;
+    const votes = {}; // optionIndex -> count
+    const voters = {}; // optionIndex -> [voterName]
+    const selfVoters = []; // names who picked themselves
+    let total = 0;
+    for (const voter of participants) {
+      const idx = answers[voter.id]?.[qid];
+      if (idx == null || idx < 0 || idx >= opts.length) continue;
+      total += 1;
+      votes[idx] = (votes[idx] || 0) + 1;
+      (voters[idx] = voters[idx] || []).push(voter.displayName);
+      if (opts[idx].id === voter.id) selfVoters.push(voter.displayName);
+    }
+    if (!total) continue;
+    const idxs = Object.keys(votes).map(Number).sort((a, b) => votes[b] - votes[a]);
+    const winnerIdx = idxs[0];
+    const winnerVotes = votes[winnerIdx];
+    const tie = idxs.filter((i) => votes[i] === winnerVotes);
+    out.push({ qid, q, opts, total, votes, voters, selfVoters, winnerIdx, winnerVotes,
+      winnerName: opts[winnerIdx].name, winnerId: opts[winnerIdx].id, tie });
+  }
+  return out;
+}
+
+const NP_ACCENTS = ["#FF4F9A", "#FFD23F", "#35C58A", "#7B3CFF", "#7CDFFF"];
+
+// Screenshot cards that name a person as the group's verdict. Sorted spiciest-first.
+export function namePickCards(bundle) {
+  const tallies = namePickTallies(bundle);
+  const cards = [];
+  tallies.forEach((t, i) => {
+    const q = t.q;
+    const winnerVoters = (t.voters[t.winnerIdx] || []).slice(0, 4);
+    const receipt = {
+      prompt: q.prompt,
+      winnerName: t.winnerName,
+      voteCount: t.winnerVotes,
+      totalVotes: t.total,
+      voters: winnerVoters,
+      optionLabel: "GROUP VOTE",
+    };
+    const selfCrown = t.selfVoters.includes(t.winnerName);
+    const unanimous = t.winnerVotes === t.total && t.total >= 3;
+    const split = t.tie.length >= 2 && t.winnerVotes >= 2;
+    let type, label, stat, headline, detail, accent, icon, mood;
+    if (split) {
+      const a = t.winnerName;
+      const b = t.opts[t.tie[1]].name;
+      type = "split"; label = "Split Decision";
+      stat = `${t.winnerVotes}–${t.winnerVotes}`;
+      headline = `The room split between ${a} and ${b}.`;
+      detail = "No consensus. Maximum argument potential.";
+      accent = "#7CDFFF"; icon = Users; mood = "purple";
+      receipt.winnerName = `${a} & ${b}`;
+    } else if (selfCrown) {
+      type = "self"; label = "Self-Incrimination";
+      stat = "SELF VOTE";
+      headline = `${t.winnerName} picked themselves.`;
+      detail = "Historic. At least they know.";
+      accent = "#FFD23F"; icon = Flame; mood = "yellow";
+    } else if (unanimous) {
+      type = "all"; label = "Everybody Knew";
+      stat = `${t.winnerVotes}/${t.total}`;
+      headline = fillWinner(q.revealTitle, t.winnerName);
+      detail = "Not a vote. A diagnosis.";
+      accent = "#35C58A"; icon = Eye; mood = "dark";
+    } else {
+      type = "crown"; label = "Group Vote";
+      stat = `${t.winnerVotes} ${t.winnerVotes === 1 ? "vote" : "votes"}`;
+      headline = fillWinner(q.revealTitle, t.winnerName);
+      detail = (q.detailTemplates && q.detailTemplates[0]) || "The group has spoken.";
+      accent = NP_ACCENTS[i % NP_ACCENTS.length]; icon = Trophy; mood = "dark";
+    }
+    const priority =
+      (unanimous ? 100 : 0) + (selfCrown ? 60 : 0) + (split ? 40 : 0) +
+      t.winnerVotes * 10 + (q.heat || 0) + (t.total >= 3 ? 20 : 0);
+    cards.push({
+      id: "np-" + t.qid + "-" + type,
+      label, stat, headline, detail, accent, icon, mood,
+      shareText: fillWinner(q.shareText, receipt.winnerName),
+      namePickReceipt: receipt,
+      priority,
+    });
+  });
+  return cards.sort((a, b) => b.priority - a.priority);
+}
+
+// The single best name-pick card (leads the group reveal). Null if no votes.
+export function bestNamePickReceipt(bundle) {
+  return namePickCards(bundle)[0] || null;
+}
+
+// "Armeen knew Mason would pick Ava." — a correct guess of a name-pick vote.
+function guessReceiptCard(bundle) {
+  const { participants = [], answers = {}, guesses = {}, group } = bundle || {};
+  const gid = group?.id;
+  for (const g of participants) {
+    for (const t of participants) {
+      if (g.id === t.id) continue;
+      const gq = (guesses[g.id] || {})[t.id] || {};
+      const tq = answers[t.id] || {};
+      for (const qid of Object.keys(gq)) {
+        const q = getQuestion(qid);
+        if (!q || !isNamePick(q) || tq[qid] == null || gq[qid] !== tq[qid]) continue;
+        const opts = participantOptionsForQuestion(q, participants, gid);
+        const picked = opts[tq[qid]]?.name;
+        if (!picked) continue;
+        return card(
+          "npguess", "Guess Receipt", "RIGHT",
+          `${nameOf(participants, g.id)} knew ${nameOf(participants, t.id)} would pick ${picked}.`,
+          "That's a dangerous amount of attention.",
+          "#35C58A", Sparkles, "purple",
+          `${nameOf(participants, g.id)} knew exactly who ${nameOf(participants, t.id)} would pick — MUTUALS.`
+        );
+      }
+    }
+  }
+  return null;
 }
 
 // ------------------------------ RECEIPTS ------------------------------------
 // The screenshot card: real question text + real option labels for a miss.
 function makeReceipts(r, everyone) {
   const q = getQuestion(r.qid);
-  if (!q) return null;
+  if (!q || isNamePick(q) || !Array.isArray(q.options)) return null;
   const question = fillName(q.about, r.target);
   const guessed = q.options[r.guessIdx];
   const real = q.options[r.realIdx];
@@ -140,7 +274,7 @@ function duoReceipt(participants, answers, guesses) {
       const truth = answers[t.id] || {};
       const guess = (guesses[g.id] || {})[t.id] || {};
       const misses = Object.keys(guess)
-        .filter((qid) => truth[qid] != null && guess[qid] !== truth[qid] && getQuestion(qid))
+        .filter((qid) => truth[qid] != null && guess[qid] !== truth[qid] && getQuestion(qid) && !isNamePick(getQuestion(qid)))
         .sort((a, b) => spiceScore(getQuestion(b)) - spiceScore(getQuestion(a)));
       if (misses.length) {
         const qid = misses[0];
@@ -157,7 +291,8 @@ function groupReceipt(participants, answers, guesses) {
   for (const t of participants) {
     const truth = answers[t.id] || {};
     for (const qid of Object.keys(truth)) {
-      if (!getQuestion(qid)) continue;
+      const gq0 = getQuestion(qid);
+      if (!gq0 || isNamePick(gq0)) continue;
       const realIdx = truth[qid];
       let wrong = 0;
       let total = 0;
@@ -357,69 +492,60 @@ function oneWayPair(participants, acc) {
   return ow;
 }
 
-function groupDeck(participants, answers, guesses, acc) {
+function groupDeck(participants, answers, guesses, acc, bundle) {
+  const b = bundle || { participants, answers, guesses };
   const { outgoing, incoming } = outgoingIncoming(participants, acc);
   const outIds = Object.keys(outgoing);
   const inIds = Object.keys(incoming);
-  const cards = [];
 
-  // Card 1 — Receipts (the answer everyone got wrong). The first screenshot.
-  const rec = groupReceipt(participants, answers, guesses);
-  if (rec) {
-    const c = makeReceipts(rec, true);
-    if (c) cards.push(c);
-  }
+  // Name-pick verdicts (the new headliners) + the cross-cutting guess receipt.
+  const np = namePickCards(b);
+  const gr = guessReceiptCard(b);
 
-  // Card 2 — Group Winner (who knows the group best).
+  // Know-who social cards, built as named vars so we can order the deck.
+  let winnerCard = null;
   if (outIds.length) {
     const w = outIds.reduce((hi, id) => (outgoing[id] > outgoing[hi] ? id : hi), outIds[0]);
-    cards.push(
-      card("winner", "Group Winner", `${pct(outgoing[w])}%`, `${nameOf(participants, w)} knows the group best.`, "Suspiciously locked in. We're watching.", "#d7ff2f", Trophy, "dark", `${nameOf(participants, w)} knows our group best. Bet your group has nobody this locked in — MUTUALS.`)
-    );
+    winnerCard = card("winner", "Group Winner", `${pct(outgoing[w])}%`, `${nameOf(participants, w)} knows the group best.`, "Suspiciously locked in. We're watching.", "#d7ff2f", Trophy, "dark", `${nameOf(participants, w)} knows our group best. Bet your group has nobody this locked in — MUTUALS.`);
   }
-
-  // Card 3 — Power Pair (strongest mutual pair = the group score beat).
   const pair = bestPair(participants, acc);
-  if (pair) {
-    cards.push(
-      card("power", "Power Pair", `${pct(pair.mutual)}%`, `${nameOf(participants, pair.a)} + ${nameOf(participants, pair.b)} are locked in.`, "Highest mutual score in the group. Send this before they deny it.", "#b794ff", Heart, "purple", `${nameOf(participants, pair.a)} + ${nameOf(participants, pair.b)} are the realest pair in our group — MUTUALS.`)
-    );
-  }
-
-  // Card 4 — Biggest One-Way Friendship.
+  const powerCard = pair
+    ? card("power", "Power Pair", `${pct(pair.mutual)}%`, `${nameOf(participants, pair.a)} + ${nameOf(participants, pair.b)} are locked in.`, "Highest mutual score in the group. Send this before they deny it.", "#b794ff", Heart, "purple", `${nameOf(participants, pair.a)} + ${nameOf(participants, pair.b)} are the realest pair in our group — MUTUALS.`)
+    : null;
   const ow = oneWayPair(participants, acc);
-  if (ow) {
-    cards.push(
-      card("oneway", "One-Way Friendship", `+${pct(ow.gap)}`, `${nameOf(participants, ow.g)} knows ${nameOf(participants, ow.t)}. ${nameOf(participants, ow.t)}? Not a clue.`, "One was reading. The other was projecting.", "#ff4f9a", HeartCrack, "yellow")
-    );
-  }
-
-  // Card 5 — Most Misunderstood (lowest incoming).
+  const onewayCard = ow
+    ? card("oneway", "One-Way Friendship", `+${pct(ow.gap)}`, `${nameOf(participants, ow.g)} knows ${nameOf(participants, ow.t)}. ${nameOf(participants, ow.t)}? Not a clue.`, "One was reading. The other was projecting.", "#ff4f9a", HeartCrack, "yellow")
+    : null;
+  let mysteryCard = null;
   if (inIds.length) {
     const m = inIds.reduce((lo, id) => (incoming[id] < incoming[lo] ? id : lo), inIds[0]);
-    cards.push(
-      card("mystery", "Most Misunderstood", `${pct(incoming[m])}%`, `Nobody actually gets ${nameOf(participants, m)}.`, `That's the group's average guessing ${nameOf(participants, m)}. You okay?`, "#7cdfff", Eye, "purple", `Nobody in our group gets ${nameOf(participants, m)}. Find your group's mystery friend — MUTUALS.`)
-    );
+    mysteryCard = card("mystery", "Most Misunderstood", `${pct(incoming[m])}%`, `Nobody actually gets ${nameOf(participants, m)}.`, `That's the group's average guessing ${nameOf(participants, m)}. You okay?`, "#7cdfff", Eye, "purple", `Nobody in our group gets ${nameOf(participants, m)}. Find your group's mystery friend — MUTUALS.`);
   }
-
-  // Card 6 — Open Book (best-read person, highest incoming).
-  if (inIds.length >= 2) {
-    const e = inIds.reduce((hi, id) => (incoming[id] > incoming[hi] ? id : hi), inIds[0]);
-    cards.push(card("open", "Open Book", `${pct(incoming[e])}%`, `${nameOf(participants, e)} is an open book.`, "Predictable in the most loving way possible.", "#7be495", Sparkles, "cream"));
-  }
-
-  // Card 7 — Scoreboard.
+  let scoreboardCard = null;
   if (outIds.length >= 2) {
-    const sorted = [...outIds].sort((a, b) => outgoing[b] - outgoing[a]);
+    const sorted = [...outIds].sort((a, b2) => outgoing[b2] - outgoing[a]);
     const ranked = sorted.map((id, i) => `${i + 1}. ${nameOf(participants, id)} ${pct(outgoing[id])}%`);
-    cards.push(card("scoreboard", "Scoreboard", `${pct(outgoing[sorted[0]])}%`, "Who knows the group, ranked.", ranked.join("   ·   "), "#7cdfff", Users, "purple", `Our group's who-knows-who scoreboard is in — MUTUALS.`));
+    scoreboardCard = card("scoreboard", "Scoreboard", `${pct(outgoing[sorted[0]])}%`, "Who knows the group, ranked.", ranked.join("   ·   "), "#7cdfff", Users, "purple", `Our group's who-knows-who scoreboard is in — MUTUALS.`);
   }
-
-  // Final — Roast (share climax).
+  const recv = groupReceipt(participants, answers, guesses);
+  const receiptCard = recv ? makeReceipts(recv, true) : null;
+  let finalCard = null;
   if (outIds.length) {
     const w = outIds.reduce((hi, id) => (outgoing[id] > outgoing[hi] ? id : hi), outIds[0]);
-    cards.push(card("final", "Final Roast", "THE END", `${nameOf(participants, w)} carried. The rest of you — we'll talk.`, "Send this to the group before they deny it. Then run it back.", "#d7ff2f", Flame, "dark", `Find out who actually knows who in your group — MUTUALS.`));
+    finalCard = card("final", "Final Roast", "THE END", `${nameOf(participants, w)} carried. The rest of you — we'll talk.`, "Send this to the group before they deny it. Then run it back.", "#d7ff2f", Flame, "dark", `Find out who actually knows who in your group — MUTUALS.`);
+  } else if (np[0]) {
+    finalCard = card("final", "Final Roast", "THE END", np[0].headline, "The group has spoken. Send the receipts, then run it back.", "#d7ff2f", Flame, "dark", np[0].shareText);
   }
 
-  return cards;
+  // Order: name-pick verdict leads, then who-knows-who, weaving more verdicts in.
+  const order = [np[0], winnerCard, np[1], powerCard, onewayCard, np[2] || gr, receiptCard, mysteryCard, scoreboardCard, finalCard];
+  const extras = [...np.slice(3), gr];
+  const seen = new Set();
+  const deck = [];
+  for (const c of [...order, ...extras]) {
+    if (!c || seen.has(c.id)) continue;
+    seen.add(c.id);
+    deck.push(c);
+  }
+  return deck;
 }

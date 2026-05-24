@@ -16,6 +16,7 @@ function Block({ label, value, highlight }) {
 export default function BigRevealCard({ card, index = 0 }) {
   const bg = PALETTE[index % PALETTE.length];
   const r = card.receipts;
+  const npr = card.namePickReceipt;
   return (
     <div
       className="relative mx-auto w-full max-w-[400px] overflow-hidden rounded-[32px] text-white shadow-2xl"
@@ -37,7 +38,26 @@ export default function BigRevealCard({ card, index = 0 }) {
           <span className="shrink-0 text-sm font-black">MUTUALS</span>
         </div>
 
-        {r ? (
+        {npr ? (
+          <div className="mt-5 short:mt-3">
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-white/55">{npr.optionLabel || "GROUP VOTE"}</p>
+            <h2 className="mt-2 break-words text-4xl font-black leading-[0.95] tracking-tight short:text-3xl">{card.headline}</h2>
+            <p className="mt-3 break-words font-black leading-none tracking-tighter text-[clamp(2.8rem,15vw,4.6rem)] short:text-[clamp(2.2rem,12vw,3.4rem)]">
+              {card.stat}
+            </p>
+            <p className="mt-3 break-words text-sm font-bold leading-snug text-white/85">{npr.prompt}</p>
+            {npr.voters && npr.voters.length ? (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {npr.voters.map((v, i) => (
+                  <span key={v + ":" + i} className="rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-black">
+                    {v}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+            {card.detail ? <p className="mt-3 break-words text-sm font-bold leading-5 text-white/80 short:hidden">{card.detail}</p> : null}
+          </div>
+        ) : r ? (
           <div className="mt-5 short:mt-3">
             <h2 className="break-words text-3xl font-black leading-[0.95] tracking-tight short:text-2xl">{card.headline}</h2>
             <div className="mt-4 space-y-2.5 short:mt-3 short:space-y-2">

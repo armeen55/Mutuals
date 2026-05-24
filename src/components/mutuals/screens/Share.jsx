@@ -30,7 +30,7 @@ export default function Share({ go }) {
     null;
   const roomMode = data?.bundle?.group?.mode || app.groupMode || "duo";
   const HERO_LABELS = { receipts: "receipt of the round", power: "strongest mutual", mystery: "mystery friend", winner: "top knower" };
-  const heroLabel = (hero && HERO_LABELS[hero.id]) || "result";
+  const heroLabel = (hero && hero.namePickReceipt && "group vote") || (hero && HERO_LABELS[hero.id]) || "result";
   const myPid = (app.participantIdsByGroup || {})[app.activeGroupId];
   const round = (app.roundsByGroup || {})[app.activeGroupId] || null;
   const lateJoiners = round ? participants.filter((p) => p.id !== myPid && !round.known.includes(p.id)) : [];

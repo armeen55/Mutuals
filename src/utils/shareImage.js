@@ -156,7 +156,42 @@ export async function createRevealShareImage(card, { index = 0 } = {}) {
   ctx.textAlign = "left";
   let y = cy + pad + 180;
 
-  if (card.receipts) {
+  if (card.namePickReceipt) {
+    const npr = card.namePickReceipt;
+    ctx.fillStyle = "rgba(255,255,255,0.6)";
+    ctx.font = `900 30px ${FONT}`;
+    ctx.fillText(String(npr.optionLabel || "GROUP VOTE"), cx + pad, y - 44);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = `900 76px ${FONT}`;
+    y = drawWrapped(ctx, card.headline, cx + pad, y, innerW, 82, 3) + 16;
+    let statSize = 200;
+    const stat = String(card.stat || "");
+    ctx.font = `900 ${statSize}px ${FONT}`;
+    while (ctx.measureText(stat).width > innerW && statSize > 84) {
+      statSize -= 12;
+      ctx.font = `900 ${statSize}px ${FONT}`;
+    }
+    ctx.fillText(stat, cx + pad, y + statSize * 0.5);
+    y += statSize * 0.72 + 30;
+    ctx.fillStyle = "rgba(255,255,255,0.88)";
+    ctx.font = `700 42px ${FONT}`;
+    y = drawWrapped(ctx, npr.prompt, cx + pad, y, innerW, 52, 3) + 26;
+    if (npr.voters && npr.voters.length) {
+      ctx.font = `900 30px ${FONT}`;
+      let chipX = cx + pad;
+      npr.voters.slice(0, 4).forEach((v) => {
+        const tw = ctx.measureText(v).width + 44;
+        if (chipX + tw > cx + cw - pad) return;
+        ctx.fillStyle = "rgba(255,255,255,0.18)";
+        roundRect(ctx, chipX, y, tw, 56, 28);
+        ctx.fill();
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(v, chipX + 22, y + 38);
+        chipX += tw + 14;
+      });
+      y += 80;
+    }
+  } else if (card.receipts) {
     ctx.fillStyle = "#ffffff";
     ctx.font = `900 72px ${FONT}`;
     y = drawWrapped(ctx, card.headline, cx + pad, y, innerW, 78, 2) + 30;

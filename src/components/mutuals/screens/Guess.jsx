@@ -7,7 +7,7 @@ import Avatar from "../ui/Avatar";
 import Button from "../ui/Button";
 import PlayerChips from "../ui/PlayerChips";
 import { members } from "../../../data/mutualsDemoData";
-import { selectQuestions, fillName } from "../../../data/questions";
+import { selectQuestions, fillName, isNamePick, participantOptionsForQuestion } from "../../../data/questions";
 import { useMutuals } from "../useMutuals";
 import {
   saveMutualsState,
@@ -207,11 +207,19 @@ export default function Guess({ next }) {
     ? round.targets.map((id) => participants.find((p) => p.id === id)).filter(Boolean)
     : pickTargets(others, answers, cap);
 
+  // Only guess questions that are answerable now: self always; name-pick once
+  // there are >=3 players (same rule + same option list the target answered on).
+  const answerable = questions.filter(
+    (q) => !isNamePick(q) || participantOptionsForQuestion(q, participants, app.activeGroupId).length >= 3
+  );
+
   return (
     <RealGuess
       next={next}
       targets={targetObjs.length ? targetObjs : pickTargets(others, answers, cap)}
-      questions={questions}
+      questions={answerable}
+      participants={participants}
+      groupId={app.activeGroupId}
       isGroup={app.groupMode === "group"}
       lateJoiners={lateJoiners}
       onAddLate={(id) => {
@@ -222,7 +230,7 @@ export default function Guess({ next }) {
   );
 }
 
-function RealGuess({ next, targets, questions, isGroup, lateJoiners = [], onAddLate }) {
+function RealGuess({ next, targets, questions, participants = [], groupId, isGroup, lateJoiners = [], onAddLate }) {
   const acc = useRef({}); // { [targetId]: { qid:idx } } accumulated locally
   const [ti, setTi] = useState(0);
   const [qi, setQi] = useState(0);
@@ -231,6 +239,8 @@ function RealGuess({ next, targets, questions, isGroup, lateJoiners = [], onAddL
   const target = targets[ti];
   const member = toMember(target, ti);
   const q = questions[qi];
+  const namepick = isNamePick(q);
+  const options = namepick ? participantOptionsForQuestion(q, participants, groupId).map((o) => o.name) : q.options;
   const lastQ = qi >= questions.length - 1;
   const lastTarget = ti >= targets.length - 1;
   const late = lateJoiners[0];
@@ -315,11 +325,13 @@ function RealGuess({ next, targets, questions, isGroup, lateJoiners = [], onAddL
           </div>
         )}
         <Progress current={guessNum} total={guessTotal} label={`Guess ${guessNum} of ${guessTotal}`} />
-        <p className="mt-4 text-center text-sm font-black text-black/50 short:mt-2 tiny:hidden">What did {member.name} actually pick?</p>
+        <p className="mt-4 text-center text-sm font-black text-black/50 short:mt-2 tiny:hidden">
+          {namepick ? `Who do you think ${member.name} picked?` : `What did ${member.name} actually pick?`}
+        </p>
         <div className="mt-4 space-y-3 short:mt-3 short:space-y-2">
-          {q.options.map((option, i) => (
+          {options.map((option, i) => (
             <button
-              key={option}
+              key={option + ":" + i}
               onClick={() => setSelected(i)}
               className={cx(
                 "flex w-full items-center gap-3 rounded-3xl p-4 text-left text-sm font-black shadow-sm short:rounded-2xl short:p-3",

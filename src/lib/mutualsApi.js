@@ -161,7 +161,7 @@ const sb = {
   async getBundle(groupId) {
     const [groupRes, partRes, ansRes, guessRes] = await Promise.all([
       supabase.from("groups").select("*").eq("id", groupId).maybeSingle(),
-      supabase.from("participants").select("*").eq("group_id", groupId),
+      supabase.from("participants").select("*").eq("group_id", groupId).order("joined_at", { ascending: true }),
       supabase.from("answers").select("*").eq("group_id", groupId),
       supabase.from("guesses").select("*").eq("group_id", groupId),
     ]);
@@ -190,7 +190,7 @@ const sb = {
     });
     return {
       group: group ? { id: group.id, mode: group.mode, createdBy: group.created_by } : null,
-      participants: (participants || []).map((p) => ({ id: p.id, displayName: p.display_name })),
+      participants: (participants || []).map((p) => ({ id: p.id, displayName: p.display_name, joinedAt: p.joined_at })),
       answers,
       guesses,
       completed,

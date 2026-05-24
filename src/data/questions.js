@@ -78,7 +78,7 @@ export const ALL_QUESTIONS = [
   { id: "q22", pack: "default", lean: "group", slot: "receipt", heat: 4, shareable: true,
     prompt: "What do I do when someone is clearly lying?", about: "What does {name} do when someone is clearly lying?",
     options: ["Let them finish", "Ask one dangerous question", "Hold eye contact", "Screenshot the evidence"] },
-  { id: "q23", pack: "default", lean: "both", slot: "sincere", heat: 3, shareable: false,
+  { id: "q23", pack: "default", lean: "both", slot: "sincere", heat: 3, shareable: false, enabled: false,
     prompt: "What makes me feel weirdly chosen?", about: "What makes {name} feel weirdly chosen?",
     options: ["Being asked first", "Being saved a seat", "Being remembered", "Being defended when I'm gone"] },
   { id: "q24", pack: "default", lean: "group", slot: "roast", heat: 3, shareable: true,
@@ -144,7 +144,7 @@ export const ALL_QUESTIONS = [
   { id: "q44", pack: "default", lean: "group", slot: "status", heat: 3, shareable: true,
     prompt: "Who in the group am I lowkey trying to impress?", about: "Who in the group is {name} lowkey trying to impress?",
     options: ["The newest member", "The hard-to-read one", "The one I clashed with", "Honestly, everyone"] },
-  { id: "q45", pack: "default", lean: "duo", slot: "sincere", heat: 3, shareable: false,
+  { id: "q45", pack: "default", lean: "duo", slot: "sincere", heat: 3, shareable: false, enabled: false,
     prompt: "What do I want people to do without making me ask?", about: "What does {name} want people to do without making them ask?",
     options: ["Check in first", "Defend me", "Notice I'm off", "Just show up"] },
   { id: "q46", pack: "default", lean: "duo", slot: "sincere", heat: 3, shareable: false,
@@ -173,7 +173,7 @@ export const ALL_QUESTIONS = [
     options: ["Reading people", "Being funny", "Looking good", "Getting my way"] },
   { id: "q54", pack: "default", lean: "duo", slot: "flirt", heat: 4, shareable: true,
     prompt: "My flirting style is honestly…", about: "{name}'s flirting style is honestly…",
-    options: ["Insulting them lovingly", "Going fully silent", "Trauma-free oversharing", "Acting unbothered"] },
+    options: ["Insulting them lovingly", "Going fully silent", "Oversharing on instinct", "Acting unbothered"] },
   { id: "q55", pack: "default", lean: "group", slot: "tension", heat: 4, shareable: true,
     prompt: "What starts a cold war between me and a friend?", about: "What starts a cold war between {name} and a friend?",
     options: ["A dry reply", "A copied move", "Being left out", "A backhanded compliment"] },
@@ -198,7 +198,7 @@ export const ALL_QUESTIONS = [
   { id: "q62", pack: "default", lean: "both", slot: "ego", heat: 3, shareable: true,
     prompt: "The thing I'll argue about for no reason is…", about: "The thing {name} will argue about for no reason is…",
     options: ["A take I half-believe", "Who's right about the past", "Directions", "Who's funnier"] },
-  { id: "q63", pack: "default", lean: "duo", slot: "sincere", heat: 3, shareable: false,
+  { id: "q63", pack: "default", lean: "duo", slot: "sincere", heat: 3, shareable: false, enabled: false,
     prompt: "What's the easiest way to actually reach me?", about: "What's the easiest way to actually reach {name}?",
     options: ["Be direct, no games", "Make me laugh", "Just keep showing up", "Catch me off guard"] },
   { id: "q64", pack: "chaos", lean: "group", slot: "chaos", heat: 5, shareable: true,
@@ -303,44 +303,255 @@ export const ALL_QUESTIONS = [
     prompt: "What I actually want but play too cool to say is…", about: "What {name} actually wants but plays too cool to say is…",
     options: ["To be chosen first", "To be pursued", "To matter to someone", "To be the priority"] },
 
+  // ===================== name-pick bank — group "most likely to" =====================
+  // type:"namepick" — options are participant names resolved at runtime (no fixed options).
+  // {name} = the player who answered; {winner} = the person the group voted for.
+  { id: "n1", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here is most likely to itemize the bill down to the cent?",
+    about: "Who did {name} pick to itemize the bill to the cent?",
+    revealTitle: "The group voted {winner} the cheapest.",
+    detailTemplates: ["Bill itemizer allegations. The group has spoken.", "Splitwise's most wanted."],
+    shareText: "Everyone voted {winner} the cheapest. We played MUTUALS and the receipts are in." },
+  { id: "n2", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here says 'I'm down' and then vanishes?",
+    about: "Who did {name} pick as the one who says 'I'm down' then vanishes?",
+    revealTitle: "The group crowned {winner} the biggest flake.",
+    detailTemplates: ["Replies 'I'm down,' shows up never.", "The phantom RSVP."],
+    shareText: "Everyone says {winner} flakes the hardest. MUTUALS has the receipts." },
+  { id: "n3", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here would sell someone out the funniest?",
+    about: "Who did {name} pick to sell someone out the funniest?",
+    revealTitle: "The group says {winner} would sell you out funniest.",
+    detailTemplates: ["No loyalty, great timing.", "Snitch of the year, with jokes."],
+    shareText: "The group says {winner} would sell you out funniest. MUTUALS." },
+  { id: "n4", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here starts drama and calls it 'being honest'?",
+    about: "Who did {name} pick as the one who starts drama and calls it honesty?",
+    revealTitle: "{winner} got crowned the group instigator.",
+    detailTemplates: ["'I'm just being honest.' Sure.", "Drama with a press release."],
+    shareText: "The group voted {winner} the instigator. MUTUALS receipts attached." },
+  { id: "n5", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 5, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here is the biggest liability with a screenshot?",
+    about: "Who did {name} pick as the biggest screenshot liability?",
+    revealTitle: "Nobody trusts {winner} with a screenshot.",
+    detailTemplates: ["One screenshot from total chaos.", "Evidence handler, terrible at it."],
+    shareText: "The group says {winner} can't be trusted with a screenshot. MUTUALS." },
+  { id: "n6", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 5, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here would text their ex tonight if nobody stopped them?",
+    about: "Who did {name} pick to text their ex if nobody stopped them?",
+    revealTitle: "{winner} is texting the ex, the group is sure of it.",
+    detailTemplates: ["Somebody hide their phone.", "One bad night from a relapse."],
+    shareText: "The group says {winner} would text the ex tonight. MUTUALS." },
+  { id: "n7", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here goes broke trying to look casual?",
+    about: "Who did {name} pick to go broke trying to look casual?",
+    revealTitle: "{winner} goes broke looking effortless.",
+    detailTemplates: ["Casual is the most expensive look.", "Bankrolling the unbothered act."],
+    shareText: "The group says {winner} goes broke looking casual. MUTUALS." },
+  { id: "n8", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here acts the most unbothered but checks everything?",
+    about: "Who did {name} pick as most unbothered but secretly checking everything?",
+    revealTitle: "{winner} acts unbothered and watches everything.",
+    detailTemplates: ["Read receipts on, ego on the line.", "Unbothered for show only."],
+    shareText: "The group says {winner} acts unbothered but checks everything. MUTUALS." },
+  { id: "n9", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here is secretly running the group?",
+    about: "Who did {name} pick as the one secretly running the group?",
+    revealTitle: "The group says {winner} is secretly running everything.",
+    detailTemplates: ["The quiet operator.", "Pulls the strings, claims innocence."],
+    shareText: "Turns out {winner} is secretly running our group. MUTUALS." },
+  { id: "n10", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 3, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here would make the best alibi?",
+    about: "Who did {name} pick to be their alibi?",
+    revealTitle: "{winner} is the group's go-to alibi.",
+    detailTemplates: ["Lies clean, never folds.", "Would take it to the grave."],
+    shareText: "The group trusts {winner} as the alibi. MUTUALS." },
+  { id: "n11", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here leaves early and still gets talked about?",
+    about: "Who did {name} pick to leave early and still get talked about?",
+    revealTitle: "{winner} leaves early and still runs the night.",
+    detailTemplates: ["Gone by 11, topic till 3.", "Absence is a power move."],
+    shareText: "The group says {winner} leaves early and still gets talked about. MUTUALS." },
+  { id: "n12", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here is the worst influence after midnight?",
+    about: "Who did {name} pick as the worst influence after midnight?",
+    revealTitle: "{winner} is the group's worst influence after midnight.",
+    detailTemplates: ["'One more' is always their idea.", "Nothing good happens on their watch."],
+    shareText: "The group voted {winner} the worst influence after midnight. MUTUALS." },
+  { id: "n13", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here would survive the group chat getting leaked?",
+    about: "Who did {name} pick to survive the group chat getting leaked?",
+    revealTitle: "{winner} would survive the group chat leak.",
+    detailTemplates: ["Nothing to hide, or hides it well.", "Built different, types careful."],
+    shareText: "The group says {winner} would survive the chat getting leaked. MUTUALS." },
+  { id: "n14", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here flirts for sport?",
+    about: "Who did {name} pick as the one who flirts for sport?",
+    revealTitle: "{winner} flirts for sport, the group agrees.",
+    detailTemplates: ["No feelings, all stats.", "It's not personal, it's recreation."],
+    shareText: "The group says {winner} flirts for sport. MUTUALS." },
+  { id: "n15", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here would start a cold war over a dry reply?",
+    about: "Who did {name} pick to start a cold war over a dry reply?",
+    revealTitle: "{winner} starts a cold war over one dry text.",
+    detailTemplates: ["One 'k' and it's on.", "Holds the line for weeks."],
+    shareText: "The group says {winner} would start a cold war over a dry reply. MUTUALS." },
+  { id: "n16", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here makes the night about them?",
+    about: "Who did {name} pick to make the night about themselves?",
+    revealTitle: "{winner} makes every night about them.",
+    detailTemplates: ["Every story circles back.", "Never a supporting role."],
+    shareText: "The group says {winner} makes the night about them. MUTUALS." },
+  { id: "n17", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here gives the most dangerous advice?",
+    about: "Who did {name} pick as the giver of the most dangerous advice?",
+    revealTitle: "{winner} gives advice that ends friendships.",
+    detailTemplates: ["'Text him.' Catastrophic.", "Confidence way past their qualifications."],
+    shareText: "The group says {winner} gives the most dangerous advice. MUTUALS." },
+  { id: "n18", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here would accidentally expose everyone?",
+    about: "Who did {name} pick to accidentally expose everyone?",
+    revealTitle: "{winner} would expose the whole group by accident.",
+    detailTemplates: ["Wrong chat, every time.", "A loose cannon with a camera roll."],
+    shareText: "The group says {winner} would accidentally expose everyone. MUTUALS." },
+  { id: "n19", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here is the most expensive friend to hang out with?",
+    about: "Who did {name} pick as the most expensive friend to hang out with?",
+    revealTitle: "{winner} is the most expensive friend to have.",
+    detailTemplates: ["Every plan has a price tag.", "Your wallet fears them."],
+    shareText: "The group voted {winner} the most expensive friend. MUTUALS." },
+  { id: "n20", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here remembers a tiny disrespect forever?",
+    about: "Who did {name} pick to remember a tiny disrespect forever?",
+    revealTitle: "{winner} never forgets a single slight.",
+    detailTemplates: ["A memory like a grudge museum.", "2019 still comes up."],
+    shareText: "The group says {winner} remembers every tiny disrespect. MUTUALS." },
+  { id: "n21", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here do you call when a lie needs to sound believable?",
+    about: "Who did {name} pick to make a lie sound believable?",
+    revealTitle: "{winner} is who you call to sell the story.",
+    detailTemplates: ["Smooth under pressure.", "Never breaks character."],
+    shareText: "The group calls {winner} when the lie has to land. MUTUALS." },
+  { id: "n22", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here folds first if their crush texts?",
+    about: "Who did {name} pick to fold first if their crush texted?",
+    revealTitle: "{winner} folds the second their crush texts.",
+    detailTemplates: ["All talk, zero defense.", "'Playing it cool' lasts 4 seconds."],
+    shareText: "The group says {winner} folds first when the crush texts. MUTUALS." },
+  { id: "n23", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here says 'be honest' and then gets mad?",
+    about: "Who did {name} pick as the one who says 'be honest' then gets mad?",
+    revealTitle: "{winner} can't handle the honesty they asked for.",
+    detailTemplates: ["Asked for it. Furious about it.", "Honesty is a trap with them."],
+    shareText: "The group says {winner} says 'be honest' then gets mad. MUTUALS." },
+  { id: "n24", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 3, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here is the reason plans turn expensive?",
+    about: "Who did {name} pick as the reason plans get expensive?",
+    revealTitle: "{winner} is why the plans cost triple.",
+    detailTemplates: ["'Let's just add one more thing.'", "The budget's natural enemy."],
+    shareText: "The group says {winner} is why plans get expensive. MUTUALS." },
+  { id: "n25", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here is most likely to post something targeted?",
+    about: "Who did {name} pick to post something targeted?",
+    revealTitle: "{winner} posts with a target in mind.",
+    detailTemplates: ["'It's not about anyone.' It's about someone.", "The aimed story."],
+    shareText: "The group says {winner} posts targeted. MUTUALS." },
+  { id: "n26", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here does everyone secretly watch for a reaction?",
+    about: "Who did {name} pick as the one everyone watches for a reaction?",
+    revealTitle: "Everyone watches {winner} for the reaction.",
+    detailTemplates: ["The room's emotional weathervane.", "Their face is the group chat."],
+    shareText: "The group says everyone watches {winner} for a reaction. MUTUALS." },
+  { id: "n27", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here would win a popularity contest and pretend not to care?",
+    about: "Who did {name} pick to win popularity and pretend not to care?",
+    revealTitle: "{winner} wins the room and acts surprised.",
+    detailTemplates: ["Loved by all, admits nothing.", "Humble flex specialist."],
+    shareText: "The group says {winner} wins popularity and pretends not to care. MUTUALS." },
+  { id: "n28", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 3, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here is the safest with a secret?",
+    about: "Who did {name} pick as the safest with a secret?",
+    revealTitle: "{winner} is the group's actual vault.",
+    detailTemplates: ["Tells no one. Ever.", "Secrets go in, nothing comes out."],
+    shareText: "The group trusts {winner} most with a secret. MUTUALS." },
+  { id: "n29", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 5, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here is the least safe with a secret?",
+    about: "Who did {name} pick as the least safe with a secret?",
+    revealTitle: "Nobody tells {winner} anything anymore.",
+    detailTemplates: ["A secret has a 9-minute shelf life.", "Leaks faster than the wifi."],
+    shareText: "The group says {winner} can't keep a secret. MUTUALS." },
+  { id: "n30", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 3, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here is the group's unofficial lawyer?",
+    about: "Who did {name} pick as the group's unofficial lawyer?",
+    revealTitle: "{winner} is the group's unofficial lawyer.",
+    detailTemplates: ["Argues everything to the ground.", "Objection: everything."],
+    shareText: "The group voted {winner} the unofficial lawyer. MUTUALS." },
+  { id: "n31", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 3, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here is the group's main character against their will?",
+    about: "Who did {name} pick as the reluctant main character?",
+    revealTitle: "{winner} is the main character and hates it.",
+    detailTemplates: ["The story finds them.", "Drama magnet, fully innocent."],
+    shareText: "The group says {winner} is the main character against their will. MUTUALS." },
+  { id: "n32", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here is most likely to disappear at the function?",
+    about: "Who did {name} pick to disappear at the function?",
+    revealTitle: "{winner} ghosts mid-function, every time.",
+    detailTemplates: ["Here, then gone, no text.", "The Irish exit world champion."],
+    shareText: "The group says {winner} vanishes at the function. MUTUALS." },
+  { id: "n33", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 3, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here turns a casual hangout into a story?",
+    about: "Who did {name} pick to turn a casual hangout into a whole story?",
+    revealTitle: "{winner} can't do casual — it becomes a saga.",
+    detailTemplates: ["Coffee becomes a chapter.", "No such thing as a quiet night."],
+    shareText: "The group says {winner} turns any hangout into a story. MUTUALS." },
+  { id: "n34", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here is right but unbearable about it?",
+    about: "Who did {name} pick as right but unbearable about it?",
+    revealTitle: "{winner} is always right and never quiet about it.",
+    detailTemplates: ["Correct and insufferable.", "'I told you so' on a loop."],
+    shareText: "The group says {winner} is right but annoying about it. MUTUALS." },
+  { id: "n35", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here would get exposed by their notes app?",
+    about: "Who did {name} pick to get exposed by their notes app?",
+    revealTitle: "{winner}'s notes app could end them.",
+    detailTemplates: ["Lists, drafts, evidence.", "Do not open the notes app."],
+    shareText: "The group says {winner} would get exposed by their notes app. MUTUALS." },
+  { id: "n36", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 3, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here holds the whole group together?",
+    about: "Who did {name} pick as the one holding the group together?",
+    revealTitle: "{winner} is the glue holding this group together.",
+    detailTemplates: ["Plans it, saves it, carries it.", "The group would fold without them."],
+    shareText: "The group says {winner} holds everyone together. MUTUALS." },
+  { id: "n37", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 3, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here is secretly the most sensitive?",
+    about: "Who did {name} pick as secretly the most sensitive?",
+    revealTitle: "{winner} is secretly the soft one.",
+    detailTemplates: ["Tough act, tender core.", "Feels everything, admits nothing."],
+    shareText: "The group says {winner} is secretly the most sensitive. MUTUALS." },
+  { id: "n38", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 3, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here would you call first in actual trouble?",
+    about: "Who did {name} pick to call first in actual trouble?",
+    revealTitle: "{winner} is the first call when it's real.",
+    detailTemplates: ["Shows up, no questions.", "Ride-or-die, confirmed."],
+    shareText: "The group says {winner} is the first call in real trouble. MUTUALS." },
+  { id: "n39", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 4, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here is the biggest menace when bored?",
+    about: "Who did {name} pick as the biggest menace when bored?",
+    revealTitle: "{winner} is a menace the second they're bored.",
+    detailTemplates: ["Boredom is a threat to everyone.", "Idle hands, group chaos."],
+    shareText: "The group says {winner} is the biggest menace when bored. MUTUALS." },
+  { id: "n40", type: "namepick", pack: "group", lean: "group", slot: "namepick", heat: 3, shareable: true, minPlayers: 3, excludeSelf: false,
+    prompt: "Who here makes the group say 'classic you'?",
+    about: "Who did {name} pick as the 'classic you' friend?",
+    revealTitle: "{winner} is peak 'classic you.'",
+    detailTemplates: ["So on-brand it's a genre.", "Predictable in the funniest way."],
+    shareText: "The group says {winner} is 'classic you' material. MUTUALS." },
+
 ];
 
-// Name-pick ideas — parked for a future mechanic (dynamic participant options).
-// Not part of the playable bank; not selected anywhere yet.
-export const NAMEPICK_IDEAS = [
-  { id: "n1", pack: "namepick", lean: "group", slot: "namepick", heat: 3, shareable: true, enabled: false,
-    prompt: "The person here I'd trust with my phone unlocked is…", about: "The person {name} would trust with their phone unlocked is…", options: [] },
-  { id: "n2", pack: "namepick", lean: "group", slot: "namepick", heat: 4, shareable: true, enabled: false,
-    prompt: "The person here who knows too much about me is…", about: "The person who knows too much about {name} is…", options: [] },
-  { id: "n3", pack: "namepick", lean: "group", slot: "namepick", heat: 5, shareable: true, enabled: false,
-    prompt: "The person here who could ruin me with one screenshot is…", about: "The person who could ruin {name} with one screenshot is…", options: [] },
-  { id: "n4", pack: "namepick", lean: "group", slot: "namepick", heat: 4, shareable: true, enabled: false,
-    prompt: "The person here I'd call to make a lie sound believable is…", about: "The person {name} would call to make a lie sound believable is…", options: [] },
-  { id: "n5", pack: "namepick", lean: "group", slot: "namepick", heat: 4, shareable: true, enabled: false,
-    prompt: "The person here I'd least want reading my notes app is…", about: "The person {name} would least want reading their notes app is…", options: [] },
-  { id: "n6", pack: "namepick", lean: "group", slot: "namepick", heat: 4, shareable: true, enabled: false,
-    prompt: "The person here who has seen the worst version of me is…", about: "The person who has seen the worst version of {name} is…", options: [] },
-  { id: "n7", pack: "namepick", lean: "group", slot: "namepick", heat: 4, shareable: true, enabled: false,
-    prompt: "The person here who would sell me out funniest is…", about: "The person who would sell {name} out funniest is…", options: [] },
-  { id: "n8", pack: "namepick", lean: "group", slot: "namepick", heat: 3, shareable: true, enabled: false,
-    prompt: "The person here who reads me too well is…", about: "The person who reads {name} too well is…", options: [] },
-  { id: "n9", pack: "namepick", lean: "group", slot: "namepick", heat: 4, shareable: true, enabled: false,
-    prompt: "The person here most likely to start the drama is…", about: "The person most likely to start the drama, per {name}, is…", options: [] },
-  { id: "n10", pack: "namepick", lean: "group", slot: "namepick", heat: 4, shareable: true, enabled: false,
-    prompt: "The person here I'd want on my side in a group argument is…", about: "The person {name} would want on their side in a group argument is…", options: [] },
-  { id: "n11", pack: "namepick", lean: "group", slot: "namepick", heat: 3, shareable: true, enabled: false,
-    prompt: "The person here who'd survive a week as me is…", about: "The person who'd survive a week as {name} is…", options: [] },
-  { id: "n12", pack: "namepick", lean: "group", slot: "namepick", heat: 4, shareable: true, enabled: false,
-    prompt: "The person here secretly running this friend group is…", about: "The person {name} thinks is secretly running this friend group is…", options: [] },
-  { id: "n13", pack: "namepick", lean: "group", slot: "namepick", heat: 4, shareable: true, enabled: false,
-    prompt: "The person here most likely to text an ex tonight is…", about: "The person most likely to text an ex tonight, per {name}, is…", options: [] },
-  { id: "n14", pack: "namepick", lean: "group", slot: "namepick", heat: 4, shareable: true, enabled: false,
-    prompt: "The person here I'd trust to plan the chaos is…", about: "The person {name} would trust to plan the chaos is…", options: [] },
-  { id: "n15", pack: "namepick", lean: "group", slot: "namepick", heat: 4, shareable: true, enabled: false,
-    prompt: "The person here most likely to fall first is…", about: "The person most likely to fall first, per {name}, is…", options: [] },
-  { id: "n16", pack: "namepick", lean: "group", slot: "namepick", heat: 3, shareable: true, enabled: false,
-    prompt: "The person here I'd actually call in a real crisis is…", about: "The person {name} would actually call in a real crisis is…", options: [] },
-];
+// Every question carries a `type`. Existing self-MCQ questions default to "self";
+// the n* bank above is "namepick" (runtime participant options, no fixed list).
+for (const q of ALL_QUESTIONS) if (!q.type) q.type = "self";
 
 const BY_ID = Object.fromEntries(ALL_QUESTIONS.map((q) => [q.id, q]));
 export function getQuestion(id) {
@@ -349,6 +560,53 @@ export function getQuestion(id) {
 
 export function fillName(template, name) {
   return String(template || "").replace(/\{name\}/g, name || "they");
+}
+
+// {winner} fill for name-pick reveal titles / share text.
+export function fillWinner(template, winner) {
+  return String(template || "").replace(/\{winner\}/g, winner || "the group");
+}
+
+// ---------------- name-pick (participant option) helpers ----------------
+export function isNamePick(q) {
+  return !!q && q.type === "namepick";
+}
+
+// Stable participant ordering: earliest join first, id as a deterministic
+// tiebreak. joinedAt may be a number (local) or ISO string (Supabase).
+export function orderedParticipants(participants) {
+  const ts = (p) => {
+    const j = p && p.joinedAt;
+    if (typeof j === "number") return j;
+    const t = Date.parse(j);
+    return isNaN(t) ? 0 : t;
+  };
+  return [...(participants || [])].sort(
+    (a, b) => ts(a) - ts(b) || String(a.id).localeCompare(String(b.id))
+  );
+}
+
+// The option list for a name-pick question: the earliest ≤4 participants by
+// join time. This set is FROZEN — appending a 5th participant never shifts
+// indices 0–2, so every player (and every late joiner) maps option_index to the
+// same person. Returns [] when there aren't enough players yet.
+// `groupId` is accepted for signature stability (not needed for the frozen rule).
+export function participantOptionsForQuestion(q, participants, groupId) {
+  if (!isNamePick(q)) return [];
+  const ordered = orderedParticipants(participants);
+  if (ordered.length < (q.minPlayers || 3)) return [];
+  return ordered.slice(0, 4).map((p) => ({ id: p.id, name: p.displayName }));
+}
+
+// Map an option index back to a human label (participant name for name-pick,
+// fixed option text for self). Used by Answer/Guess/insights consistently.
+export function labelForOption(q, optionIndex, participants, groupId) {
+  if (isNamePick(q)) {
+    const opts = participantOptionsForQuestion(q, participants, groupId);
+    return opts[optionIndex] ? opts[optionIndex].name : "?";
+  }
+  const o = (q && q.options) || [];
+  return o[optionIndex] != null ? o[optionIndex] : "?";
 }
 
 // ---------------- deterministic helpers ----------------
@@ -400,17 +658,9 @@ const STATUSY = ["ego", "status", "money"];
 const HOT = ["tension", "flirt", "party"];
 const SOFT = ["sincere"];
 
-// Build a 5–8 question episode with rhythm + caps, deterministic per room.
-// The SET is groupId-seeded (scoring-safe even if mode flips); `mode` only
-// re-orders so duo leads intimate / group leads social.
-export function selectQuestions(groupId, mode, count) {
-  const n = count || roomQuestionCount(groupId);
-  const rng = mulberry32(hashStr(String(groupId || "default")));
-  const pool = shuffled(
-    ALL_QUESTIONS.filter((q) => q.enabled !== false),
-    rng
-  );
-
+// Build a self-MCQ episode (rhythm + caps) from a self-question pool,
+// deterministic per room. Used for duo, and for the self portion of group.
+function selfEpisode(pool, n, mode) {
   const used = new Set();
   const out = [];
   let sincere = 0;
@@ -435,7 +685,6 @@ export function selectQuestions(groupId, mode, count) {
     if (q) push(q);
     return !!q;
   };
-
   const steps = [
     () => take(WARMUP) || take(RECEIPT),
     () => take(RECEIPT) || take(WARMUP),
@@ -447,7 +696,6 @@ export function selectQuestions(groupId, mode, count) {
   for (let i = 0; i < n; i++) {
     if (!steps[i % steps.length]()) takeAny();
   }
-  // guarantee at least 3 shareable receipts in the episode
   for (let i = 0; shareable < 3 && i < out.length; i++) {
     if (out[i].shareable) continue;
     const repl = pool.find((x) => ok(x) && x.shareable);
@@ -460,7 +708,6 @@ export function selectQuestions(groupId, mode, count) {
     used.add(repl.id);
     shareable += 1;
   }
-
   if (mode === "duo" || mode === "group") {
     const rank = (q) => (q.lean === mode ? 0 : q.lean === "both" ? 1 : 2);
     out.sort((a, b) => rank(a) - rank(b));
@@ -468,9 +715,75 @@ export function selectQuestions(groupId, mode, count) {
   return out;
 }
 
+// Deterministic 5–8 episode for a room. The SET is groupId-seeded — identical
+// for EVERY player, so guess/reveal stay in lockstep regardless of who is
+// looking or how many have joined. DUO = self-MCQ only. GROUP = a hybrid that
+// leads with name-pick "most likely to" votes (≥3) plus self-MCQ (≥2). A
+// name-pick's *answerability* (needs ≥3 players for ≥3 options) is resolved
+// later at answer/guess time; the SET never depends on live participant count.
+export function selectQuestions(groupId, mode, count, _opts = {}) {
+  const n = count || roomQuestionCount(groupId);
+  const enabled = ALL_QUESTIONS.filter((q) => q.enabled !== false);
+  const selfRng = mulberry32(hashStr(String(groupId || "default")));
+  const selfPool = shuffled(enabled.filter((q) => !isNamePick(q)), selfRng);
+
+  if (mode !== "group") return selfEpisode(selfPool, n, mode);
+
+  // GROUP hybrid: ~60% name-pick (≥3), the rest self-MCQ (≥2).
+  const npRng = mulberry32(hashStr("namepick:" + String(groupId || "default")));
+  const npPool = shuffled(enabled.filter((q) => isNamePick(q)), npRng);
+  const npCount = Math.max(3, Math.min(n - 2, Math.round(n * 0.6)));
+  const namepicks = npPool.slice(0, Math.min(npCount, npPool.length));
+  const selfTarget = n - namepicks.length;
+
+  const selfPicks = [];
+  const slots = new Set();
+  for (const q of selfPool) {
+    if (selfPicks.length >= selfTarget) break;
+    if (q.slot === "sincere" || slots.has(q.slot)) continue;
+    selfPicks.push(q);
+    slots.add(q.slot);
+  }
+  for (const q of selfPool) {
+    if (selfPicks.length >= selfTarget) break;
+    if (selfPicks.includes(q) || q.slot === "sincere") continue;
+    selfPicks.push(q);
+  }
+
+  // interleave so name-picks never run 3+ in a row (self questions as dividers)
+  const merged = [];
+  const np = [...namepicks];
+  const sf = [...selfPicks];
+  let run = 0;
+  while (np.length || sf.length) {
+    if (np.length && (run < 2 || !sf.length)) {
+      merged.push(np.shift());
+      run += 1;
+    } else if (sf.length) {
+      merged.push(sf.shift());
+      run = 0;
+    } else if (np.length) {
+      merged.push(np.shift());
+      run += 1;
+    }
+  }
+  return merged;
+}
+
 // A stable mode-leaning preview (e.g. for a "what you'll be asked" peek).
 export function previewQuestionsForMode(mode, count = 6) {
   return selectQuestions("preview-" + (mode || "duo"), mode, count);
+}
+
+// Name-pick questions this player can answer NOW but hasn't — drives the reveal
+// "add your group votes" nudge for the host/late joiners who reached Answer
+// before the room had 3 people (name-picks were deferred then).
+export function pendingNamePicks(groupId, mode, participants, selfAnswers) {
+  if (mode !== "group") return [];
+  const sa = selfAnswers || {};
+  return selectQuestions(groupId, mode).filter(
+    (q) => isNamePick(q) && sa[q.id] == null && participantOptionsForQuestion(q, participants, groupId).length >= 3
+  );
 }
 
 // ---------------- dev/debug ----------------
@@ -480,15 +793,22 @@ export function questionCountByLean() {
   return c;
 }
 
-const FORBIDDEN = ["love language", "zombie", "dog", "healing", "attachment", " hr ", "therapy", "safe space"];
+const FORBIDDEN = [
+  "love language", "healing", "safe space", "boundaries", "attachment", "zombie",
+  "dog at the party", "vibe check", "hot take machine", "main character energy",
+  "trauma-free", "therapy",
+];
+const FORBIDDEN_WORD = [/\bhr\b/, /\bvalid\b/];
 export function validateQuestionBank() {
-  const playable = ALL_QUESTIONS.filter((q) => q.enabled !== false && q.pack !== "namepick");
+  const enabled = ALL_QUESTIONS.filter((q) => q.enabled !== false);
+  const selfQs = enabled.filter((q) => q.type !== "namepick");
+  const namepickQs = enabled.filter((q) => q.type === "namepick");
   const tally = (arr, key) =>
     arr.reduce((m, q) => ((m[q[key]] = (m[q[key]] || 0) + 1), m), {});
   const issues = [];
   const seenPrompt = new Set();
   for (const q of ALL_QUESTIONS) {
-    for (const f of ["id", "pack", "lean", "slot", "prompt", "about"]) {
+    for (const f of ["id", "type", "pack", "lean", "slot", "prompt", "about"]) {
       if (q[f] == null) issues.push(`${q.id}: missing ${f}`);
     }
     if (typeof q.heat !== "number") issues.push(`${q.id}: missing heat`);
@@ -496,28 +816,60 @@ export function validateQuestionBank() {
     const p = (q.prompt || "").toLowerCase();
     if (seenPrompt.has(p)) issues.push(`${q.id}: duplicate prompt`);
     seenPrompt.add(p);
-    for (const f of FORBIDDEN) if ((p + " " + (q.about || "")).toLowerCase().includes(f)) issues.push(`${q.id}: forbidden "${f.trim()}"`);
-    if (q.pack !== "namepick") {
-      if (!Array.isArray(q.options) || q.options.length !== 4) issues.push(`${q.id}: options not 4`);
+    const text = [q.prompt, q.about, q.revealTitle, q.shareText, (q.options || []).join(" "), (q.detailTemplates || []).join(" ")]
+      .join(" ")
+      .toLowerCase();
+    for (const f of FORBIDDEN) if (text.includes(f)) issues.push(`${q.id}: forbidden "${f}"`);
+    for (const re of FORBIDDEN_WORD) if (re.test(text)) issues.push(`${q.id}: forbidden "${re.source}"`);
+    if (q.type === "namepick") {
+      if (Array.isArray(q.options) && q.options.length) issues.push(`${q.id}: namepick must not have fixed options`);
+      for (const f of ["minPlayers", "revealTitle", "shareText"]) if (q[f] == null) issues.push(`${q.id}: namepick missing ${f}`);
+    } else {
+      if (!Array.isArray(q.options) || q.options.length !== 4) issues.push(`${q.id}: self options not 4`);
       else if (new Set(q.options).size !== q.options.length) issues.push(`${q.id}: repeated option`);
     }
   }
-  const softCombined = playable.filter((q) =>
-    /quiet|misunderstood|reassur|compliment/i.test(q.prompt + " " + q.options.join(" "))
+
+  // Selected-episode checks on a sample room.
+  const gEp = selectQuestions("validate-group", "group", 6);
+  const dEp = selectQuestions("validate-duo", "duo", 6);
+  const gNamepick = gEp.filter((q) => q.type === "namepick").length;
+  const gSelf = gEp.filter((q) => q.type !== "namepick").length;
+  const gShareable = gEp.filter((q) => q.shareable).length;
+  const gSincere = gEp.filter((q) => q.slot === "sincere").length;
+  if (gNamepick < 3) issues.push(`group episode: only ${gNamepick} namepick (need >=3)`);
+  if (gSelf < 2) issues.push(`group episode: only ${gSelf} self (need >=2)`);
+  if (gShareable < 4) issues.push(`group episode: only ${gShareable} shareable (need >=4)`);
+  if (gSincere > 1) issues.push(`group episode: ${gSincere} sincere (max 1)`);
+  if (dEp.some((q) => q.type === "namepick")) issues.push(`duo episode: contains namepick`);
+  let runSlot = null;
+  let runLen = 0;
+  let maxRun = 0;
+  for (const q of gEp) {
+    if (q.slot === runSlot) runLen += 1;
+    else { runSlot = q.slot; runLen = 1; }
+    maxRun = Math.max(maxRun, runLen);
+  }
+  if (maxRun > 2) issues.push(`group episode: ${maxRun} same-slot in a row (max 2)`);
+
+  const softCombined = selfQs.filter((q) =>
+    /quiet|misunderstood|reassur|compliment/i.test(q.prompt + " " + (q.options || []).join(" "))
   ).length;
   return {
     total: ALL_QUESTIONS.length,
-    playable: playable.length,
-    byPack: tally(ALL_QUESTIONS, "pack"),
-    byLean: tally(playable, "lean"),
-    bySlot: tally(playable, "slot"),
-    byHeat: tally(playable, "heat"),
-    shareable: playable.filter((q) => q.shareable).length,
-    heat4: playable.filter((q) => q.heat === 4).length,
-    heat5: playable.filter((q) => q.heat === 5).length,
-    sincere: playable.filter((q) => q.slot === "sincere").length,
+    self: selfQs.length,
+    namepick: namepickQs.length,
+    byPack: tally(enabled, "pack"),
+    byLean: tally(selfQs, "lean"),
+    bySlot: tally(enabled, "slot"),
+    byHeat: tally(enabled, "heat"),
+    shareable: enabled.filter((q) => q.shareable).length,
+    heat4: enabled.filter((q) => q.heat === 4).length,
+    heat5: enabled.filter((q) => q.heat === 5).length,
+    sincere: selfQs.filter((q) => q.slot === "sincere").length,
     softCombined,
-    namepickIdeas: NAMEPICK_IDEAS.length,
+    groupEpisode: { namepick: gNamepick, self: gSelf, shareable: gShareable, maxSlotRun: maxRun },
+    duoEpisodeNamepick: dEp.filter((q) => q.type === "namepick").length,
     issues,
   };
 }
