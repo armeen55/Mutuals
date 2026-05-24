@@ -61,8 +61,11 @@ export default function Home({ next, go }) {
           <h1 className="font-black leading-none tracking-tighter" style={{ fontSize: "clamp(4rem, 15vw, 5.5rem)" }}>
             MUTUALS
           </h1>
-          <p className="mt-2 font-bold text-black/55" style={{ fontSize: "clamp(1rem, 4.4vw, 1.2rem)" }}>
-            Find out who knows who.
+          <p
+            className="mx-auto mt-2.5 max-w-[320px] font-bold leading-snug text-black/55"
+            style={{ fontSize: "clamp(0.95rem, 4vw, 1.05rem)" }}
+          >
+            Prove which of your friends actually knows you, and which ones are faking.
           </p>
         </div>
 

@@ -22,7 +22,7 @@ const COPY = {
   group: {
     mood: "cream",
     eyebrow: "group chaos",
-    header: "Put the group chat on the record.",
+    header: "Test the whole friend group.",
     sub: "Everyone answers about themselves. MUTUALS reveals who actually pays attention.",
     cta: "Send to group chat",
     note: "You answer now. Friends can join later.",

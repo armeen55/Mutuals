@@ -5,6 +5,15 @@ Newest entry on top.
 
 ---
 
+## Chunk 20D — Copy tweaks (BUILD + PUSH)
+
+- Home subtitle: "Find out who knows who." → **"Prove which of your friends actually knows you, and which ones are faking."** (eased the size + max-width so the longer line reads as a supporting subhead).
+- Group Create headline: "Put the group chat on the record." → **"Test the whole friend group."** (JoinWall lobby headline unchanged.)
+
+Files: `screens/Home.jsx`, `screens/Create.jsx`. Copy only; no logic/schema. Build green (~248ms).
+
+---
+
 ## Chunk 20C — Unify Create spacing across 1:1 / Group (BUILD + PUSH)
 
 ### Problem
