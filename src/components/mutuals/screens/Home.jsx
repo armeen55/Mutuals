@@ -23,51 +23,67 @@ export default function Home({ next, go }) {
 
   return (
     <Phone mood="dark">
-      <div className="relative z-10 flex flex-1 flex-col px-6 pb-8 pt-20 text-white">
-        <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <h1 className="text-7xl font-black leading-none tracking-tighter">
-            MUT<span className="text-[#d7ff2f]">U</span>ALS
+      <div
+        className="relative z-10 flex flex-1 flex-col px-6 text-white"
+        style={{
+          paddingTop: "clamp(28px, 6svh, 60px)",
+          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + clamp(20px, 4svh, 36px))",
+        }}
+      >
+        {/* breathing space above the brand (kept smaller than the middle) */}
+        <div style={{ flexGrow: 1 }} />
+
+        <div className="text-center">
+          <h1 className="font-black leading-none tracking-tighter" style={{ fontSize: "clamp(3.25rem, 16vw, 5.25rem)" }}>
+            MUTUALS
           </h1>
-          <p className="mt-4 text-lg font-bold text-white/70">Find out who knows who.</p>
+          <p className="mt-3 font-bold text-white/70" style={{ fontSize: "clamp(1rem, 4.6vw, 1.25rem)" }}>
+            Find out who knows who
+          </p>
         </div>
+
+        {/* the decorative middle — bigger so the brand sits in the upper third */}
+        <div style={{ flexGrow: 1.4 }} />
 
         <div className="space-y-3">
           <button
             onClick={() => startRoom("duo")}
-            className="flex w-full items-center justify-between rounded-[28px] bg-[#6b2cff] p-5 text-left shadow-xl transition active:scale-[0.98]"
+            className="flex w-full items-center justify-between gap-3 rounded-[26px] bg-[#6b2cff] px-5 text-left shadow-xl transition active:scale-[0.98]"
+            style={{ paddingTop: "clamp(14px, 2.4svh, 20px)", paddingBottom: "clamp(14px, 2.4svh, 20px)" }}
           >
             <div>
               <p className="text-[11px] font-black uppercase tracking-widest text-white/60">1:1 showdown</p>
-              <p className="mt-0.5 text-2xl font-black">Challenge 1 Friend</p>
+              <p className="text-xl font-black leading-tight sm:text-2xl">Challenge 1 Friend</p>
               <p className="text-sm font-bold text-white/70">Prove who knows who better.</p>
             </div>
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/15">
-              <Users className="h-6 w-6" />
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/15">
+              <Users className="h-5 w-5" />
             </div>
           </button>
 
           <button
             onClick={() => startRoom("group")}
-            className="flex w-full items-center justify-between rounded-[28px] bg-[#ff4f9a] p-5 text-left shadow-xl transition active:scale-[0.98]"
+            className="flex w-full items-center justify-between gap-3 rounded-[26px] bg-[#ff4f9a] px-5 text-left shadow-xl transition active:scale-[0.98]"
+            style={{ paddingTop: "clamp(14px, 2.4svh, 20px)", paddingBottom: "clamp(14px, 2.4svh, 20px)" }}
           >
             <div>
               <p className="text-[11px] font-black uppercase tracking-widest text-white/70">group chaos</p>
-              <p className="mt-0.5 text-2xl font-black">Start Group Room</p>
+              <p className="text-xl font-black leading-tight sm:text-2xl">Start Group Room</p>
               <p className="text-sm font-bold text-white/80">Who actually pays attention?</p>
             </div>
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/20">
-              <Users className="h-6 w-6" />
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/20">
+              <Users className="h-5 w-5" />
             </div>
           </button>
 
           <button
             onClick={() => go("Join")}
-            className="flex w-full items-center justify-center gap-2 rounded-[24px] border-2 border-white/15 bg-white/5 p-4 text-sm font-black text-white transition active:scale-[0.98]"
+            className="flex w-full items-center justify-center gap-2 rounded-[22px] border-2 border-white/15 bg-white/5 py-3.5 text-sm font-black text-white transition active:scale-[0.98]"
           >
             <UserPlus className="h-5 w-5" /> Join a Room
           </button>
 
-          <p className="pt-1 text-center text-xs font-bold text-white/45">
+          <p className="px-2 pt-1 text-center text-xs font-bold leading-relaxed text-white/45">
             Answer about yourself. Guess your friends. Reveal the receipts.
           </p>
           <button

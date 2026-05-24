@@ -1,4 +1,4 @@
-import { Copy, Share2 } from "lucide-react";
+import { Copy, Share2, Link2 } from "lucide-react";
 import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
 import Button from "../ui/Button";
@@ -13,7 +13,7 @@ const COPY = {
     mood: "dark",
     eyebrow: "1:1 showdown",
     header: "Prove who knows who better.",
-    body: "Send this to one person. You'll both answer, guess each other, then get the receipts.",
+    body: "Send this to one person. You both answer, guess each other, then reveal the receipts.",
     cta: "Send challenge",
     shareText: "Bet I know you better than you know me. Prove me wrong:",
   },
@@ -21,7 +21,7 @@ const COPY = {
     mood: "purple",
     eyebrow: "group chaos",
     header: "Put the group chat on the record.",
-    body: "Drop this link. Everyone answers about themselves. MUTUALS reveals who actually pays attention.",
+    body: "Drop the link. Everyone answers about themselves. MUTUALS reveals who actually pays attention.",
     cta: "Send to group chat",
     shareText: "Answer this before I start judging the group:",
   },
@@ -36,6 +36,10 @@ export default function Create({ next }) {
     saveMutualsState({ groupMode: m });
     captureGroup();
   };
+  const copyLink = () => {
+    navigator.clipboard?.writeText(link);
+    showToast("Link copied");
+  };
   const sendAndNext = () => {
     shareOrCopy({ text: c.shareText, url: link });
     next();
@@ -43,11 +47,13 @@ export default function Create({ next }) {
 
   return (
     <Phone mood={c.mood}>
-      <div className="relative z-10 px-6 pt-16 text-center text-white">
+      <div className="relative z-10 px-6 text-center text-white" style={{ paddingTop: "clamp(24px, 6svh, 56px)" }}>
         <p className="text-xs font-black uppercase tracking-[0.25em] text-white/60">{c.eyebrow}</p>
-        <h2 className="mt-3 text-5xl font-black leading-[0.9] tracking-tighter">{c.header}</h2>
+        <h2 className="mt-2 font-black leading-[0.95] tracking-tighter" style={{ fontSize: "clamp(2rem, 8.5vw, 3.25rem)" }}>
+          {c.header}
+        </h2>
       </div>
-      <BottomSheet tall>
+      <BottomSheet>
         <div className="flex rounded-2xl bg-black/5 p-1">
           {[
             ["duo", "1:1"],
@@ -65,33 +71,42 @@ export default function Create({ next }) {
             </button>
           ))}
         </div>
+
         <p className="mt-3 text-sm font-bold text-black/60">{c.body}</p>
         {mode === "group" && (
           <p className="mt-2 text-[11px] font-black text-[#6b2cff]">
             Group unlocks at 3 finished. Bigger groups make better receipts.
           </p>
         )}
-        <div className="mt-4 rounded-[26px] bg-[#f4f1fa] p-4">
-          <p className="text-xs font-black uppercase tracking-widest text-black/35">your link</p>
-          <p className="mt-1 break-all text-sm font-black">{link}</p>
-        </div>
-        <div className="mt-4">
-          <Button
-            tone="lime"
-            icon={Copy}
-            onClick={() => {
-              navigator.clipboard?.writeText(link);
-              showToast("Link copied");
-            }}
+
+        <div className="mt-4 flex items-center gap-3 rounded-[22px] bg-[#f4f1fa] p-3">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#6b2cff] text-white">
+            <Link2 className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-black uppercase tracking-widest text-black/40">invite link ready</p>
+            <p className="truncate text-sm font-black text-black">{link}</p>
+          </div>
+          <button
+            onClick={copyLink}
+            aria-label="Copy link"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-black/5 transition active:scale-95"
           >
-            Copy link
-          </Button>
+            <Copy className="h-4 w-4" />
+          </button>
         </div>
-        <div className="mt-3">
+
+        <div className="mt-4">
           <Button tone="primary" icon={Share2} onClick={sendAndNext}>
             {c.cta}
           </Button>
         </div>
+        <button
+          onClick={copyLink}
+          className="mx-auto mt-3 block text-xs font-black uppercase tracking-widest text-black/40"
+        >
+          Copy link instead
+        </button>
       </BottomSheet>
     </Phone>
   );

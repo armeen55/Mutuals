@@ -5,6 +5,32 @@ Newest entry on top.
 
 ---
 
+## Chunk 16B — Home/Create visual direction + responsiveness (BUILD + PUSH)
+
+### Goal
+Chunk 16's Home/Create were too empty/harsh and not responsive. Match the friendly dark MUTUALS reference (deep navy/purple, playful organic shapes, big white wordmark, compact spacing). Logic from Chunk 15/16 untouched. Operator previews locally — no browser preview run here.
+
+### Home (`Home.jsx`)
+- Dropped the dead-center `flex-1 justify-center` brand block and the neon lime "U". Plain **white MUTUALS** wordmark, subtitle "Find out who knows who".
+- Vertical rhythm via two weighted flex spacers (top `flexGrow:1`, middle `flexGrow:1.4`) so the brand sits in the upper third and the two doors sit toward the bottom with decorations framing the middle — not a dead empty zone.
+- **Responsive clamps:** logo `clamp(3.25rem,16vw,5.25rem)`, subtitle `clamp(1rem,4.6vw,1.25rem)`, top padding `clamp(28px,6svh,60px)`, bottom padding `safe-area-inset-bottom + clamp(20px,4svh,36px)`, door padding `clamp(14px,2.4svh,20px)`. Computed to fit 375×667 → 430×932 with no scroll/clipping.
+- Doors: **Challenge 1 Friend** (1:1 showdown) / **Start Group Room** (group chaos) + subcopy; secondary **Join a Room**; tiny helper + How-it-works sheet. Behavior unchanged (duo/group room creation, Join routes to Join).
+
+### Create (`Create.jsx`)
+- Removed the giant `pt-16` + `text-5xl` header and `BottomSheet tall`. Compact clamped header (`clamp(2rem,8.5vw,3.25rem)`), default BottomSheet.
+- Raw localhost link no longer dominates: a compact **"invite link ready"** card with a link icon, a single **truncated** line, and a copy icon. Primary CTA is the share (**Send challenge** / **Send to group chat**); "Copy link instead" is the tertiary. Mode-specific eyebrow/title/body/rule retained.
+
+### Decorations (`ui/AbstractBg.jsx`)
+- Friendlier, corner-framed composition: yellow blob top-right, accent top-left, pink on the left edge (lower half), teal bottom-right, soft accent bottom-left, two dot clusters, one SVG squiggle. Organic `rounded-[%]` shapes tucked into the edges and kept out of the vertical center so headlines/buttons stay clean. Friendly per-mood palettes (yellow/pink/teal + accent). Pure CSS/SVG.
+
+### Files changed
+`screens/Home.jsx`, `screens/Create.jsx`, `ui/AbstractBg.jsx`. **Untouched:** Chunk 15/16 logic (rounds, late joiners, answer editing, map/`pairScores`, reveal flow), Supabase schema, deploy config, Eazo.
+
+### Build
+One `npm run build` → green (2227 modules, ~273ms). No manual preview per request.
+
+---
+
 ## Chunk 16 — Brand, mode separation, reveal artifact, social-graph loop (BUILD + PUSH)
 
 ### Goal
