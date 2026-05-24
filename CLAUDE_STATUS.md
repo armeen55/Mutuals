@@ -5,6 +5,51 @@ Newest entry on top.
 
 ---
 
+## Chunk 25 — Database hardening (no gameplay change) (BUILD + PUSH)
+
+Correctness/security only. No UI redesign, no scoring/selection/flow change.
+
+### 1) Client-id identity (no duplicate-name collisions)
+- Migration adds `participants.client_id text` and moves the unique key from `(group_id, display_name)` to **`(group_id, client_id)`** (drops all prior unique constraints on participants; display names are now free to repeat).
+- `mutualsStorage.getClientId(groupId)` generates + persists a stable per-room client id (crypto.randomUUID, fallback). Both Supabase and localStorage `joinGroup(groupId, displayName, clientId)` upsert/match on the client id. Display names render unchanged.
+
+### 2) RLS — no anon delete
+- Replaced the four `for all using(true)` policies with explicit **select / insert / update** policies on groups/participants/answers/guesses. **No delete policy anywhere** → anon cannot delete rooms or rows. App still creates rooms, joins, saves answers/guesses, marks complete, reads bundle (upserts need insert+update, both present).
+
+### 3) Event logging
+- New `events` table (id, event, group_id, participant_id, props jsonb, created_at), **insert-only anon policy, no anon select**. `track()` now fires a fire-and-forget Supabase insert when configured (group/participant pulled from state), keeping the localStorage buffer as fallback. Never blocks or throws into the UI.
+
+### 4) DB error visibility
+- Reveal + Guess waiting states count consecutive poll failures and show a small **"Connection issue — tap Check again"** line at ≥2 fails (resets on success). JoinWall shows a non-blocking **"Connection issue — tap to retry"** on a failed room fetch. Normal play is never blocked (Answer/Guess saves already surface "Couldn't save — try again").
+
+### Schema / migration
+- `supabase/migrations/0002_db_hardening.sql` (idempotent) + `supabase/schema.sql` updated to the hardened canonical state. Applied to the Mutuals project only.
+
+### Files changed
+`supabase/migrations/0002_db_hardening.sql`, `supabase/schema.sql`, `utils/mutualsStorage.js`, `lib/mutualsApi.js`, `utils/analytics.js`, `screens/Reveal.jsx`, `screens/Guess.jsx`, `screens/JoinWall.jsx`. **Untouched:** scoring, question selection, room flow, no secrets committed.
+
+---
+
+## Chunk 24 — Mobile viewport fit pass + exact Home stats (BUILD + PUSH)
+
+Every public screen must fit the visible phone area (iPhone Safari / Eazo shell) with no body scroll. Visual style preserved; gameplay/schema untouched.
+
+### Shared viewport system
+- `index.css`: `@custom-variant short (max-height:740px)` + `tiny (max-height:680px)`; spacing tokens `--screen-pad-x/top/bottom`, `--hero-gap`, `--sheet-pad`, `--button-h`, `--radius-sheet`, `--sheet-maxh` that clamp down on short/tiny; `html,body,#root{height:100%}` + `body{overflow:hidden}` (no body scroll). Debug shell + marketing landing get their own `h-[100dvh] overflow-y-auto` so they still scroll under the lock.
+- `Phone.jsx`: root is now exactly `h-[100dvh] max-h-[100dvh] min-h-[100svh] overflow-hidden` (was `min-h-[100dvh]`).
+- `BottomSheet.jsx`: var-driven padding/radius, per-variant max-h that **grows** as the header shrinks on short screens, `min-h-0`, new `noScroll` + `center` (centers the sheet for waiting states instead of bottom-gluing). `Button` min-height → `--button-h` (56/52/50, never <44). `Avatar` lg/md shrink on short. `Progress` label tightens.
+
+### Per-screen
+- **Home**: compact logo/CTA/stats on short (CTA `min-h` 104→86→74), subtitle/support copy hide on tiny. **Quick fix:** stats now show **exact DB counts** (dropped the 12/30/100 floors and the "+"); labels → **"Rooms created" / Players / "Questions answered"** (`getPublicStats` already returns exact counts; null until loaded → renders "—").
+- **Create/JoinWall**: header padding → tokens, clamped headlines, compact invite card/proof box, payoff chips hide on tiny, footer/notes hide on short.
+- **Answer/Guess** (worst offenders): clamped question card + smaller h2, compact option rows (`p-3`), "Answer honestly"/group-helper boxes hide on short, smaller avatar, CTA always visible — fits the longest question without scroll. Loading/waiting states centered.
+- **Reveal/Matrix/Share**: already fixed-height flex; padding → tokens, headlines + `BigRevealCard` (stat/headline/blocks) compress on short, waiting/loading states centered (kills the huge empty top). `SignupGate`/`Today` headers also moved onto tokens.
+
+### Files changed
+`index.css`, `ui/Phone.jsx`, `ui/BottomSheet.jsx`, `ui/Button.jsx`, `ui/Avatar.jsx`, `ui/Progress.jsx`, `ui/BigRevealCard.jsx`, `MutualsMergedFlow.jsx`, `screens/Home.jsx`, `Create.jsx`, `JoinWall.jsx`, `Answer.jsx`, `Guess.jsx`, `Reveal.jsx`, `Matrix.jsx`, `Share.jsx`, `SignupGate.jsx`, `Today.jsx`, `lib/mutualsApi.js` (getPublicStats unchanged). **Untouched:** gameplay logic, question selection, scoring, Supabase schema.
+
+---
+
 ## Chunk 23 — FINAL pre-submit hardening + Eazo vote CTA + public stats (BUILD + PUSH)
 
 ### Submission pitch (for Eazo + judges)

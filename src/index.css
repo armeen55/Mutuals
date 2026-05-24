@@ -1,1 +1,58 @@
 @import "tailwindcss";
+
+/* Height-based variants for cramped phone/Eazo/Safari shells.
+   short  = bottom URL bar / smaller phones
+   tiny   = Eazo in-app banner + chrome (very little vertical room) */
+@custom-variant short (@media (max-height: 740px));
+@custom-variant tiny (@media (max-height: 680px));
+
+/* Shared spacing tokens. Every public screen reads these so one system
+   drives the whole app — they clamp down as vertical room disappears. */
+:root {
+  --screen-pad-x: 22px;
+  --screen-pad-top: 40px;
+  --screen-pad-bottom: 22px;
+  --hero-gap: 18px;
+  --sheet-pad: 18px;
+  --button-h: 56px;
+  --radius-sheet: 32px;
+  --sheet-maxh: 76dvh;
+}
+@media (max-height: 740px) {
+  :root {
+    --screen-pad-x: 20px;
+    --screen-pad-top: 22px;
+    --screen-pad-bottom: 16px;
+    --hero-gap: 12px;
+    --sheet-pad: 15px;
+    --button-h: 52px;
+    --radius-sheet: 26px;
+    --sheet-maxh: 82dvh;
+  }
+}
+@media (max-height: 680px) {
+  :root {
+    --screen-pad-x: 16px;
+    --screen-pad-top: 14px;
+    --screen-pad-bottom: 12px;
+    --hero-gap: 8px;
+    --sheet-pad: 13px;
+    --button-h: 50px;
+    --radius-sheet: 22px;
+    --sheet-maxh: 88dvh;
+  }
+}
+
+/* Lock the document to the visible viewport: the app owns its own height and
+   never lets the body scroll. Surfaces that genuinely need to scroll (debug
+   shell, marketing landing) opt back in with their own overflow container. */
+html,
+body,
+#root {
+  height: 100%;
+}
+html,
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}

@@ -1,5 +1,5 @@
 import { isSupabaseEnabled, supabase } from "./supabaseClient";
-import { getMutualsState, saveMutualsState, getParticipantId, setParticipantId } from "../utils/mutualsStorage";
+import { getMutualsState, saveMutualsState, getParticipantId, setParticipantId, getClientId } from "../utils/mutualsStorage";
 import { computeInsights, computeReadiness } from "./insights";
 
 // =============================================================================
@@ -55,12 +55,13 @@ const local = {
   async getGroup(id) {
     return lsDb().groups[id] || null;
   },
-  async joinGroup(groupId, displayName) {
+  async joinGroup(groupId, displayName, clientId) {
     const db = lsDb();
     db.participants[groupId] = db.participants[groupId] || [];
-    let p = db.participants[groupId].find((x) => x.displayName === displayName);
+    // Identity is the per-room client id, so duplicate display names stay distinct.
+    let p = clientId ? db.participants[groupId].find((x) => x.clientId === clientId) : null;
     if (!p) {
-      p = { id: uid(), groupId, displayName, joinedAt: Date.now() };
+      p = { id: uid(), groupId, displayName, clientId, joinedAt: Date.now() };
       db.participants[groupId].push(p);
       lsWrite(db);
     }
@@ -111,11 +112,11 @@ const sb = {
     const { data } = await supabase.from("groups").select("*").eq("id", id).maybeSingle();
     return data ? { id: data.id, mode: data.mode, createdBy: data.created_by } : null;
   },
-  async joinGroup(groupId, displayName) {
-    // Idempotent per (group_id, display_name) — race-safe.
+  async joinGroup(groupId, displayName, clientId) {
+    // Idempotent per (group_id, client_id) — race-safe and name-collision-safe.
     const { data, error } = await supabase
       .from("participants")
-      .upsert({ group_id: groupId, display_name: displayName }, { onConflict: "group_id,display_name" })
+      .upsert({ group_id: groupId, display_name: displayName, client_id: clientId }, { onConflict: "group_id,client_id" })
       .select()
       .single();
     if (error) throw error;
@@ -202,7 +203,7 @@ const backend = isSupabaseEnabled ? sb : local;
 // ---------------- public async API ----------------
 export const createGroup = (args) => backend.createGroup(args);
 export const getGroup = (id) => backend.getGroup(id);
-export const joinGroup = (groupId, displayName) => backend.joinGroup(groupId, displayName);
+export const joinGroup = (groupId, displayName, clientId) => backend.joinGroup(groupId, displayName, clientId);
 export const saveAnswers = (groupId, pid, answersObj) => backend.saveAnswers(groupId, pid, answersObj);
 export const saveGuesses = (groupId, gid, byTarget) => backend.saveGuesses(groupId, gid, byTarget);
 export const setCompleted = (groupId, pid, value) => backend.setCompleted(groupId, pid, value);
@@ -239,9 +240,10 @@ async function ensureParticipant() {
   const existing = getParticipantId(gid);
   if (existing) return existing;
   const name = s.currentUserName || "You";
+  const cid = getClientId(gid);
   const grp = await getGroup(gid);
   if (!grp) await createGroup({ id: gid, mode: s.groupMode || "group", createdBy: name });
-  const p = await joinGroup(gid, name);
+  const p = await joinGroup(gid, name, cid);
   if (p?.id) setParticipantId(gid, p.id);
   return p?.id || null;
 }
@@ -261,9 +263,10 @@ export function captureJoin(name) {
   const gid = s.activeGroupId;
   if (!gid) return;
   (async () => {
+    const cid = getClientId(gid);
     const grp = await getGroup(gid);
     if (!grp) await createGroup({ id: gid, mode: s.groupMode || "group", createdBy: name });
-    const p = await joinGroup(gid, name);
+    const p = await joinGroup(gid, name, cid);
     if (p?.id) setParticipantId(gid, p.id);
   })().catch(() => {});
 }

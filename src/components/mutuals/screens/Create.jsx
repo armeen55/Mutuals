@@ -52,19 +52,19 @@ export default function Create({ next }) {
 
   return (
     <Phone mood={c.mood} quiet>
-      <div className="relative z-10 px-6 text-center text-[#17112B]" style={{ paddingTop: "clamp(42px, 8svh, 86px)" }}>
+      <div className="relative z-10 px-[var(--screen-pad-x)] text-center text-[#17112B]" style={{ paddingTop: "var(--screen-pad-top)" }}>
         <p className="text-xs font-black uppercase tracking-[0.25em] text-black/45">{c.eyebrow}</p>
         <h2
-          className="mx-auto mt-2 font-black leading-[0.92] tracking-tighter"
-          style={{ fontSize: "clamp(2.4rem, 10vw, 4.25rem)", maxWidth: "340px" }}
+          className="mx-auto mt-2 font-black leading-[0.92] tracking-tighter text-[clamp(2.4rem,10vw,4.25rem)] short:text-[clamp(2rem,8vw,3rem)] short:mt-1"
+          style={{ maxWidth: "340px" }}
         >
           {c.header}
         </h2>
-        <p className="mx-auto mt-3 max-w-[320px] text-sm font-bold leading-snug text-black/55">{c.sub}</p>
+        <p className="mx-auto mt-3 max-w-[320px] text-sm font-bold leading-snug text-black/55 short:mt-2 tiny:text-[13px]">{c.sub}</p>
       </div>
 
       <BottomSheet variant="standard">
-        <div className="flex h-12 rounded-2xl bg-black/5 p-1">
+        <div className="flex h-12 rounded-2xl bg-black/5 p-1 short:h-11">
           {[
             ["duo", "1:1"],
             ["group", "Group"],
@@ -91,7 +91,7 @@ export default function Create({ next }) {
                 </span>
               ))}
             </div>
-            <p className="mt-2 text-[11px] font-black text-[#6B2CFF]">
+            <p className="mt-2 text-[11px] font-black text-[#6B2CFF] tiny:hidden">
               Unlocks at 3 finished. Bigger groups make better receipts.
             </p>
           </div>
@@ -114,17 +114,17 @@ export default function Create({ next }) {
           </button>
         </div>
 
-        <div className="mt-4">
-          <Button tone="primary" icon={Share2} onClick={sendInvite} className="min-h-[60px]">
+        <div className="mt-4 short:mt-3">
+          <Button tone="primary" icon={Share2} onClick={sendInvite}>
             {c.cta}
           </Button>
         </div>
-        <div className="mt-2.5">
-          <Button tone="white" onClick={next} className="min-h-[58px]">
+        <div className="mt-2.5 short:mt-2">
+          <Button tone="white" onClick={next}>
             I shared it · answer now
           </Button>
         </div>
-        <p className="mt-2 text-center text-[11px] font-bold text-black/35">{c.note}</p>
+        <p className="mt-2 text-center text-[11px] font-bold text-black/35 tiny:hidden">{c.note}</p>
       </BottomSheet>
     </Phone>
   );

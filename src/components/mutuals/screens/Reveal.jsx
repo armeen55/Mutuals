@@ -24,13 +24,16 @@ export default function Reveal({ next, go, goSignup }) {
   const [real, setReal] = useState(null); // { readiness, cards, bundle }
   const [loading, setLoading] = useState(!app.soloDemo);
   const [pos, setPos] = useState(0);
+  const [pollFails, setPollFails] = useState(0);
   const viewedRef = useRef(false);
   const myPid = (app.participantIdsByGroup || {})[app.activeGroupId];
   const need = useMemo(() => selectQuestions(app.activeGroupId).length, [app.activeGroupId]);
 
   const [checking, setChecking] = useState(false);
+  const onPollError = () => setPollFails((f) => f + 1);
   const applyReal = (r) => {
     setReal(r);
+    setPollFails(0);
     repairParticipantId(app.activeGroupId, r?.bundle?.participants);
   };
   const refresh = () => {
@@ -40,7 +43,7 @@ export default function Reveal({ next, go, goSignup }) {
     }
     getInsights(app.activeGroupId)
       .then(applyReal)
-      .catch(() => {})
+      .catch(onPollError)
       .finally(() => setLoading(false));
   };
   const checkAgain = () => {
@@ -48,7 +51,7 @@ export default function Reveal({ next, go, goSignup }) {
     if (app.soloDemo || !app.activeGroupId) return setChecking(false);
     getInsights(app.activeGroupId)
       .then(applyReal)
-      .catch(() => {})
+      .catch(onPollError)
       .finally(() => setTimeout(() => setChecking(false), 400));
   };
   const unlockAsDuo = () => {
@@ -72,7 +75,7 @@ export default function Reveal({ next, go, goSignup }) {
           applyReal(r);
           if (r?.readiness?.unlocked && r.cards?.length > 0) clearInterval(id);
         })
-        .catch(() => {});
+        .catch(onPollError);
     }, 6000);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -102,9 +105,9 @@ export default function Reveal({ next, go, goSignup }) {
   if (!app.soloDemo && app.activeGroupId && loading && !real) {
     return (
       <Phone mood="purple">
-        <div className="relative z-10 px-6 pt-32 text-center text-white">
+        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-[var(--screen-pad-x)] text-center text-white">
           <p className="text-xs font-black uppercase tracking-[0.25em] text-white/70">reveal</p>
-          <h2 className="mt-4 text-5xl font-black leading-none tracking-tighter">Tallying the group…</h2>
+          <h2 className="mt-4 text-5xl font-black leading-none tracking-tighter short:text-4xl">Tallying the group…</h2>
         </div>
       </Phone>
     );
@@ -124,22 +127,22 @@ export default function Reveal({ next, go, goSignup }) {
       .join(", ");
     return (
       <Phone mood="purple">
-        <div className="relative z-10 px-6 pt-20 text-center">
+        <div className="relative z-10 px-[var(--screen-pad-x)] pt-[var(--screen-pad-top)] text-center">
           <span className="inline-flex rounded-full bg-black px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-white">
             {mode === "duo" ? "1:1 room" : "Group room"}
           </span>
         </div>
-        <BottomSheet tall>
+        <BottomSheet tall center>
           <p className="text-xs font-black uppercase tracking-widest text-black/35">
             {status.joined} joined · {status.answered} answered · {status.finished} finished
           </p>
-          <h2 className="mt-2 text-4xl font-black leading-[0.95] tracking-tighter text-black">
+          <h2 className="mt-2 text-4xl font-black leading-[0.95] tracking-tighter text-black short:text-3xl">
             {needFinish > 0 ? `${needFinish} more to finish.` : "Unlocking…"}
           </h2>
-          <p className="mt-2 text-sm font-bold text-black/55">
+          <p className="mt-2 text-sm font-bold text-black/55 short:text-[13px]">
             Group unlocks at 3 finished. 1:1 at 2. Partial reveals still work — updating live…
           </p>
-          <div className="mt-4 rounded-[26px] bg-[#f4f1fa] p-4">
+          <div className="mt-4 rounded-[26px] bg-[#f4f1fa] p-4 short:mt-3 short:p-3">
             <PlayerChips participants={participants} statuses={status.statuses} youId={myPid} />
           </div>
           {mode === "group" && participants.length === 2 && (
@@ -165,6 +168,9 @@ export default function Reveal({ next, go, goSignup }) {
               {unfinishedNames ? `Nudge ${unfinishedNames.split(",")[0]}` : "Nudge the group"}
             </Button>
           </div>
+          {pollFails >= 2 && (
+            <p className="mt-3 text-center text-xs font-black text-[#FF4F9A]">Connection issue — tap Check again</p>
+          )}
           <div className="mt-3 grid grid-cols-2 gap-3">
             <Button
               tone="lime"
@@ -189,14 +195,14 @@ export default function Reveal({ next, go, goSignup }) {
   if (!app.soloDemo && app.activeGroupId && unlocked && !realReady) {
     return (
       <Phone mood="purple">
-        <div className="relative z-10 px-6 pt-24 text-center text-white">
+        <div className="relative z-10 px-[var(--screen-pad-x)] pt-[var(--screen-pad-top)] text-center text-white">
           <p className="text-xs font-black uppercase tracking-[0.25em] text-white/70">reveal</p>
-          <h2 className="mt-4 text-5xl font-black leading-none tracking-tighter">Everyone's in.</h2>
-          <p className="mx-auto mt-4 max-w-[270px] text-sm font-bold text-white/75">
+          <h2 className="mt-4 text-5xl font-black leading-none tracking-tighter short:text-4xl">Everyone's in.</h2>
+          <p className="mx-auto mt-4 max-w-[270px] text-sm font-bold text-white/75 short:mt-3">
             Not enough overlapping guesses yet to build your cards. Get more friends to guess each other, or run it back.
           </p>
         </div>
-        <BottomSheet>
+        <BottomSheet center>
           <Button
             tone="pink"
             icon={Share2}
@@ -247,13 +253,13 @@ export default function Reveal({ next, go, goSignup }) {
   return (
     <Phone mood="dark">
       <div
-        className="relative z-10 flex h-[100dvh] flex-col px-5 text-white"
+        className="relative z-10 flex h-[100dvh] flex-col px-[var(--screen-pad-x)] text-white"
         style={{
           paddingTop: "clamp(16px, 4svh, 34px)",
           paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + clamp(14px, 3svh, 26px))",
         }}
       >
-        <p className="text-center text-sm font-black text-white/70">Here's what we learned…</p>
+        <p className="text-center text-sm font-black text-white/70 short:text-[13px]">Here's what we learned…</p>
 
         <div className="mt-3 flex min-h-0 flex-1 flex-col overflow-y-auto py-2">
           <div className="my-auto w-full">

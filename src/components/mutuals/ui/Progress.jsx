@@ -18,7 +18,7 @@ export default function Progress({ step, current, total, label }) {
           ))}
         </div>
         {label && (
-          <p className="mt-2 text-center text-xs font-black uppercase tracking-widest text-black/45">{label}</p>
+          <p className="mt-2 text-center text-xs font-black uppercase tracking-widest text-black/45 short:mt-1">{label}</p>
         )}
       </div>
     );

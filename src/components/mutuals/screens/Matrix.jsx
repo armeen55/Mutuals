@@ -154,7 +154,7 @@ export default function Matrix({ next, go }) {
   return (
     <Phone mood={isDuo ? "lavender" : "cream"}>
       <div
-        className="relative z-10 flex h-[100dvh] flex-col px-5 text-[#17112B]"
+        className="relative z-10 flex h-[100dvh] flex-col px-[var(--screen-pad-x)] text-[#17112B]"
         style={{
           paddingTop: "clamp(18px, 5svh, 44px)",
           paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + clamp(14px, 3svh, 26px))",
@@ -164,7 +164,7 @@ export default function Matrix({ next, go }) {
           <p className="text-xs font-black uppercase tracking-[0.25em] text-black/45">
             {isDuo ? "the 1:1 verdict" : "the group-chat map"}
           </p>
-          <h2 className="mt-2 font-black leading-[0.95] tracking-tighter" style={{ fontSize: "clamp(1.9rem, 8vw, 2.75rem)" }}>
+          <h2 className="mt-2 font-black leading-[0.95] tracking-tighter text-[clamp(1.9rem,8vw,2.75rem)] short:text-[clamp(1.6rem,7vw,2.1rem)]">
             {isDuo ? "The verdict is in." : "Who knows who?"}
           </h2>
         </div>

@@ -1,5 +1,10 @@
-// Dependency-free local analytics: console + a capped localStorage event buffer.
-// No backend, no schema — for local funnel debugging only. Safe to no-op anywhere.
+// Local analytics (console + capped localStorage buffer) that also mirrors into
+// the Supabase `events` table when configured. The Supabase write is strictly
+// fire-and-forget and never blocks or throws into the UI; localStorage is the
+// always-on fallback for local funnel debugging.
+import { isSupabaseEnabled, supabase } from "../lib/supabaseClient";
+import { getMutualsState, getParticipantId } from "./mutualsStorage";
+
 const KEY = "mutuals.events.v1";
 const MAX = 200;
 
@@ -17,6 +22,22 @@ export function track(event, props = {}) {
     localStorage.setItem(KEY, JSON.stringify(buf));
   } catch {
     // ignore (private mode / quota / SSR)
+  }
+  if (isSupabaseEnabled && supabase) {
+    try {
+      const s = getMutualsState();
+      const gid = s.activeGroupId || null;
+      const pid = gid ? getParticipantId(gid) : null;
+      supabase
+        .from("events")
+        .insert({ event, group_id: gid, participant_id: pid, props })
+        .then(
+          () => {},
+          () => {}
+        );
+    } catch {
+      // ignore — analytics must never break the game
+    }
   }
 }
 

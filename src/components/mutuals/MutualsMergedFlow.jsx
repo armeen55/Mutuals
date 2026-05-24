@@ -57,7 +57,12 @@ export default function MutualsMergedFlow() {
   }, []);
 
   if (!showPrototype) {
-    return <MarketingLanding onStart={() => setShowPrototype(true)} view={view} setView={setView} debug={debug} />;
+    // Landing can exceed the viewport — give it its own scroll (body is locked).
+    return (
+      <div className="h-[100dvh] overflow-y-auto">
+        <MarketingLanding onStart={() => setShowPrototype(true)} view={view} setView={setView} debug={debug} />
+      </div>
+    );
   }
 
   // PUBLIC: full-bleed mobile web app. The centered max-w-md column only matters on
@@ -77,7 +82,7 @@ export default function MutualsMergedFlow() {
   const effectiveView = view;
 
   return (
-    <div className="min-h-screen overflow-hidden bg-[#f5f0e8] text-black">
+    <div className="h-[100dvh] overflow-y-auto bg-[#f5f0e8] text-black">
       <div className="sticky top-0 z-50 border-b border-black/5 bg-white/85 px-4 py-4 shadow-lg backdrop-blur">
           <div className="mx-auto flex max-w-7xl flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center justify-between gap-4">

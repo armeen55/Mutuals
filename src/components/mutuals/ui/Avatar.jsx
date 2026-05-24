@@ -1,7 +1,12 @@
 import { cx } from "../../../utils/ui";
 
 export default function Avatar({ member, size = "md" }) {
-  const dims = size === "sm" ? "h-10 w-10 text-sm" : size === "lg" ? "h-20 w-20 text-2xl" : "h-14 w-14 text-lg";
+  const dims =
+    size === "sm"
+      ? "h-10 w-10 text-sm"
+      : size === "lg"
+        ? "h-20 w-20 text-2xl short:h-16 short:w-16 short:text-xl tiny:h-14 tiny:w-14"
+        : "h-14 w-14 text-lg short:h-12 short:w-12";
   return (
     <div className="flex flex-col items-center gap-2">
       <div

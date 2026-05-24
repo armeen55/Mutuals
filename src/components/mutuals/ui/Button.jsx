@@ -20,7 +20,7 @@ export default function Button({ children, onClick, tone = "primary", icon: Icon
     <button
       onClick={onClick}
       className={cx(
-        "flex min-h-[56px] w-full items-center justify-between rounded-3xl px-5 py-3.5 text-left text-sm font-black transition active:scale-[0.98]",
+        "flex min-h-[var(--button-h)] w-full items-center justify-between rounded-3xl px-5 py-3 text-left text-sm font-black transition active:scale-[0.98]",
         styles[tone] || styles.primary,
         className
       )}

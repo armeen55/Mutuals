@@ -16,17 +16,24 @@ export default function JoinWall({ go }) {
   const app = useMutuals();
   const [name, setName] = useState(app.currentUserName || "");
   const [bundle, setBundle] = useState(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   const need = useMemo(() => selectQuestions(app.activeGroupId).length, [app.activeGroupId]);
 
+  const load = () => {
+    if (!app.activeGroupId) return;
+    getBundle(app.activeGroupId)
+      .then((b) => {
+        setBundle(b);
+        setLoadFailed(false);
+        repairParticipantId(app.activeGroupId, b?.participants);
+        if (b?.group?.mode) saveMutualsState({ groupMode: b.group.mode });
+      })
+      .catch(() => setLoadFailed(true));
+  };
+
   useEffect(() => {
-    if (app.activeGroupId)
-      getBundle(app.activeGroupId)
-        .then((b) => {
-          setBundle(b);
-          repairParticipantId(app.activeGroupId, b?.participants);
-          if (b?.group?.mode) saveMutualsState({ groupMode: b.group.mode });
-        })
-        .catch(() => {});
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [app.activeGroupId]);
 
   const participants = bundle?.participants || [];
@@ -59,19 +66,22 @@ export default function JoinWall({ go }) {
 
   return (
     <Phone mood="cream">
-      <div className="relative z-10 px-6 text-center text-[#17112B]" style={{ paddingTop: "clamp(40px, 8svh, 80px)" }}>
+      <div className="relative z-10 px-[var(--screen-pad-x)] text-center text-[#17112B]" style={{ paddingTop: "var(--screen-pad-top)" }}>
         <p className="inline-flex rounded-full bg-[#17112B] px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-white">
           {badge}
         </p>
-        <h2 className="mx-auto mt-4 font-black leading-[0.9] tracking-tighter" style={{ fontSize: "clamp(2.8rem, 12vw, 4.6rem)", maxWidth: "340px" }}>
+        <h2
+          className="mx-auto mt-4 font-black leading-[0.9] tracking-tighter text-[clamp(2.8rem,12vw,4.6rem)] short:mt-2 short:text-[clamp(2.2rem,9vw,3.2rem)]"
+          style={{ maxWidth: "340px" }}
+        >
           {headline}
         </h2>
-        <p className="mx-auto mt-3 max-w-[300px] text-sm font-bold leading-snug text-black/60">{subhead}</p>
+        <p className="mx-auto mt-3 max-w-[300px] text-sm font-bold leading-snug text-black/60 short:mt-2 tiny:text-[13px]">{subhead}</p>
       </div>
 
       <BottomSheet variant="standard">
         {/* 1 — live room proof */}
-        <div className="rounded-[22px] bg-[#F3EFFF] p-4">
+        <div className="rounded-[22px] bg-[#F3EFFF] p-4 short:p-3">
           <p className="text-[11px] font-black uppercase tracking-widest text-black/40">
             {status.joined} joined · {status.answered} answered · {status.finished} finished
           </p>
@@ -86,10 +96,15 @@ export default function JoinWall({ go }) {
           ) : (
             <p className="mt-1.5 text-sm font-black text-black/55">{emptyCopy}</p>
           )}
+          {loadFailed && (
+            <button onClick={load} className="mt-2 block w-full text-left text-[11px] font-black text-[#FF4F9A]">
+              Connection issue — tap to retry
+            </button>
+          )}
         </div>
 
         {/* 2 — payoff preview */}
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-2 tiny:hidden">
           {PAYOFF.map((p) => (
             <span key={p} className="rounded-full bg-[#FFF3DF] px-3 py-1.5 text-[11px] font-black text-[#17112B] ring-1 ring-black/5">
               {p}
@@ -98,7 +113,7 @@ export default function JoinWall({ go }) {
         </div>
 
         {/* 3 — name input */}
-        <div className="mt-4">
+        <div className="mt-4 short:mt-3">
           <p className="text-[11px] font-black uppercase tracking-widest text-black/40">your display name</p>
           <input
             value={name}
@@ -111,16 +126,16 @@ export default function JoinWall({ go }) {
         </div>
 
         {/* 4 — primary CTA */}
-        <div className="mt-3">
+        <div className="mt-3 short:mt-2.5">
           <Button
             onClick={join}
             tone={isDuo ? "primary" : "pink"}
-            className={cx("min-h-[60px]", name.trim() ? "" : "pointer-events-none opacity-40")}
+            className={cx(name.trim() ? "" : "pointer-events-none opacity-40")}
           >
             {cta}
           </Button>
         </div>
-        <p className="mt-2 text-center text-[11px] font-bold text-black/35">No account. No install. Quick round. Real receipts.</p>
+        <p className="mt-2 text-center text-[11px] font-bold text-black/35 short:hidden">No account. No install. Quick round. Real receipts.</p>
       </BottomSheet>
     </Phone>
   );

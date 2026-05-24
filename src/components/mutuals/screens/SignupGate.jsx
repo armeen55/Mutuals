@@ -8,7 +8,7 @@ import { showToast } from "../../../utils/ui";
 export default function SignupGate({ next }) {
   return (
     <Phone mood="yellow">
-      <div className="relative z-10 px-7 pt-24 text-center">
+      <div className="relative z-10 px-[var(--screen-pad-x)] pt-[var(--screen-pad-top)] text-center">
         <p className="inline-flex rounded-full bg-black px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-white">
           mid-reveal cliffhanger
         </p>

@@ -49,21 +49,23 @@ export default function Answer({ next }) {
 
   return (
     <Phone mood="cream">
-      <div className="relative z-10 px-6 pt-16">
+      <div className="relative z-10 px-[var(--screen-pad-x)] pt-[var(--screen-pad-top)]">
         <p className="text-center text-xs font-black uppercase tracking-[0.25em] text-black/45">about you</p>
-        <div className="mt-4 rounded-[28px] bg-white p-6 text-center shadow-xl">
-          <h2 className="text-3xl font-black leading-tight text-black">{q.prompt}</h2>
+        <div className="mt-4 rounded-[28px] bg-white p-6 text-center shadow-xl short:mt-3 short:rounded-[22px] short:p-4">
+          <h2 className="font-black leading-tight text-black text-[clamp(1.45rem,6.5vw,1.875rem)] short:text-[clamp(1.2rem,5.6vw,1.55rem)]">
+            {q.prompt}
+          </h2>
         </div>
       </div>
       <BottomSheet tall>
         <Progress current={qi + 1} total={questions.length} label={`Question ${qi + 1} of ${questions.length}`} />
-        <div className="mt-5 space-y-3">
+        <div className="mt-5 space-y-3 short:mt-3 short:space-y-2">
           {q.options.map((option, i) => (
             <button
               key={option}
               onClick={() => pick(i)}
               className={cx(
-                "flex w-full items-center gap-3 rounded-3xl p-4 text-left text-sm font-black shadow-sm",
+                "flex w-full items-center gap-3 rounded-3xl p-4 text-left text-sm font-black shadow-sm short:rounded-2xl short:p-3",
                 i === selected ? "bg-[#FF4F9A] text-white" : "bg-[#F3EFFF] text-black"
               )}
             >
@@ -79,13 +81,13 @@ export default function Answer({ next }) {
             </button>
           ))}
         </div>
-        <div className="mt-5 rounded-[26px] bg-[#e9fff0] p-4">
+        <div className="mt-5 rounded-[26px] bg-[#e9fff0] p-4 short:hidden">
           <p className="text-sm font-black">Answer honestly</p>
           <p className="mt-1 text-xs font-bold text-black/50">
             Your answers stay private until the reveal. Your friends will try to guess them.
           </p>
         </div>
-        <div className="mt-5">
+        <div className="mt-5 short:mt-3">
           {qi > 0 ? (
             <div className="grid grid-cols-3 gap-3">
               <Button tone="dark" icon={ChevronLeft} onClick={() => setQi(qi - 1)} className="col-span-1">

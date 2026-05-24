@@ -56,21 +56,24 @@ export default function Guess({ next }) {
   const need = questions.length;
   const [bundle, setBundle] = useState(null);
   const [checking, setChecking] = useState(false);
+  const [pollFails, setPollFails] = useState(0);
+  const onPollError = () => setPollFails((f) => f + 1);
 
   const applyBundle = (b) => {
     setBundle(b);
+    setPollFails(0);
     repairParticipantId(app.activeGroupId, b?.participants);
     if (b?.group?.mode) saveMutualsState({ groupMode: b.group.mode });
   };
   const refresh = () => {
-    if (app.activeGroupId) getBundle(app.activeGroupId).then(applyBundle).catch(() => {});
+    if (app.activeGroupId) getBundle(app.activeGroupId).then(applyBundle).catch(onPollError);
   };
   const checkAgain = () => {
     setChecking(true);
     if (!app.activeGroupId) return setChecking(false);
     getBundle(app.activeGroupId)
       .then(applyBundle)
-      .catch(() => {})
+      .catch(onPollError)
       .finally(() => setTimeout(() => setChecking(false), 400));
   };
   const unlockAsDuo = () => {
@@ -85,7 +88,7 @@ export default function Guess({ next }) {
     if (app.soloDemo) return;
     refresh();
     const id = setInterval(() => {
-      if (app.activeGroupId) getBundle(app.activeGroupId).then(applyBundle).catch(() => {});
+      if (app.activeGroupId) getBundle(app.activeGroupId).then(applyBundle).catch(onPollError);
     }, 6000);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -119,9 +122,9 @@ export default function Guess({ next }) {
   if (realRoom && bundle === null) {
     return (
       <Phone mood="lavender">
-        <div className="relative z-10 px-6 pt-32 text-center text-[#17112B]">
+        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-[var(--screen-pad-x)] text-center text-[#17112B]">
           <p className="text-xs font-black uppercase tracking-[0.25em] text-black/50">your room</p>
-          <h2 className="mt-4 text-5xl font-black leading-none tracking-tighter">Loading room…</h2>
+          <h2 className="mt-4 text-5xl font-black leading-none tracking-tighter short:text-4xl">Loading room…</h2>
         </div>
       </Phone>
     );
@@ -135,25 +138,25 @@ export default function Guess({ next }) {
     const needMore = Math.max(0, required - participants.length);
     return (
       <Phone mood="lavender">
-        <div className="relative z-10 px-6 pt-20 text-center">
+        <div className="relative z-10 px-[var(--screen-pad-x)] pt-[var(--screen-pad-top)] text-center">
           <span className="inline-flex rounded-full bg-black px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-white">
             {app.groupMode === "duo" ? "1:1 room" : "Group room"}
           </span>
         </div>
-        <BottomSheet tall>
+        <BottomSheet tall center>
           <p className="text-xs font-black uppercase tracking-widest text-black/35">
             {status.joined} joined · {status.answered} answered · {status.finished} finished
           </p>
-          <h2 className="mt-2 text-4xl font-black leading-[0.95] tracking-tighter text-black">
+          <h2 className="mt-2 text-4xl font-black leading-[0.95] tracking-tighter text-black short:text-3xl">
             {needMore > 0 ? `Need ${needMore} more ${needMore === 1 ? "person" : "people"}.` : "Ready to play."}
           </h2>
           <p className="mt-2 text-sm font-bold text-black/55">Group rooms unlock at 3. 1:1 rooms unlock at 2.</p>
           {app.groupMode === "group" && (
-            <p className="mt-2 text-xs font-bold text-black/45">
+            <p className="mt-2 text-xs font-bold text-black/45 tiny:hidden">
               You'll guess up to 3 people. Bigger groups make better receipts as more finish.
             </p>
           )}
-          <div className="mt-4 rounded-[26px] bg-[#f4f1fa] p-4">
+          <div className="mt-4 rounded-[26px] bg-[#f4f1fa] p-4 short:mt-3 short:p-3">
             <PlayerChips participants={participants} statuses={status.statuses} youId={myPid} />
           </div>
           {app.groupMode === "group" && participants.length === 2 && (
@@ -177,6 +180,9 @@ export default function Guess({ next }) {
               Nudge a friend
             </Button>
           </div>
+          {pollFails >= 2 && (
+            <p className="mt-3 text-center text-xs font-black text-[#FF4F9A]">Connection issue — tap Check again</p>
+          )}
           <div className="mt-3 grid grid-cols-2 gap-3">
             <Button
               tone="lime"
@@ -276,25 +282,25 @@ function RealGuess({ next, targets, questions, isGroup, lateJoiners = [], onAddL
 
   return (
     <Phone mood="lavender">
-      <div className="relative z-10 px-6 pt-12 text-center text-[#17112B]">
+      <div className="relative z-10 px-[var(--screen-pad-x)] pt-[var(--screen-pad-top)] text-center text-[#17112B]">
         <p className="text-xs font-black uppercase tracking-[0.25em] text-black/50">guessing {member.name}</p>
-        <div className="mt-3 flex justify-center">
+        <div className="mt-3 flex justify-center short:mt-2">
           <Avatar member={member} size="lg" />
         </div>
-        <div className="mt-4 rounded-[28px] bg-white p-5 shadow-xl">
-          <h2 className="break-words text-2xl font-black leading-tight text-black">{fillName(q.about, member.name)}</h2>
+        <div className="mt-4 rounded-[28px] bg-white p-5 shadow-xl short:mt-3 short:rounded-[22px] short:p-4">
+          <h2 className="break-words text-2xl font-black leading-tight text-black short:text-xl">{fillName(q.about, member.name)}</h2>
         </div>
       </div>
       <BottomSheet tall>
         {isGroup && (
-          <p className="mb-2 text-center text-[11px] font-bold text-black/45">
+          <p className="mb-2 text-center text-[11px] font-bold text-black/45 short:hidden">
             You'll guess up to 3 people. Bigger groups make better receipts.
           </p>
         )}
         {late && (
-          <div className="mb-3 rounded-2xl bg-[#fff3c4] p-3">
+          <div className="mb-3 rounded-2xl bg-[#fff3c4] p-3 short:mb-2 short:p-2.5">
             <p className="text-sm font-black">{late.displayName} joined late.</p>
-            <p className="mt-0.5 text-xs font-bold text-black/55">This reveal uses your current round.</p>
+            <p className="mt-0.5 text-xs font-bold text-black/55 short:hidden">This reveal uses your current round.</p>
             <button
               onClick={() => onAddLate(late.id)}
               className="mt-2 w-full rounded-xl bg-black px-3 py-2 text-xs font-black text-white"
@@ -309,14 +315,14 @@ function RealGuess({ next, targets, questions, isGroup, lateJoiners = [], onAddL
           </div>
         )}
         <Progress current={guessNum} total={guessTotal} label={`Guess ${guessNum} of ${guessTotal}`} />
-        <p className="mt-4 text-center text-sm font-black text-black/50">What did {member.name} actually pick?</p>
-        <div className="mt-4 space-y-3">
+        <p className="mt-4 text-center text-sm font-black text-black/50 short:mt-2 tiny:hidden">What did {member.name} actually pick?</p>
+        <div className="mt-4 space-y-3 short:mt-3 short:space-y-2">
           {q.options.map((option, i) => (
             <button
               key={option}
               onClick={() => setSelected(i)}
               className={cx(
-                "flex w-full items-center gap-3 rounded-3xl p-4 text-left text-sm font-black shadow-sm",
+                "flex w-full items-center gap-3 rounded-3xl p-4 text-left text-sm font-black shadow-sm short:rounded-2xl short:p-3",
                 i === selected ? "bg-[#7CDFFF] text-black" : "bg-[#F3EFFF] text-black"
               )}
             >
@@ -332,7 +338,7 @@ function RealGuess({ next, targets, questions, isGroup, lateJoiners = [], onAddL
             </button>
           ))}
         </div>
-        <div className="mt-5">
+        <div className="mt-5 short:mt-3">
           {canBack ? (
             <div className="grid grid-cols-3 gap-3">
               <Button tone="dark" icon={ChevronLeft} onClick={onBack} className="col-span-1">

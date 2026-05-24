@@ -9,6 +9,7 @@ const DEFAULT_STATE = {
   soloDemo: false,
   currentUserName: "",
   participantIdsByGroup: {}, // { [groupId]: participantId } — scoped per room
+  clientIdsByGroup: {}, // { [groupId]: clientId } — stable per-room browser identity
   roundsByGroup: {}, // { [groupId]: { targets:[pid], known:[pid] } } — this player's guess round
   groupMode: "duo", // 'duo' (1:1, unlocks at 2) | 'group' (3+)
   createdGroups: [], // [{ id, name, createdBy, createdAt }]
@@ -95,6 +96,23 @@ export function setParticipantId(groupId, participantId) {
   const map = { ...(getMutualsState().participantIdsByGroup || {}) };
   map[groupId] = participantId;
   saveMutualsState({ participantIdsByGroup: map });
+}
+
+// Stable per-room client id — this browser's identity within a room. Generated
+// once and persisted, so the join upserts on (group_id, client_id): two players
+// who type the same display name stay distinct participants.
+export function getClientId(groupId) {
+  if (!groupId) return null;
+  const map = getMutualsState().clientIdsByGroup || {};
+  if (map[groupId]) return map[groupId];
+  let cid;
+  try {
+    cid = crypto.randomUUID();
+  } catch {
+    cid = "c-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
+  saveMutualsState({ clientIdsByGroup: { ...map, [groupId]: cid } });
+  return cid;
 }
 
 // If our stored participant id for this room is missing or stale (not in the

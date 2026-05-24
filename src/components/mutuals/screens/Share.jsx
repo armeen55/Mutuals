@@ -82,7 +82,7 @@ export default function Share({ go }) {
   return (
     <Phone mood="dark">
       <div
-        className="relative z-10 flex h-[100dvh] flex-col px-5 text-white"
+        className="relative z-10 flex h-[100dvh] flex-col px-[var(--screen-pad-x)] text-white"
         style={{
           paddingTop: "clamp(18px, 5svh, 44px)",
           paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + clamp(14px, 3svh, 26px))",
@@ -90,10 +90,10 @@ export default function Share({ go }) {
       >
         <div className="text-center">
           <p className="text-xs font-black uppercase tracking-[0.25em] text-white/60">that was fun</p>
-          <h2 className="mt-2 font-black leading-[0.95] tracking-tighter" style={{ fontSize: "clamp(2rem, 8.5vw, 3rem)" }}>
+          <h2 className="mt-2 font-black leading-[0.95] tracking-tighter text-[clamp(2rem,8.5vw,3rem)] short:text-[clamp(1.7rem,7.5vw,2.3rem)]">
             {roomMode === "duo" ? "The verdict is in." : "The receipts are in."}
           </h2>
-          <p className="mx-auto mt-2 max-w-[280px] text-sm font-bold text-white/60">Share this before they deny it.</p>
+          <p className="mx-auto mt-2 max-w-[280px] text-sm font-bold text-white/60 tiny:hidden">Share this before they deny it.</p>
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col justify-center py-3">
@@ -122,18 +122,18 @@ export default function Share({ go }) {
           />
         </div>
 
-        <div className="mt-3">
+        <div className="mt-3 short:mt-2">
           <Button tone="yellow" icon={Trophy} onClick={voteEazo}>
             Vote for MUTUALS
           </Button>
-          <p className="mt-1.5 text-center text-[11px] font-bold text-white/55">Search MUTUALS on Eazo. Use all your votes.</p>
+          <p className="mt-1.5 text-center text-[11px] font-bold text-white/55 short:mt-1">Search MUTUALS on Eazo. Use all your votes.</p>
         </div>
 
-        <div className="mt-3">
+        <div className="mt-3 short:mt-2">
           <Button tone="primary" icon={RotateCcw} onClick={() => newRoom(app.groupMode || "group")}>
             {late ? `Run it back with ${late.displayName}` : "Run it back · new questions"}
           </Button>
-          <p className="mt-1.5 text-center text-[11px] font-bold text-white/45">Same chaos, new receipts.</p>
+          <p className="mt-1.5 text-center text-[11px] font-bold text-white/45 short:hidden">Same chaos, new receipts.</p>
         </div>
 
         <div className="mt-2 grid grid-cols-2 gap-2">

@@ -34,7 +34,7 @@ const BG = {
 export default function Phone({ children, mood = "cream", quiet = false }) {
   return (
     <div
-      className="relative flex min-h-[100dvh] flex-col overflow-hidden text-[#17112B]"
+      className="mutuals-screen relative flex h-[100dvh] max-h-[100dvh] min-h-[100svh] flex-col overflow-hidden text-[#17112B]"
       style={{ background: BG[mood] || BG.cream }}
     >
       <AbstractBg mood={mood} quiet={quiet} />

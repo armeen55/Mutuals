@@ -27,13 +27,13 @@ function parseInvite(text) {
 export default function Home({ next, go }) {
   const [how, setHow] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
-  // Live momentum — friendly floors shown instantly, climb with real counts.
-  const [stats, setStats] = useState({ rooms: 12, players: 30, answers: 100 });
+  // Live momentum — exact official counts from the database on every load.
+  const [stats, setStats] = useState(null);
 
   useEffect(() => {
     getPublicStats()
       .then((s) => {
-        if (s) setStats({ rooms: Math.max(12, s.rooms), players: Math.max(30, s.players), answers: Math.max(100, s.answers) });
+        if (s) setStats(s);
       })
       .catch(() => {});
   }, []);
@@ -57,10 +57,10 @@ export default function Home({ next, go }) {
   return (
     <Phone mood="cream" quiet>
       <div
-        className="relative z-10 flex flex-1 flex-col px-6 text-[#17112B]"
+        className="relative z-10 flex flex-1 flex-col px-[var(--screen-pad-x)] text-[#17112B]"
         style={{
-          paddingTop: "clamp(28px, 5svh, 56px)",
-          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + clamp(18px, 4svh, 32px))",
+          paddingTop: "var(--screen-pad-top)",
+          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + var(--screen-pad-bottom))",
         }}
       >
         {/* upper framing (smaller, so the cluster sits in the upper-middle) */}
@@ -68,75 +68,72 @@ export default function Home({ next, go }) {
 
         {/* brand */}
         <div className="text-center">
-          <h1 className="font-black leading-none tracking-tighter" style={{ fontSize: "clamp(4rem, 15vw, 5.5rem)" }}>
+          <h1 className="font-black leading-none tracking-tighter text-[clamp(4rem,15vw,5.5rem)] short:text-[clamp(3.2rem,13vw,4.4rem)] tiny:text-[clamp(2.8rem,12vw,3.6rem)]">
             MUTUALS
           </h1>
-          <p
-            className="mx-auto mt-2.5 max-w-[320px] font-bold leading-snug text-black/55"
-            style={{ fontSize: "clamp(0.95rem, 4vw, 1.05rem)" }}
-          >
+          <p className="mx-auto mt-2.5 max-w-[320px] font-bold leading-snug text-black/55 text-[clamp(0.95rem,4vw,1.05rem)] short:mt-2 short:text-sm tiny:hidden">
             Prove which of your friends actually knows you, and which ones are faking.
           </p>
         </div>
 
         {/* modest gap so logo + actions meet near the middle */}
-        <div style={{ height: "clamp(26px, 5svh, 56px)" }} />
+        <div style={{ height: "var(--hero-gap)" }} />
 
         {/* actions */}
-        <div className="space-y-3">
+        <div className="space-y-2.5 short:space-y-2">
           <button
             onClick={() => startRoom("duo")}
-            className="flex min-h-[104px] w-full items-center justify-between gap-3 rounded-[26px] bg-[#6B2CFF] px-5 py-4 text-left text-white shadow-xl transition active:scale-[0.98]"
+            className="flex min-h-[104px] w-full items-center justify-between gap-3 rounded-[26px] bg-[#6B2CFF] px-5 py-4 text-left text-white shadow-xl transition active:scale-[0.98] short:min-h-[86px] short:py-3 tiny:min-h-[74px]"
           >
             <div>
               <p className="text-[11px] font-black uppercase tracking-widest text-white/65">1:1 showdown</p>
-              <p className="mt-0.5 text-2xl font-black leading-tight">Challenge 1 Friend</p>
-              <p className="text-sm font-bold text-white/75">Settle who knows who better.</p>
+              <p className="mt-0.5 text-2xl font-black leading-tight short:text-xl">Challenge 1 Friend</p>
+              <p className="text-sm font-bold text-white/75 short:text-[13px] tiny:hidden">Settle who knows who better.</p>
             </div>
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/15">
-              <Users className="h-6 w-6" />
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/15 short:h-10 short:w-10">
+              <Users className="h-6 w-6 short:h-5 short:w-5" />
             </div>
           </button>
 
           <button
             onClick={() => startRoom("group")}
-            className="flex min-h-[104px] w-full items-center justify-between gap-3 rounded-[26px] bg-[#FF4F9A] px-5 py-4 text-left text-white shadow-xl transition active:scale-[0.98]"
+            className="flex min-h-[104px] w-full items-center justify-between gap-3 rounded-[26px] bg-[#FF4F9A] px-5 py-4 text-left text-white shadow-xl transition active:scale-[0.98] short:min-h-[86px] short:py-3 tiny:min-h-[74px]"
           >
             <div>
               <p className="text-[11px] font-black uppercase tracking-widest text-white/75">group chaos</p>
-              <p className="mt-0.5 text-2xl font-black leading-tight">Start Group Room</p>
-              <p className="text-sm font-bold text-white/85">Put the chat on the record.</p>
+              <p className="mt-0.5 text-2xl font-black leading-tight short:text-xl">Start Group Room</p>
+              <p className="text-sm font-bold text-white/85 short:text-[13px] tiny:hidden">Put the chat on the record.</p>
             </div>
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/20">
-              <Users className="h-6 w-6" />
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/20 short:h-10 short:w-10">
+              <Users className="h-6 w-6 short:h-5 short:w-5" />
             </div>
           </button>
 
           <button
             onClick={() => setJoinOpen(true)}
-            className="flex min-h-[58px] w-full items-center justify-center gap-2 rounded-[22px] border border-black/5 bg-white text-sm font-black text-[#17112B] shadow-sm transition active:scale-[0.98]"
+            className="flex min-h-[58px] w-full items-center justify-center gap-2 rounded-[22px] border border-black/5 bg-white text-sm font-black text-[#17112B] shadow-sm transition active:scale-[0.98] short:min-h-[50px]"
           >
             <UserPlus className="h-5 w-5" /> Join a room
           </button>
 
-          <p className="px-2 pt-1 text-center text-xs font-bold leading-relaxed text-black/45">
+          <p className="px-2 pt-1 text-center text-xs font-bold leading-relaxed text-black/45 tiny:hidden">
             Answer about yourself. Guess your friends. Reveal the receipts.
           </p>
           <div className="grid grid-cols-3 gap-2">
             {[
-              ["Rooms", stats.rooms],
-              ["Players", stats.players],
-              ["Answers", stats.answers],
+              ["Rooms created", stats?.rooms],
+              ["Players", stats?.players],
+              ["Questions answered", stats?.answers],
             ].map(([label, n]) => (
-              <div key={label} className="rounded-2xl bg-white/70 py-2 text-center shadow-sm">
-                <p className="text-lg font-black leading-none text-[#6B2CFF]">{n}+</p>
-                <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-black/40">{label}</p>
+              <div key={label} className="rounded-2xl bg-white/70 py-2 text-center shadow-sm short:py-1.5">
+                <p className="text-lg font-black leading-none text-[#6B2CFF] short:text-base">{n ?? "—"}</p>
+                <p className="mt-1 text-[9px] font-black uppercase leading-tight tracking-wide text-black/40 short:mt-0.5">{label}</p>
               </div>
             ))}
           </div>
           <button
             onClick={() => setHow(true)}
-            className="mx-auto block text-center text-xs font-black uppercase tracking-widest text-black/45 underline-offset-4 hover:underline"
+            className="mx-auto block text-center text-xs font-black uppercase tracking-widest text-black/45 underline-offset-4 hover:underline tiny:hidden"
           >
             How it works
           </button>

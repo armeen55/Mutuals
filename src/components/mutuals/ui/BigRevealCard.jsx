@@ -4,7 +4,7 @@ const PALETTE = ["#FF4F9A", "#35C58A", "#7B3CFF", "#6B2CFF"];
 
 function Block({ label, value, highlight }) {
   return (
-    <div className={highlight ? "rounded-2xl bg-[#FFD23F] p-3.5 text-black" : "rounded-2xl bg-white/15 p-3.5"}>
+    <div className={highlight ? "rounded-2xl bg-[#FFD23F] p-3.5 short:p-3 text-black" : "rounded-2xl bg-white/15 p-3.5 short:p-3"}>
       <p className={highlight ? "text-[10px] font-black uppercase tracking-widest text-black/50" : "text-[10px] font-black uppercase tracking-widest text-white/55"}>
         {label}
       </p>
@@ -38,25 +38,25 @@ export default function BigRevealCard({ card, index = 0 }) {
         </div>
 
         {r ? (
-          <div className="mt-5">
-            <h2 className="break-words text-3xl font-black leading-[0.95] tracking-tight">{card.headline}</h2>
-            <div className="mt-4 space-y-2.5">
+          <div className="mt-5 short:mt-3">
+            <h2 className="break-words text-3xl font-black leading-[0.95] tracking-tight short:text-2xl">{card.headline}</h2>
+            <div className="mt-4 space-y-2.5 short:mt-3 short:space-y-2">
               <Block label="Question" value={r.question} />
               <Block label={r.guessedLabel} value={r.guessed} />
               <Block label="Real answer" value={r.real} highlight />
             </div>
           </div>
         ) : (
-          <div className="mt-5">
-            <p className="break-words font-black leading-none tracking-tighter" style={{ fontSize: "clamp(4rem, 20vw, 6rem)" }}>
+          <div className="mt-5 short:mt-3">
+            <p className="break-words font-black leading-none tracking-tighter text-[clamp(4rem,20vw,6rem)] short:text-[clamp(2.8rem,14vw,4rem)]">
               {card.stat}
             </p>
-            <h2 className="mt-3 break-words text-3xl font-black leading-[0.95] tracking-tight">{card.headline}</h2>
-            <p className="mt-3 break-words text-sm font-bold leading-5 text-white/85">{card.detail}</p>
+            <h2 className="mt-3 break-words text-3xl font-black leading-[0.95] tracking-tight short:mt-2 short:text-2xl">{card.headline}</h2>
+            <p className="mt-3 break-words text-sm font-bold leading-5 text-white/85 short:mt-2">{card.detail}</p>
           </div>
         )}
 
-        <p className="mt-6 text-[11px] font-black uppercase tracking-[0.2em] text-white/55">find out who knows who</p>
+        <p className="mt-6 text-[11px] font-black uppercase tracking-[0.2em] text-white/55 short:mt-3">find out who knows who</p>
       </div>
     </div>
   );
