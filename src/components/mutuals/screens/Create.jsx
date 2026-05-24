@@ -14,7 +14,7 @@ const COPY = {
     mood: "lavender",
     eyebrow: "1:1 showdown",
     header: "Prove who knows who better.",
-    sub: "Send this to one person. You both answer 6 questions, then guess each other.",
+    sub: "Send this to one person. You both answer a quick round, then guess each other.",
     cta: "Send challenge",
     note: "You can answer first. They join whenever.",
     shareText: "Bet I know you better than you know me. Prove me wrong:",

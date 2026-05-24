@@ -5,6 +5,30 @@ Newest entry on top.
 
 ---
 
+## Chunk 22B — One spicy bank (unlock everything) + variable-length copy (BUILD + PUSH)
+
+### Goal
+MUTUALS is one spicy social game — not separate safe/adult lanes. Make the whole playable bank eligible in every room and remove lane thinking.
+
+### `data/questions.js`
+- `selectQuestions(groupId, mode, count)` — **removed the audience filter and all `opts.adult` logic**; the pool is now every enabled question. All **q1–q96 are eligible in normal rooms** (verified: formerly-"adult" q65–q96 now appear). Rhythm, heat/sincere caps, ≥3-shareable guarantee, mode preference, and the deterministic **5–8** count are kept; scoring stays keyed by question id.
+- **Removed the `audience` field** from every question (no question carries it anymore). The 32 spicier questions are just part of the bank now; the `afterdark` pack was renamed **`extended`**.
+- **Name-pick** moved out of `ALL_QUESTIONS` into a separate `export const NAMEPICK_IDEAS` (16 ideas) — parked for a future dynamic-participant mechanic, not counted as playable, not selected anywhere.
+- `validateQuestionBank()` no longer reports audience; reports `namepickIdeas`. Result: **96 playable**, 0 issues, byLean duo 20 / group 42 / both 34, heat4 59 / heat5 7, shareable 89, sincere 6.
+
+### Copy (variable length, no "6")
+- Create 1:1 sub: "…you both answer **a quick round**, then guess each other."
+- JoinWall 1:1 sub: "**Answer a quick round.** Guess each other…"
+- (Answer/Guess/Reveal/JoinWall already read `selectQuestions().length`, so progress + readiness track the real 5–8 count.)
+
+### Files changed
+`data/questions.js`, `screens/Create.jsx`, `screens/JoinWall.jsx`. (`lib/insights.js` unchanged — `spiceScore` is already metadata-driven, not audience-based.)
+
+### Build
+One `npm run build` → green. No manual preview per request.
+
+---
+
 ## Chunk 22 — Question Bank 3.0 + variable episode length (BUILD + PUSH)
 
 ### Variable question count (kills the hardcoded 6)
@@ -12,8 +36,8 @@ Newest entry on top.
 
 ### Bank 3.0 (`data/questions.js`)
 - Rewrote the bank to a **group-chat game** voice (roast / receipts / status / ego / flirt / money / tension), dropping the therapy-adjacent/AI-ish tone. Forbidden phrases (love language, attachment, healing, therapy, safe space, "dog", zombie…) scrubbed and guarded by the validator.
-- Rich metadata per question: `pack, lean, slot, heat (1–5), audience (all|adult), shareable, prompt, about, options`.
-- **96 playable** + **16 namepick** (metadata-only, `enabled:false`, excluded from selection until name-pick UI exists). Two lanes: **64 all-audience** (works HS→adult, savage but clean) + **32 adult after-dark** (dating/party/money/status; excluded from default rooms via the audience filter).
+- Rich metadata per question: `pack, lean, slot, heat (1–5), shareable, prompt, about, options`.
+- **96 playable** questions — one spicy social bank, all eligible in normal rooms. **16 name-pick ideas** parked separately for a future mechanic.
 - Distribution: duo 20 / group 42 / both 34 · heat4 59 / heat5 7 · shareable 89 · sincere 6 · soft (quiet/misunderstood/etc.) 8 · validator issues **0**.
 - **Rhythm selector**: each episode builds warmup/roast → receipt → ego/status/money → tension/flirt/party → sincere → chaos/shareable, with caps (≤2 sincere, ≤2 heat-5, ≥3 shareable) — deterministic per room, mode only re-orders (duo leads intimate, group leads social).
 - `validateQuestionBank()`, `spiceScore()`, `roomQuestionCount()` exported.
@@ -22,7 +46,7 @@ Newest entry on top.
 - Replaced the hardcoded `SPICY_ORDER` with metadata-driven `spiceScore` (shareable + heat + slot weight). The Receipts card now features the **spiciest actual miss**; group receipts tie-break on spice. Avoids sincere unless nothing better.
 
 ### Files changed
-`data/questions.js`, `lib/insights.js`. **Untouched:** answer/guess/reveal logic + components (they read `selectQuestions().length`), Supabase schema, scoring. Adult lane built but dormant (no adult-room toggle yet); namepick dormant.
+`data/questions.js`, `lib/insights.js`. **Untouched:** answer/guess/reveal logic + components (they read `selectQuestions().length`), Supabase schema, scoring.
 
 ### Build
 One `npm run build` → green (~265ms). No manual preview per request.

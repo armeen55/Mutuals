@@ -52,7 +52,7 @@ export default function JoinWall({ go }) {
   const badge = isDuo ? "1:1 challenge" : "group room";
   const headline = isDuo ? (host ? `${host} challenged you.` : "You got challenged.") : "The group chat is on the record.";
   const subhead = isDuo
-    ? "Answer 6 questions. Guess each other. See who actually pays attention."
+    ? "Answer a quick round. Guess each other. See who actually pays attention."
     : "Answer about yourself, guess your friends, reveal the receipts.";
   const cta = isDuo ? "Accept challenge" : "Join room";
   const emptyCopy = isDuo ? "Waiting for both players." : "Be first in. Bring the chaos.";
