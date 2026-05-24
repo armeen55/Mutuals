@@ -5,6 +5,36 @@ Newest entry on top.
 
 ---
 
+## Chunk 20 — Mobile spacing + invite-lobby conversion pass (BUILD + PUSH)
+
+### Goal
+Fix the spatial system on the four core screens so the app feels like a polished mobile game, not a stretched Figma frame. No brand redesign, no logic/schema change. Operator previews locally.
+
+### Shared primitives
+- **BottomSheet** (`ui/BottomSheet.jsx`): added a `variant` (`compact 62dvh` / `standard 72dvh` / `tall 84dvh`); `tall` kept for back-compat. **Removed the forced `min-h`** — sheets are content-driven (no more empty white tubs) — and added safe-area bottom padding (`env(safe-area-inset-bottom) + 12px`), responsive `p-4 sm:p-5`.
+- **AbstractBg** (`ui/AbstractBg.jsx` + `Phone.jsx`): new `quiet` prop (forwarded by Phone). On Home/Create the lower blobs move further into the corners and soften, and the lower-right dot cluster is dropped, so nothing competes with the CTA stack.
+- **Button** (`ui/Button.jsx`): `min-h-[56px]` touch target; shadow moved per-tone so colored tones read as primary and `white` is quieter (border + soft shadow), readable not disabled.
+
+### Home (`Home.jsx`)
+- Three zones: brand (top, `clamp(36px,7svh,70px)`), a centered **payoff card** ("tonight's receipts: who knows who, who missed what, who's secretly paying attention"), and an anchored action zone. No dead center. MUTUALS `clamp(3.4rem,14.5vw,5rem)`, subtitle `mt-2`. Equal `min-h-[104px]` mode cards (white text, 48px icon): "Challenge 1 Friend / Settle who knows who better." · "Start Group Room / Put the chat on the record." White Join (58px) + How-it-works.
+
+### Create (`Create.jsx`)
+- Compact hero (no billboard): eyebrow + headline `clamp(2.4rem,10vw,4.25rem)` (max-w 340) + a mode subhead. `standard` sheet, no dead space. 48px mode toggle (focus-visible only). Compact link row (44px icon, one-line). **Group** adds unlock chips (Who knows who · Power pair · Biggest miss) + friendlier "Unlocks at 3 finished." CTAs: primary **Send challenge / Send to group chat** (60px) → quieter secondary **I shared it · answer now** (58px) → mode reassurance note.
+
+### JoinWall = invite lobby (`JoinWall.jsx`)
+- Sells the room before asking a name. Mode-aware: duo badge "1:1 challenge" + headline **"{host} challenged you."** (real first participant, **no fake host**; falls back to "You got challenged."), CTA **Accept challenge**; group badge "group room" + "The group chat is on the record.", CTA **Join room**. Toned full-yellow → **cream** (warm, readable). Sheet order: live proof (joined/answered/finished + chips, empty copy "Waiting for both players." / "Be first in. Bring the chaos.") → payoff chips → **secondary** name input ("Your display name") → CTA → "No account. No install. Takes about 2 minutes."
+
+### JoinPanel (Home)
+- "Paste your invite" / "Drop in the link your friend sent." / placeholder `https://mutuals…` / helper "Room links look like mutuals.app/?group=m-xxxx" / **Enter-to-submit** / CTA "Open room".
+
+### Files changed
+`ui/BottomSheet.jsx`, `ui/Phone.jsx`, `ui/AbstractBg.jsx`, `ui/Button.jsx`, `screens/Home.jsx`, `screens/Create.jsx`, `screens/JoinWall.jsx`. **Untouched:** answer/guess/reveal logic, Supabase schema, deploy config, no deps, no fake bezel.
+
+### Build
+One `npm run build` → green (2230 modules, ~290ms). Sized to fit 390×844 / 430×932 with CTAs above the fold; touch targets ≥48px; blobs kept off text/CTAs. No manual preview per request.
+
+---
+
 ## Chunk 19 — Replayable, viral, finished (BUILD + PUSH)
 
 ### Goal

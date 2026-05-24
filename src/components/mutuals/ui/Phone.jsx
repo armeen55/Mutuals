@@ -31,13 +31,13 @@ const BG = {
   sky: PALETTE.sky,
 };
 
-export default function Phone({ children, mood = "cream" }) {
+export default function Phone({ children, mood = "cream", quiet = false }) {
   return (
     <div
       className="relative flex min-h-[100dvh] flex-col overflow-hidden text-[#17112B]"
       style={{ background: BG[mood] || BG.cream }}
     >
-      <AbstractBg mood={mood} />
+      <AbstractBg mood={mood} quiet={quiet} />
       {children}
     </div>
   );
