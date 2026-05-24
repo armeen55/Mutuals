@@ -52,14 +52,7 @@ export default function Create({ next }) {
 
   return (
     <Phone mood={c.mood} quiet>
-      <div
-        className={cx("relative z-10 px-6 text-center text-[#17112B]", isDuo && "flex flex-1 flex-col justify-end")}
-        style={
-          isDuo
-            ? { paddingTop: "clamp(40px, 6svh, 64px)", paddingBottom: "clamp(16px, 3svh, 28px)" }
-            : { paddingTop: "clamp(42px, 8svh, 86px)" }
-        }
-      >
+      <div className="relative z-10 px-6 text-center text-[#17112B]" style={{ paddingTop: "clamp(42px, 8svh, 86px)" }}>
         <p className="text-xs font-black uppercase tracking-[0.25em] text-black/45">{c.eyebrow}</p>
         <h2
           className="mx-auto mt-2 font-black leading-[0.92] tracking-tighter"
@@ -70,7 +63,7 @@ export default function Create({ next }) {
         <p className="mx-auto mt-3 max-w-[320px] text-sm font-bold leading-snug text-black/55">{c.sub}</p>
       </div>
 
-      <BottomSheet variant={isDuo ? "compact" : "standard"}>
+      <BottomSheet variant="standard">
         <div className="flex h-12 rounded-2xl bg-black/5 p-1">
           {[
             ["duo", "1:1"],

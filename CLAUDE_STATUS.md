@@ -5,6 +5,22 @@ Newest entry on top.
 
 ---
 
+## Chunk 20C — Unify Create spacing across 1:1 / Group (BUILD + PUSH)
+
+### Problem
+Toggling 1:1 ↔ Group felt like the whole layout shifted: Chunk 20B had 1:1 bottom-align its header (`flex-1 justify-end`, compact sheet) while Group stayed top-aligned (standard sheet), so switching flipped the header from bottom to top.
+
+### Fix (`Create.jsx`, spacing only)
+- Both modes now use the **same** spatial system — the better-looking top-anchored Group layout: header `paddingTop clamp(42px,8svh,86px)`, `BottomSheet variant="standard"`. `isDuo` now drives **only the copy + the group unlock chips**, not the layout. Switching modes keeps the header top fixed and the sheet bottom-anchored, so only the headline text / chips change — no whole-page spacing jump.
+
+### Files changed
+`screens/Create.jsx`. No logic/schema/group-copy changes.
+
+### Build
+One `npm run build` → green (~277ms). No manual preview per request.
+
+---
+
 ## Chunk 20B — Home + 1:1 Create spacing correction (BUILD + PUSH)
 
 ### Goal
