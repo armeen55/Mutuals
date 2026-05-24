@@ -1,20 +1,21 @@
 import { useState, useEffect } from "react";
-import { Share2, Link2, ArrowRight } from "lucide-react";
+import { Share2, Link2, RotateCcw } from "lucide-react";
 import Phone from "../ui/Phone";
 import ShareActionTile from "../ui/ShareActionTile";
 import Button from "../ui/Button";
 import { useMutuals } from "../useMutuals";
 import { getInsights } from "../../../lib/mutualsApi";
 import { pairScores } from "../../../lib/insights";
-import { shareUrl } from "../../../utils/mutualsStorage";
+import { shareUrl, saveMutualsState, newRoomId, ensureGroup } from "../../../utils/mutualsStorage";
+import { captureGroup } from "../../../lib/mutualsApi";
 import { shareOrCopy, showToast } from "../../../utils/ui";
-import { createMapShareImage, shareImageBlob } from "../../../utils/shareImage";
+import { createMapShareImage, createRevealShareImage, shareImageBlob } from "../../../utils/shareImage";
 
 const pct = (x) => Math.round(x * 100);
 const pairKey = (a, b) => [a, b].sort().join(":");
 
-// Circular node graph: nodes around a ring, top edges as lines (weight = score),
-// best mutual pair highlighted in lime.
+// Circular node graph (group): nodes around a ring, top edges weighted by score,
+// best mutual pair highlighted yellow.
 function Graph({ players, edges, best }) {
   const n = players.length;
   if (!n) return null;
@@ -62,7 +63,20 @@ function Graph({ players, edges, best }) {
   );
 }
 
-export default function Matrix({ next }) {
+function BreakdownRow({ label, headline, stat }) {
+  if (!headline) return null;
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/10 p-4">
+      <div className="min-w-0">
+        <p className="text-[10px] font-black uppercase tracking-widest text-white/55">{label}</p>
+        <p className="mt-0.5 break-words text-base font-black leading-tight text-white">{headline}</p>
+      </div>
+      {stat && <span className="shrink-0 rounded-full bg-[#FFD23F] px-3 py-1 text-sm font-black text-black">{stat}</span>}
+    </div>
+  );
+}
+
+export default function Matrix({ next, go }) {
   const app = useMutuals();
   const [data, setData] = useState(null);
 
@@ -71,6 +85,12 @@ export default function Matrix({ next }) {
     getInsights(app.activeGroupId).then(setData).catch(() => {});
   }, [app.activeGroupId, app.soloDemo]);
 
+  const mode = data?.bundle?.group?.mode || app.groupMode || "duo";
+  const isDuo = mode === "duo";
+  const cards = data?.cards || [];
+  const byId = (id) => cards.find((c) => c.id === id);
+  const heroCard = byId("receipts") || byId("winner") || cards[0] || null;
+
   const graph = data ? pairScores(data.bundle) : null;
   const players = graph?.players || [];
   const top = (graph?.edges || []).slice(0, 5);
@@ -78,6 +98,40 @@ export default function Matrix({ next }) {
   const roomUrl = shareUrl(app.activeGroupId);
   const bestK = best ? pairKey(best.a, best.b) : null;
 
+  const runItBack = () => {
+    const id = newRoomId();
+    ensureGroup(id);
+    saveMutualsState({
+      groupMode: mode,
+      selfAnswers: {},
+      guesses: {},
+      revealUnlocked: false,
+      completedSteps: [],
+      soloDemo: false,
+    });
+    captureGroup();
+    showToast("New room · new questions");
+    go ? go("Create") : next();
+  };
+  const copyLink = () => {
+    navigator.clipboard?.writeText(roomUrl);
+    showToast("Link copied");
+  };
+  const shareResult = async () => {
+    try {
+      if (!heroCard) throw new Error("no card");
+      const blob = await createRevealShareImage(heroCard, { index: 0 });
+      const res = await shareImageBlob({
+        blob,
+        text: heroCard.shareText || heroCard.headline,
+        url: roomUrl,
+        fileName: "mutuals-result.png",
+      });
+      showToast(res === "downloaded" ? "Image saved" : res === "copied" ? "Link copied" : "Shared");
+    } catch {
+      shareOrCopy({ text: heroCard ? heroCard.headline : "Our MUTUALS result:", url: roomUrl });
+    }
+  };
   const shareMap = async () => {
     try {
       const blob = await createMapShareImage(graph || {}, { roomUrl });
@@ -92,10 +146,6 @@ export default function Matrix({ next }) {
       shareOrCopy({ text: "Our MUTUALS who-knows-who map:", url: roomUrl });
     }
   };
-  const copyLink = () => {
-    navigator.clipboard?.writeText(roomUrl);
-    showToast("Link copied");
-  };
 
   return (
     <Phone mood="dark">
@@ -107,86 +157,114 @@ export default function Matrix({ next }) {
         }}
       >
         <div className="text-center">
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-white/60">who knows who map</p>
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-white/60">
+            {isDuo ? "the showdown" : "who knows who map"}
+          </p>
           <h2 className="mt-2 font-black leading-[0.95] tracking-tighter" style={{ fontSize: "clamp(1.9rem, 8vw, 2.75rem)" }}>
-            The receipts, but visual.
+            {isDuo ? "Your breakdown." : "The receipts, but visual."}
           </h2>
         </div>
 
         <div className="mt-3 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto py-1">
-          <div className="rounded-[28px] bg-[#1f1736] p-4">
-            {players.length ? (
+          {isDuo ? (
+            cards.length ? (
               <>
-                <Graph players={players} edges={graph?.edges || []} best={best} />
-                <div className="mt-3 flex flex-wrap justify-center gap-2">
-                  {players.map((p) => {
-                    const isBest = best && (p.id === best.a || p.id === best.b);
-                    return (
-                      <span
-                        key={p.id}
-                        className={
-                          isBest
-                            ? "rounded-full bg-[#FFD23F] px-3 py-1 text-xs font-black text-black"
-                            : "rounded-full bg-white/10 px-3 py-1 text-xs font-black text-white"
-                        }
-                      >
-                        {p.displayName}
-                      </span>
-                    );
-                  })}
-                </div>
+                <BreakdownRow label="Winner" headline={byId("winner")?.headline} stat={byId("winner")?.stat} />
+                <BreakdownRow label="Mutual score" headline={byId("mutual")?.headline} stat={byId("mutual")?.stat} />
+                <BreakdownRow label="Biggest miss" headline={byId("receipts")?.headline} />
+                <BreakdownRow label="Best read" headline={byId("bestread")?.headline} stat={byId("bestread")?.stat} />
+                {!byId("winner") && !byId("mutual") && (
+                  <p className="px-1 text-sm font-bold text-white/55">Not enough guesses yet. Run it back.</p>
+                )}
               </>
             ) : (
-              <p className="py-6 text-center text-sm font-bold text-white/55">Loading the room…</p>
-            )}
-          </div>
-
-          {best && (
-            <div className="rounded-[24px] bg-[#FFD23F] p-4 text-black">
-              <p className="text-[11px] font-black uppercase tracking-widest text-black/40">best mutual pair</p>
-              <p className="mt-1 break-words text-2xl font-black leading-tight">
-                {best.aName} ↔ {best.bName}
-              </p>
-              <p className="text-sm font-bold text-black/60">{pct(best.mutual)}% mutual. Suspiciously in sync.</p>
-            </div>
-          )}
-
-          {top.length > 0 && (
-            <div>
-              <p className="px-1 text-xs font-black uppercase tracking-widest text-white/55">who reads who</p>
-              <div className="mt-2 space-y-2">
-                {top.map((e, i) => {
-                  const isBest = bestK && pairKey(e.from, e.to) === bestK;
-                  return (
-                    <div key={i} className="relative overflow-hidden rounded-2xl bg-white/10">
-                      <div
-                        className={isBest ? "absolute inset-y-0 left-0 bg-[#FFD23F]/25" : "absolute inset-y-0 left-0 bg-[#6b2cff]/45"}
-                        style={{ width: `${Math.max(12, pct(e.acc))}%` }}
-                      />
-                      <div className="relative flex items-center justify-between gap-2 p-3">
-                        <p className="break-words text-sm font-black">
-                          {e.fromName} <span className="text-white/40">→</span> {e.toName}
-                        </p>
-                        <span className="shrink-0 rounded-full bg-black px-2.5 py-1 text-xs font-black text-white">{pct(e.acc)}%</span>
-                      </div>
+              <p className="py-6 text-center text-sm font-bold text-white/55">Loading the showdown…</p>
+            )
+          ) : (
+            <>
+              <div className="rounded-[28px] bg-[#1f1736] p-4">
+                {players.length ? (
+                  <>
+                    <Graph players={players} edges={graph?.edges || []} best={best} />
+                    <div className="mt-3 flex flex-wrap justify-center gap-2">
+                      {players.map((p) => {
+                        const isBest = best && (p.id === best.a || p.id === best.b);
+                        return (
+                          <span
+                            key={p.id}
+                            className={
+                              isBest
+                                ? "rounded-full bg-[#FFD23F] px-3 py-1 text-xs font-black text-black"
+                                : "rounded-full bg-white/10 px-3 py-1 text-xs font-black text-white"
+                            }
+                          >
+                            {p.displayName}
+                          </span>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  </>
+                ) : (
+                  <p className="py-6 text-center text-sm font-bold text-white/55">Loading the room…</p>
+                )}
               </div>
-            </div>
-          )}
 
-          {players.length > 0 && top.length === 0 && (
-            <p className="px-1 text-sm font-bold text-white/55">Not enough guesses yet to map the room. Run it back.</p>
+              {best && (
+                <div className="rounded-[24px] bg-[#FFD23F] p-4 text-black">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-black/40">best mutual pair</p>
+                  <p className="mt-1 break-words text-2xl font-black leading-tight">
+                    {best.aName} ↔ {best.bName}
+                  </p>
+                  <p className="text-sm font-bold text-black/60">{pct(best.mutual)}% mutual. Suspiciously in sync.</p>
+                </div>
+              )}
+
+              {top.length > 0 && (
+                <div>
+                  <p className="px-1 text-xs font-black uppercase tracking-widest text-white/55">who reads who</p>
+                  <div className="mt-2 space-y-2">
+                    {top.map((e, i) => {
+                      const isBest = bestK && pairKey(e.from, e.to) === bestK;
+                      return (
+                        <div key={i} className="relative overflow-hidden rounded-2xl bg-white/10">
+                          <div
+                            className={isBest ? "absolute inset-y-0 left-0 bg-[#FFD23F]/25" : "absolute inset-y-0 left-0 bg-[#6b2cff]/45"}
+                            style={{ width: `${Math.max(12, pct(e.acc))}%` }}
+                          />
+                          <div className="relative flex items-center justify-between gap-2 p-3">
+                            <p className="break-words text-sm font-black text-white">
+                              {e.fromName} <span className="text-white/40">→</span> {e.toName}
+                            </p>
+                            <span className="shrink-0 rounded-full bg-black px-2.5 py-1 text-xs font-black text-white">{pct(e.acc)}%</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {players.length > 0 && top.length === 0 && (
+                <p className="px-1 text-sm font-bold text-white/55">Not enough guesses yet to map the room. Run it back.</p>
+              )}
+            </>
           )}
         </div>
 
         <div className="mt-3 flex gap-2">
-          <ShareActionTile icon={Share2} label="Share Map" onClick={shareMap} tone="primary" />
+          <ShareActionTile
+            icon={Share2}
+            label={isDuo ? "Share result" : "Share map"}
+            onClick={isDuo ? shareResult : shareMap}
+            tone="primary"
+          />
           <ShareActionTile icon={Link2} label="Copy Link" onClick={copyLink} />
         </div>
-        <div className="mt-3">
-          <Button tone="primary" icon={ArrowRight} onClick={next}>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <Button tone="lime" icon={RotateCcw} onClick={runItBack}>
+            Run it back
+          </Button>
+          <Button tone="primary" onClick={next}>
             Continue
           </Button>
         </div>

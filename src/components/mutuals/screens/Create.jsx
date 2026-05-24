@@ -40,10 +40,7 @@ export default function Create({ next }) {
     navigator.clipboard?.writeText(link);
     showToast("Link copied");
   };
-  const sendAndNext = () => {
-    shareOrCopy({ text: c.shareText, url: link });
-    next();
-  };
+  const sendInvite = () => shareOrCopy({ text: c.shareText, url: link });
 
   return (
     <Phone mood={c.mood}>
@@ -97,16 +94,15 @@ export default function Create({ next }) {
         </div>
 
         <div className="mt-4">
-          <Button tone="primary" icon={Share2} onClick={sendAndNext}>
+          <Button tone="primary" icon={Share2} onClick={sendInvite}>
             {c.cta}
           </Button>
         </div>
-        <button
-          onClick={copyLink}
-          className="mx-auto mt-3 block text-xs font-black uppercase tracking-widest text-black/40"
-        >
-          Copy link instead
-        </button>
+        <div className="mt-3">
+          <Button tone="white" onClick={next}>
+            I shared it · answer now
+          </Button>
+        </div>
       </BottomSheet>
     </Phone>
   );

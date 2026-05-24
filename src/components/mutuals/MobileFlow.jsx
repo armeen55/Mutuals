@@ -27,7 +27,7 @@ export default function MobileFlow({ step, setStep, debug }) {
     <Guess next={next} />,
     <Reveal next={next} go={go} goSignup={() => setStep(7)} />,
     <SignupGate next={next} />,
-    <Matrix next={next} />,
+    <Matrix next={next} go={go} />,
     <Share next={next} go={go} />,
     <Today go={go} />,
   ];

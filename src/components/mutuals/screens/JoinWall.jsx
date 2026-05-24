@@ -41,11 +41,11 @@ export default function JoinWall({ go }) {
     <Phone mood="yellow">
       <div className="relative z-10 px-7 pt-20 text-center">
         <p className="inline-flex rounded-full bg-black px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-white">
-          you were invited to mutuals
+          add your name
         </p>
-        <h2 className="mt-6 text-6xl font-black leading-[0.85] tracking-tighter">Find out who actually knows who.</h2>
+        <h2 className="mt-6 text-6xl font-black leading-[0.85] tracking-tighter">What should we call you?</h2>
         <p className="mx-auto mt-4 max-w-[270px] text-sm font-bold text-black/60">
-          Answer about yourself, then guess your friends. The reveal unlocks when enough people finish.
+          This is the name your friends will guess. Use one they'll recognize.
         </p>
       </div>
       <BottomSheet>
@@ -74,7 +74,7 @@ export default function JoinWall({ go }) {
         </div>
         <div className="mt-3">
           <Button onClick={join} tone="pink" className={name.trim() ? "" : "pointer-events-none opacity-40"}>
-            Join room
+            Continue
           </Button>
         </div>
       </BottomSheet>

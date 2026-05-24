@@ -5,6 +5,38 @@ Newest entry on top.
 
 ---
 
+## Chunk 18 — Conversion + clarity sweep (BUILD + PUSH)
+
+### Goal
+Fix the core UX confusions; no new big features, no schema change, no color redesign (contrast fixes only), no share-image rework. One build.
+
+1. **Real question progress** (`ui/Progress.jsx` now supports `current`/`total`+`label`). Answer shows **"Question N of 6"** (`qi+1`/length); Guess shows **"Guess N of 18"** (`ti*len+qi+1` / `targets*len`). Removed the global `Progress step={4/5}` from the public question flows (legacy step mode kept for debug screens).
+2. **Duo no longer goes to the group map.** Reveal's final real CTA branches: group → **"See the map"**, duo → **"See the breakdown."** `Matrix.jsx` now renders a **DuoBreakdown** (winner · mutual score · biggest miss · best read) for 1:1 and the graph for group.
+3. **Contrast sweep.** Light screens = ink text, dark stage = white text; bumped faint disabled/ghost text (e.g. Eazo `/25`→`/40`); no core instruction below `/40`.
+4. **Host name before Answer.** JoinWall is now host-neutral + name-first ("What should we call you?" / "the name your friends will guess"), collected before answers save. CTA → "Continue."
+5. **Real "Join a Room."** Home's Join opens a paste-invite-link panel that extracts `?group=`, `ensureGroup`, and routes to Join — no dead room.
+6. **Invite-first Create.** Primary = **Send invite / challenge / to group chat** (shares only); secondary = **"I shared it · answer now"** (advances). Copy stays in the invite card.
+7. **Nudge on waiting screens.** Guess-waiting "Nudge a friend" ("one more player unlocks the reveal"); Reveal-waiting **"Nudge {unfinished name}"** ("finish your MUTUALS answers — the receipts are waiting").
+8. **Guess back/edit.** Previous button in Guess; navigating restores the locally-held guess; nothing submits until the final awaited `submitGuesses`.
+9. **Share auto-picks the spiciest hero**: receipts → power → most-misunderstood → winner → first (was always winner).
+10. **Run-it-back copy**: "Run it back · new questions" + "Same chaos, new receipts" (late joiner → "Run it back with {name}"). Fresh-room behavior unchanged.
+11. **Mode-leaning questions (safe).** Questions tagged `lean` (duo/group/both); `selectQuestions(groupId, mode)` keeps the **SET groupId-stable** (scoring safe across unlock-as-1:1) and only re-orders so duo leads intimate, group leads social.
+12. **Eazo** stays post-reveal only (Share), readable when disabled, "Help MUTUALS win on Eazo" when live. URL unchanged.
+
+### Files changed
+`data/questions.js`, `ui/Progress.jsx`, `MobileFlow.jsx`, `screens/Answer.jsx`, `screens/Guess.jsx`, `screens/Reveal.jsx`, `screens/Matrix.jsx`, `screens/Share.jsx`, `screens/Home.jsx`, `screens/Create.jsx`, `screens/JoinWall.jsx`. **Untouched:** Supabase schema, insight engine internals, share-image canvas, Eazo URL. Scoring stays qid-based and stable.
+
+### Build
+One `npm run build` → green (2229 modules, ~303ms). No manual preview per request.
+
+### Smoke path (live)
+1. Home → **Challenge 1 Friend** (or **Start Group Room**) → Create shows **Send invite** (primary) then **I shared it · answer now** → JoinWall **"What should we call you?"** → Answer with **"Question N of 6"** progress.
+2. Friends open the link (or Home → **Join a Room** → paste link); answer + guess with **"Guess N of 18"** progress and a **Back** button.
+3. Waiting screens show a **Nudge** CTA. Reveal cards → final CTA: duo **See the breakdown** / group **See the map**.
+4. Matrix: duo breakdown vs group graph → **Continue** → Share (hero = spiciest card, **Run it back · new questions**, Eazo post-reveal).
+
+---
+
 ## Chunk 17B — Color system pass (friendlier/warmer, dark = reveal stage only) (BUILD + PUSH)
 
 ### Goal

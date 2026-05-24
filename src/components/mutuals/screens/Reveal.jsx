@@ -108,6 +108,11 @@ export default function Reveal({ next, go, goSignup }) {
     const mode = real.bundle?.group?.mode || app.groupMode || "duo";
     const needFinish = Math.max(0, r.required - r.completedCount);
     const status = roomStatus(real.bundle, need);
+    const unfinishedNames = participants
+      .filter((p) => !real.bundle?.completed?.[p.id])
+      .map((p) => p.displayName)
+      .slice(0, 2)
+      .join(", ");
     return (
       <Phone mood="purple">
         <div className="relative z-10 px-6 pt-20 text-center">
@@ -135,7 +140,23 @@ export default function Reveal({ next, go, goSignup }) {
               </Button>
             </div>
           )}
-          <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="mt-4">
+            <Button
+              tone="pink"
+              icon={Share2}
+              onClick={() =>
+                shareOrCopy({
+                  text: unfinishedNames
+                    ? `${unfinishedNames} — finish your MUTUALS answers. The receipts are waiting.`
+                    : "Finish your MUTUALS answers. The receipts are waiting.",
+                  url: shareUrl(app.activeGroupId),
+                })
+              }
+            >
+              {unfinishedNames ? `Nudge ${unfinishedNames.split(",")[0]}` : "Nudge the group"}
+            </Button>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-3">
             <Button
               tone="lime"
               icon={Copy}
@@ -144,22 +165,8 @@ export default function Reveal({ next, go, goSignup }) {
                 showToast("Link copied");
               }}
             >
-              Copy invite
+              Copy link
             </Button>
-            <Button
-              tone="white"
-              icon={Share2}
-              onClick={() =>
-                shareOrCopy({
-                  text: "Our group is about to find out who the mystery friend is.",
-                  url: shareUrl(app.activeGroupId),
-                })
-              }
-            >
-              Share invite
-            </Button>
-          </div>
-          <div className="mt-3">
             <Button tone="dark" onClick={checkAgain}>
               {checking ? "Checking…" : "Check again"}
             </Button>
@@ -212,6 +219,7 @@ export default function Reveal({ next, go, goSignup }) {
       ? (real.bundle?.participants || []).filter((p) => p.id !== myPid && !round.known.includes(p.id))
       : [];
   const roomUrl = shareUrl(app.activeGroupId);
+  const mode = real?.bundle?.group?.mode || app.groupMode || "duo";
   const advance = () => (atEnd ? (realReady ? go("Matrix") : go("Share")) : setPos(pos + 1));
   const shareImage = async () => {
     try {
@@ -288,7 +296,7 @@ export default function Reveal({ next, go, goSignup }) {
             </Button>
           ) : (
             <Button onClick={advance} tone="primary">
-              {atEnd ? (realReady ? "See the map" : "Finish") : "Next result"}
+              {atEnd ? (realReady ? (mode === "duo" ? "See the breakdown" : "See the map") : "Finish") : "Next result"}
             </Button>
           )}
         </div>

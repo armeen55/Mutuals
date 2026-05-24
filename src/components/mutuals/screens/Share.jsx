@@ -25,8 +25,11 @@ export default function Share({ go }) {
 
   const cards = data?.cards || [];
   const participants = data?.bundle?.participants || [];
-  const winner = cards.find((c) => c.id === "winner");
-  const hero = winner || cards[0] || null;
+  // Auto-pick the spiciest card for the share hero (not always the winner).
+  const hero =
+    ["receipts", "power", "mystery", "winner"].map((id) => cards.find((c) => c.id === id)).find(Boolean) ||
+    cards[0] ||
+    null;
   const myPid = (app.participantIdsByGroup || {})[app.activeGroupId];
   const round = (app.roundsByGroup || {})[app.activeGroupId] || null;
   const lateJoiners = round ? participants.filter((p) => p.id !== myPid && !round.known.includes(p.id)) : [];
@@ -113,8 +116,9 @@ export default function Share({ go }) {
 
         <div className="mt-3">
           <Button tone="primary" icon={RotateCcw} onClick={() => newRoom(app.groupMode || "group")}>
-            {late ? `Run it back with ${late.displayName}` : "Play another round · new questions"}
+            {late ? `Run it back with ${late.displayName}` : "Run it back · new questions"}
           </Button>
+          <p className="mt-1.5 text-center text-[11px] font-bold text-white/45">Same chaos, new receipts.</p>
         </div>
 
         <div className="mt-2 grid grid-cols-2 gap-2">
@@ -141,9 +145,9 @@ export default function Share({ go }) {
           </button>
           <button
             onClick={eazoReady ? () => window.open(EAZO_VOTE_URL, "_blank", "noopener") : undefined}
-            className={cx("text-xs font-black", eazoReady ? "text-[#FFD23F]" : "pointer-events-none text-white/25")}
+            className={cx("text-xs font-black", eazoReady ? "text-[#FFD23F]" : "pointer-events-none text-white/40")}
           >
-            {eazoReady ? "Vote on Eazo" : "Eazo soon"}
+            {eazoReady ? "Help MUTUALS win on Eazo" : "Eazo soon"}
           </button>
         </div>
       </div>

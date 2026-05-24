@@ -3,9 +3,29 @@ import { Users, UserPlus, X } from "lucide-react";
 import Phone from "../ui/Phone";
 import { ensureGroup, saveMutualsState, newRoomId } from "../../../utils/mutualsStorage";
 import { captureGroup } from "../../../lib/mutualsApi";
+import { cx, showToast } from "../../../utils/ui";
+
+// Pull a room id out of a pasted MUTUALS invite link (or a raw id).
+function parseInvite(text) {
+  const t = (text || "").trim();
+  if (!t) return null;
+  try {
+    const u = new URL(t);
+    const g = u.searchParams.get("group");
+    if (g) return g;
+    const m = (u.hash || "").match(/\/g\/([^/?#]+)/);
+    if (m) return m[1];
+  } catch {
+    // not a full URL — fall through
+  }
+  const m = t.match(/[?&]group=([^&\s]+)/);
+  if (m) return m[1];
+  return t.replace(/\s+/g, "");
+}
 
 export default function Home({ next, go }) {
   const [how, setHow] = useState(false);
+  const [joinOpen, setJoinOpen] = useState(false);
 
   const startRoom = (mode) => {
     ensureGroup(newRoomId());
@@ -77,7 +97,7 @@ export default function Home({ next, go }) {
           </button>
 
           <button
-            onClick={() => go("Join")}
+            onClick={() => setJoinOpen(true)}
             className="flex w-full items-center justify-center gap-2 rounded-[22px] border-2 border-[#6B2CFF]/20 bg-white py-3.5 text-sm font-black text-[#17112B] shadow-sm transition active:scale-[0.98]"
           >
             <UserPlus className="h-5 w-5" /> Join a Room
@@ -96,6 +116,7 @@ export default function Home({ next, go }) {
       </div>
 
       {how && <HowItWorks onClose={() => setHow(false)} />}
+      {joinOpen && <JoinPanel onClose={() => setJoinOpen(false)} go={go} />}
     </Phone>
   );
 }
@@ -128,6 +149,48 @@ function HowItWorks({ onClose }) {
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function JoinPanel({ onClose, go }) {
+  const [text, setText] = useState("");
+  const submit = () => {
+    const id = parseInvite(text);
+    if (!id) {
+      showToast("Paste a valid invite link");
+      return;
+    }
+    ensureGroup(id);
+    saveMutualsState({ selfAnswers: {}, guesses: {}, revealUnlocked: false, completedSteps: [], soloDemo: false });
+    go("Join");
+  };
+  return (
+    <div className="absolute inset-0 z-30 flex flex-col justify-end bg-black/60" onClick={onClose}>
+      <div className="rounded-t-[34px] bg-white p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <p className="text-xl font-black text-[#17112B]">Join a room</p>
+          <button onClick={onClose} className="grid h-9 w-9 place-items-center rounded-full bg-black/5">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <p className="mt-2 text-sm font-bold text-black/55">Paste the MUTUALS invite link a friend sent you.</p>
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Paste invite link…"
+          className="mt-3 w-full rounded-2xl border-4 border-black/10 bg-white px-4 py-3.5 text-sm font-black text-[#17112B] outline-none placeholder:font-bold placeholder:text-black/30 focus:border-[#6B2CFF]"
+        />
+        <button
+          onClick={submit}
+          className={cx(
+            "mt-3 w-full rounded-2xl bg-[#6B2CFF] py-3.5 text-sm font-black text-white transition active:scale-[0.98]",
+            text.trim() ? "" : "pointer-events-none opacity-40"
+          )}
+        >
+          Join room
+        </button>
       </div>
     </div>
   );

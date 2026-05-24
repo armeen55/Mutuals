@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Copy, Share2 } from "lucide-react";
+import { Copy, Share2, ChevronLeft } from "lucide-react";
 import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
 import Progress from "../ui/Progress";
@@ -51,7 +51,7 @@ function pickTargets(others, answers, cap) {
 
 export default function Guess({ next }) {
   const app = useMutuals();
-  const questions = useMemo(() => selectQuestions(app.activeGroupId), [app.activeGroupId]);
+  const questions = useMemo(() => selectQuestions(app.activeGroupId, app.groupMode), [app.activeGroupId, app.groupMode]);
   const need = questions.length;
   const [bundle, setBundle] = useState(null);
   const [checking, setChecking] = useState(false);
@@ -162,7 +162,21 @@ export default function Guess({ next }) {
               </Button>
             </div>
           )}
-          <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="mt-4">
+            <Button
+              tone="pink"
+              icon={Share2}
+              onClick={() =>
+                shareOrCopy({
+                  text: "Join my MUTUALS room — one more player unlocks the reveal.",
+                  url: shareUrl(app.activeGroupId),
+                })
+              }
+            >
+              Nudge a friend
+            </Button>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-3">
             <Button
               tone="lime"
               icon={Copy}
@@ -171,19 +185,8 @@ export default function Guess({ next }) {
                 showToast("Link copied");
               }}
             >
-              Copy invite
+              Copy link
             </Button>
-            <Button
-              tone="white"
-              icon={Share2}
-              onClick={() =>
-                shareOrCopy({ text: "Find out who actually knows who in our group.", url: shareUrl(app.activeGroupId) })
-              }
-            >
-              Share invite
-            </Button>
-          </div>
-          <div className="mt-3">
             <Button tone="dark" onClick={checkAgain}>
               {checking ? "Checking…" : "Check again"}
             </Button>
@@ -224,19 +227,35 @@ function RealGuess({ next, targets, questions, isGroup, lateJoiners = [], onAddL
   const lastQ = qi >= questions.length - 1;
   const lastTarget = ti >= targets.length - 1;
   const late = lateJoiners[0];
+  const guessNum = ti * questions.length + qi + 1;
+  const guessTotal = targets.length * questions.length;
+  const canBack = ti > 0 || qi > 0;
+  const onBack = () => {
+    if (saving || !canBack) return;
+    let nti = ti;
+    let nqi = qi;
+    if (qi > 0) nqi = qi - 1;
+    else {
+      nti = ti - 1;
+      nqi = questions.length - 1;
+    }
+    setTi(nti);
+    setQi(nqi);
+    setSelected(acc.current[targets[nti].id]?.[questions[nqi].id] ?? null);
+  };
 
   const onNext = async () => {
     if (selected == null || saving) return;
     acc.current[target.id] = { ...(acc.current[target.id] || {}), [q.id]: selected };
     if (!lastQ) {
       setQi(qi + 1);
-      setSelected(null);
+      setSelected(acc.current[target.id]?.[questions[qi + 1].id] ?? null);
       return;
     }
     if (!lastTarget) {
       setTi(ti + 1);
       setQi(0);
-      setSelected(null);
+      setSelected(acc.current[targets[ti + 1].id]?.[questions[0].id] ?? null);
       return;
     }
     // Last question of last target: write everything, await, then complete.
@@ -256,9 +275,7 @@ function RealGuess({ next, targets, questions, isGroup, lateJoiners = [], onAddL
   return (
     <Phone mood="lavender">
       <div className="relative z-10 px-6 pt-12 text-center text-[#17112B]">
-        <p className="text-xs font-black uppercase tracking-[0.25em] text-black/50">
-          guessing {member.name} · {ti + 1}/{targets.length}
-        </p>
+        <p className="text-xs font-black uppercase tracking-[0.25em] text-black/50">guessing {member.name}</p>
         <div className="mt-3 flex justify-center">
           <Avatar member={member} size="lg" />
         </div>
@@ -289,10 +306,8 @@ function RealGuess({ next, targets, questions, isGroup, lateJoiners = [], onAddL
             )}
           </div>
         )}
-        <Progress step={5} />
-        <p className="mt-4 text-center text-sm font-black text-black/50">
-          What did {member.name} actually pick? · {qi + 1}/{questions.length}
-        </p>
+        <Progress current={guessNum} total={guessTotal} label={`Guess ${guessNum} of ${guessTotal}`} />
+        <p className="mt-4 text-center text-sm font-black text-black/50">What did {member.name} actually pick?</p>
         <div className="mt-4 space-y-3">
           {q.options.map((option, i) => (
             <button
@@ -316,13 +331,28 @@ function RealGuess({ next, targets, questions, isGroup, lateJoiners = [], onAddL
           ))}
         </div>
         <div className="mt-5">
-          <Button
-            onClick={onNext}
-            tone="primary"
-            className={selected == null || saving ? "pointer-events-none opacity-40" : ""}
-          >
-            {saving ? "Saving…" : lastQ && lastTarget ? "See the reveal" : "Next"}
-          </Button>
+          {canBack ? (
+            <div className="grid grid-cols-3 gap-3">
+              <Button tone="dark" icon={ChevronLeft} onClick={onBack} className="col-span-1">
+                Back
+              </Button>
+              <Button
+                onClick={onNext}
+                tone="primary"
+                className={cx("col-span-2", selected == null || saving ? "pointer-events-none opacity-40" : "")}
+              >
+                {saving ? "Saving…" : lastQ && lastTarget ? "See the reveal" : "Next"}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={onNext}
+              tone="primary"
+              className={selected == null || saving ? "pointer-events-none opacity-40" : ""}
+            >
+              {saving ? "Saving…" : lastQ && lastTarget ? "See the reveal" : "Next"}
+            </Button>
+          )}
         </div>
       </BottomSheet>
     </Phone>

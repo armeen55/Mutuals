@@ -12,7 +12,7 @@ import { selectQuestions } from "../../../data/questions";
 
 export default function Answer({ next }) {
   const app = useMutuals();
-  const questions = useMemo(() => selectQuestions(app.activeGroupId), [app.activeGroupId]);
+  const questions = useMemo(() => selectQuestions(app.activeGroupId, app.groupMode), [app.activeGroupId, app.groupMode]);
   const [qi, setQi] = useState(0);
   const q = questions[qi];
   const [selected, setSelected] = useState(app.selfAnswers?.[q.id] ?? null);
@@ -48,15 +48,13 @@ export default function Answer({ next }) {
   return (
     <Phone mood="cream">
       <div className="relative z-10 px-6 pt-16">
-        <p className="text-center text-xs font-black uppercase tracking-[0.25em] text-black/45">
-          about you · {qi + 1}/{questions.length}
-        </p>
+        <p className="text-center text-xs font-black uppercase tracking-[0.25em] text-black/45">about you</p>
         <div className="mt-4 rounded-[28px] bg-white p-6 text-center shadow-xl">
           <h2 className="text-3xl font-black leading-tight text-black">{q.prompt}</h2>
         </div>
       </div>
       <BottomSheet tall>
-        <Progress step={4} />
+        <Progress current={qi + 1} total={questions.length} label={`Question ${qi + 1} of ${questions.length}`} />
         <div className="mt-5 space-y-3">
           {q.options.map((option, i) => (
             <button
