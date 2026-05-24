@@ -117,9 +117,9 @@ export default function Guess({ next }) {
   // Real room whose data hasn't loaded yet — never show seeded/fake data.
   if (realRoom && bundle === null) {
     return (
-      <Phone mood="purple">
-        <div className="relative z-10 px-6 pt-32 text-center text-white">
-          <p className="text-xs font-black uppercase tracking-[0.25em] text-white/70">your room</p>
+      <Phone mood="lavender">
+        <div className="relative z-10 px-6 pt-32 text-center text-[#17112B]">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-black/50">your room</p>
           <h2 className="mt-4 text-5xl font-black leading-none tracking-tighter">Loading room…</h2>
         </div>
       </Phone>
@@ -133,7 +133,7 @@ export default function Guess({ next }) {
     const required = app.groupMode === "duo" ? 2 : 3;
     const needMore = Math.max(0, required - participants.length);
     return (
-      <Phone mood="purple">
+      <Phone mood="lavender">
         <div className="relative z-10 px-6 pt-20 text-center">
           <span className="inline-flex rounded-full bg-black px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-white">
             {app.groupMode === "duo" ? "1:1 room" : "Group room"}
@@ -254,9 +254,9 @@ function RealGuess({ next, targets, questions, isGroup, lateJoiners = [], onAddL
   };
 
   return (
-    <Phone mood="purple">
-      <div className="relative z-10 px-6 pt-12 text-center text-white">
-        <p className="text-xs font-black uppercase tracking-[0.25em] text-white/70">
+    <Phone mood="lavender">
+      <div className="relative z-10 px-6 pt-12 text-center text-[#17112B]">
+        <p className="text-xs font-black uppercase tracking-[0.25em] text-black/50">
           guessing {member.name} · {ti + 1}/{targets.length}
         </p>
         <div className="mt-3 flex justify-center">
@@ -300,7 +300,7 @@ function RealGuess({ next, targets, questions, isGroup, lateJoiners = [], onAddL
               onClick={() => setSelected(i)}
               className={cx(
                 "flex w-full items-center gap-3 rounded-3xl p-4 text-left text-sm font-black shadow-sm",
-                i === selected ? "bg-[#7cdfff] text-black" : "bg-[#f4f1fa] text-black"
+                i === selected ? "bg-[#7CDFFF] text-black" : "bg-[#F3EFFF] text-black"
               )}
             >
               <span
@@ -346,9 +346,9 @@ function SeededGuess({ next }) {
     next();
   };
   return (
-    <Phone mood="purple">
-      <div className="relative z-10 px-6 pt-14 text-center text-white">
-        <p className="text-xs font-black uppercase tracking-[0.25em] text-white/70">guess your friend</p>
+    <Phone mood="lavender">
+      <div className="relative z-10 px-6 pt-14 text-center text-[#17112B]">
+        <p className="text-xs font-black uppercase tracking-[0.25em] text-black/50">guess your friend</p>
         <div className="mt-4 flex justify-center">
           <Avatar member={members[2]} size="lg" />
         </div>
@@ -366,7 +366,7 @@ function SeededGuess({ next }) {
               onClick={() => setSelected(i)}
               className={cx(
                 "flex w-full items-center gap-3 rounded-3xl p-4 text-left text-sm font-black shadow-sm",
-                i === selected ? "bg-[#7cdfff] text-black" : "bg-[#f4f1fa] text-black"
+                i === selected ? "bg-[#7CDFFF] text-black" : "bg-[#F3EFFF] text-black"
               )}
             >
               <span

@@ -40,7 +40,7 @@ function Graph({ players, edges, best }) {
             y1={a.y}
             x2={b.x}
             y2={b.y}
-            stroke={isBest ? "#d7ff2f" : "#ffffff"}
+            stroke={isBest ? "#FFD23F" : "#ffffff"}
             strokeOpacity={isBest ? 0.95 : 0.15 + e.acc * 0.5}
             strokeWidth={isBest ? 1.8 : 0.5 + e.acc * 1.3}
             strokeLinecap="round"
@@ -51,7 +51,7 @@ function Graph({ players, edges, best }) {
         const isBest = best && (p.id === best.a || p.id === best.b);
         return (
           <g key={p.id}>
-            <circle cx={p.x} cy={p.y} r="7.5" fill={isBest ? "#d7ff2f" : "#6b2cff"} stroke="#fff" strokeWidth="0.9" />
+            <circle cx={p.x} cy={p.y} r="7.5" fill={isBest ? "#FFD23F" : "#6b2cff"} stroke="#fff" strokeWidth="0.9" />
             <text x={p.x} y={p.y + 1.6} textAnchor="middle" fontSize="6" fontWeight="900" fill={isBest ? "#000" : "#fff"}>
               {(p.name || "?").trim().slice(0, 1).toUpperCase()}
             </text>
@@ -126,7 +126,7 @@ export default function Matrix({ next }) {
                         key={p.id}
                         className={
                           isBest
-                            ? "rounded-full bg-[#d7ff2f] px-3 py-1 text-xs font-black text-black"
+                            ? "rounded-full bg-[#FFD23F] px-3 py-1 text-xs font-black text-black"
                             : "rounded-full bg-white/10 px-3 py-1 text-xs font-black text-white"
                         }
                       >
@@ -142,7 +142,7 @@ export default function Matrix({ next }) {
           </div>
 
           {best && (
-            <div className="rounded-[24px] bg-[#d7ff2f] p-4 text-black">
+            <div className="rounded-[24px] bg-[#FFD23F] p-4 text-black">
               <p className="text-[11px] font-black uppercase tracking-widest text-black/40">best mutual pair</p>
               <p className="mt-1 break-words text-2xl font-black leading-tight">
                 {best.aName} ↔ {best.bName}
@@ -160,7 +160,7 @@ export default function Matrix({ next }) {
                   return (
                     <div key={i} className="relative overflow-hidden rounded-2xl bg-white/10">
                       <div
-                        className={isBest ? "absolute inset-y-0 left-0 bg-[#d7ff2f]/25" : "absolute inset-y-0 left-0 bg-[#6b2cff]/45"}
+                        className={isBest ? "absolute inset-y-0 left-0 bg-[#FFD23F]/25" : "absolute inset-y-0 left-0 bg-[#6b2cff]/45"}
                         style={{ width: `${Math.max(12, pct(e.acc))}%` }}
                       />
                       <div className="relative flex items-center justify-between gap-2 p-3">

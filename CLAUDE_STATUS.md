@@ -5,6 +5,33 @@ Newest entry on top.
 
 ---
 
+## Chunk 17B — Color system pass (friendlier/warmer, dark = reveal stage only) (BUILD + PUSH)
+
+### Goal
+No features, no flow changes. Make the palette friendlier/warmer/cohesive; use dark navy only as the dramatic reveal/map stage, not the default emotional background. Normalized in the theme files.
+
+### Palette normalized (`ui/Phone.jsx`, `ui/AbstractBg.jsx`, `ui/Button.jsx`)
+- `Phone.jsx` now exports `PALETTE` (ink #17112B, cream #FFF3DF, pageCream, violet #7B3CFF, deepViolet #6B2CFF, lavender #F3EFFF, pink #FF4F9A, yellow #FFD23F, mint #35C58A, sky #7CDFFF, softLine) and a `mood→bg` map (added `lavender`/`violet`/`mint`/`sky`/`pageCream`; `dark`/`ink` = navy). Default mood is now **cream**, default text **ink**.
+- `Button.jsx` tones remapped to the palette; the `lime` key now renders **mint**, `dark` → ink, `yellow` → #FFD23F (added a `violet` tone).
+- `AbstractBg.jsx`: warm blob palettes per mood, **reduced dark-purple dominance** (accents are sky/violet/white at low opacity), and **mood-aware dots** (ink on light, white on dark) + a pink squiggle so decorations frame content on every screen.
+
+### Screen moods reassigned
+- **Home** → cream (was dark): ink text, white "Join a Room", purple/pink doors kept. Friendly, not threatening.
+- **Answer** → cream (was dark): warm/safe; white question card, **lavender** choices, **pink** selected.
+- **Guess** → lavender (was full purple) across loading/waiting/guess states; ink text, white question card, **sky** selected.
+- **Create** → lavender (1:1) / cream (group), ink header text.
+- **Reveal** stays the dark dramatic stage, but `BigRevealCard`/share-image card palette is now bright + white-text-safe (**pink / mint / violet / deepViolet**); the receipts "real answer" highlight is **yellow** (was lime).
+- **Matrix (map)** keeps a navy frame with colorful elements; best-pair highlight → yellow.
+- **Share** keeps a navy frame but the top-knower preview is now a bright **violet** card (celebration); Eazo accent → yellow.
+
+### Files changed
+`ui/Phone.jsx`, `ui/AbstractBg.jsx`, `ui/Button.jsx`, `ui/BigRevealCard.jsx`, `utils/shareImage.js`, `screens/Home.jsx`, `screens/Answer.jsx`, `screens/Guess.jsx`, `screens/Create.jsx`, `screens/Matrix.jsx`, `screens/Share.jsx`. **Untouched:** all flow logic (Chunk 15 rounds/late-join/answer-edit, Chunk 17 share/map), Supabase schema, insight engine, Eazo URL. No features added.
+
+### Build
+One `npm run build` → green (2229 modules, ~265ms). No manual preview per request.
+
+---
+
 ## Chunk 17 — Screenshot-worthy reveal/share + real share-card images (BUILD + PUSH)
 
 ### Goal

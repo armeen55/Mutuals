@@ -10,7 +10,7 @@ import { cx, showToast, shareOrCopy } from "../../../utils/ui";
 // The mode defines the screen: 1:1 is a tight showdown, Group is social chaos.
 const COPY = {
   duo: {
-    mood: "dark",
+    mood: "lavender",
     eyebrow: "1:1 showdown",
     header: "Prove who knows who better.",
     body: "Send this to one person. You both answer, guess each other, then reveal the receipts.",
@@ -18,7 +18,7 @@ const COPY = {
     shareText: "Bet I know you better than you know me. Prove me wrong:",
   },
   group: {
-    mood: "purple",
+    mood: "cream",
     eyebrow: "group chaos",
     header: "Put the group chat on the record.",
     body: "Drop the link. Everyone answers about themselves. MUTUALS reveals who actually pays attention.",
@@ -47,8 +47,8 @@ export default function Create({ next }) {
 
   return (
     <Phone mood={c.mood}>
-      <div className="relative z-10 px-6 text-center text-white" style={{ paddingTop: "clamp(24px, 6svh, 56px)" }}>
-        <p className="text-xs font-black uppercase tracking-[0.25em] text-white/60">{c.eyebrow}</p>
+      <div className="relative z-10 px-6 text-center text-[#17112B]" style={{ paddingTop: "clamp(24px, 6svh, 56px)" }}>
+        <p className="text-xs font-black uppercase tracking-[0.25em] text-black/45">{c.eyebrow}</p>
         <h2 className="mt-2 font-black leading-[0.95] tracking-tighter" style={{ fontSize: "clamp(2rem, 8.5vw, 3.25rem)" }}>
           {c.header}
         </h2>

@@ -1,14 +1,41 @@
 import AbstractBg from "./AbstractBg";
 
-// Full-bleed mood background so white-on-screen headers stay readable and the
-// reveal reads like a real screen — not a phone-inside-a-phone mockup.
-const BG = { purple: "#6b2cff", dark: "#17112b", cream: "#fff2df", yellow: "#ffbd00" };
+// MUTUALS palette (single source for screen backgrounds). Dark navy (ink) is the
+// dramatic reveal stage only — friendly cream/lavender/violet carry the rest.
+export const PALETTE = {
+  ink: "#17112B",
+  cream: "#FFF3DF",
+  pageCream: "#F8F1E8",
+  violet: "#7B3CFF",
+  deepViolet: "#6B2CFF",
+  lavender: "#F3EFFF",
+  pink: "#FF4F9A",
+  yellow: "#FFD23F",
+  mint: "#35C58A",
+  sky: "#7CDFFF",
+  softLine: "#E8DFF8",
+};
 
-export default function Phone({ children, mood = "purple" }) {
+// mood -> background color
+const BG = {
+  ink: PALETTE.ink,
+  dark: PALETTE.ink, // alias for existing reveal-stage usages
+  cream: PALETTE.cream,
+  pageCream: PALETTE.pageCream,
+  lavender: PALETTE.lavender,
+  purple: PALETTE.deepViolet,
+  violet: PALETTE.violet,
+  yellow: PALETTE.yellow,
+  pink: PALETTE.pink,
+  mint: PALETTE.mint,
+  sky: PALETTE.sky,
+};
+
+export default function Phone({ children, mood = "cream" }) {
   return (
     <div
-      className="relative flex min-h-[100dvh] flex-col overflow-hidden text-black"
-      style={{ background: BG[mood] || BG.purple }}
+      className="relative flex min-h-[100dvh] flex-col overflow-hidden text-[#17112B]"
+      style={{ background: BG[mood] || BG.cream }}
     >
       <AbstractBg mood={mood} />
       {children}

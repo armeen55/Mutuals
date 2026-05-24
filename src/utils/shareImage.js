@@ -5,7 +5,7 @@
 const W = 1080;
 const H = 1920;
 const NAVY = "#17112b";
-const CARD_PALETTE = ["#ff4f9a", "#35c58a", "#7c2cff", "#ff8b5e", "#2d5bff", "#16a394"];
+const CARD_PALETTE = ["#FF4F9A", "#35C58A", "#7B3CFF", "#6B2CFF"];
 const FONT = "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
 
 function origin() {
@@ -163,7 +163,7 @@ export async function createRevealShareImage(card, { index = 0 } = {}) {
     const block = (lbl, val, highlight) => {
       const lines = wrapLines(ctx, val, innerW - 60);
       const bh = 70 + Math.min(lines.length, 3) * 54 + 30;
-      ctx.fillStyle = highlight ? "#d7ff2f" : "rgba(255,255,255,0.16)";
+      ctx.fillStyle = highlight ? "#FFD23F" : "rgba(255,255,255,0.16)";
       roundRect(ctx, cx + pad, y, innerW, bh, 28);
       ctx.fill();
       ctx.fillStyle = highlight ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.6)";
@@ -230,7 +230,7 @@ export async function createMapShareImage(graph, _opts = {}) {
   let y = cy + pad + 320;
   const best = graph && graph.best;
   if (best) {
-    ctx.fillStyle = "#d7ff2f";
+    ctx.fillStyle = "#FFD23F";
     roundRect(ctx, cx + pad, y, innerW, 170, 28);
     ctx.fill();
     ctx.fillStyle = "rgba(0,0,0,0.5)";

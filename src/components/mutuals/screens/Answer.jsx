@@ -46,9 +46,9 @@ export default function Answer({ next }) {
   };
 
   return (
-    <Phone mood="dark">
+    <Phone mood="cream">
       <div className="relative z-10 px-6 pt-16">
-        <p className="text-center text-xs font-black uppercase tracking-[0.25em] text-white/60">
+        <p className="text-center text-xs font-black uppercase tracking-[0.25em] text-black/45">
           about you · {qi + 1}/{questions.length}
         </p>
         <div className="mt-4 rounded-[28px] bg-white p-6 text-center shadow-xl">
@@ -64,7 +64,7 @@ export default function Answer({ next }) {
               onClick={() => pick(i)}
               className={cx(
                 "flex w-full items-center gap-3 rounded-3xl p-4 text-left text-sm font-black shadow-sm",
-                i === selected ? "bg-[#ff4f9a] text-white" : "bg-[#f4f1fa] text-black"
+                i === selected ? "bg-[#FF4F9A] text-white" : "bg-[#F3EFFF] text-black"
               )}
             >
               <span

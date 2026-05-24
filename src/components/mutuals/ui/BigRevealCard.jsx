@@ -1,10 +1,10 @@
 // A self-contained, screenshot-worthy result card: a vivid rounded card on the
 // dark reveal background (mirrors the canvas share image). Cycles color by index.
-const PALETTE = ["#ff4f9a", "#35c58a", "#7c2cff", "#ff8b5e", "#2d5bff", "#16a394"];
+const PALETTE = ["#FF4F9A", "#35C58A", "#7B3CFF", "#6B2CFF"];
 
 function Block({ label, value, highlight }) {
   return (
-    <div className={highlight ? "rounded-2xl bg-[#d7ff2f] p-3.5 text-black" : "rounded-2xl bg-white/15 p-3.5"}>
+    <div className={highlight ? "rounded-2xl bg-[#FFD23F] p-3.5 text-black" : "rounded-2xl bg-white/15 p-3.5"}>
       <p className={highlight ? "text-[10px] font-black uppercase tracking-widest text-black/50" : "text-[10px] font-black uppercase tracking-widest text-white/55"}>
         {label}
       </p>

@@ -86,8 +86,8 @@ export default function Share({ go }) {
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col justify-center py-3">
-          <div className="rounded-[26px] bg-[#1f1736] p-5">
-            <div className="flex items-center gap-2 text-white/55">
+          <div className="rounded-[26px] bg-[#7B3CFF] p-5 shadow-xl">
+            <div className="flex items-center gap-2 text-white/70">
               <Trophy className="h-4 w-4" />
               <p className="text-[11px] font-black uppercase tracking-widest">top knower</p>
             </div>
@@ -141,7 +141,7 @@ export default function Share({ go }) {
           </button>
           <button
             onClick={eazoReady ? () => window.open(EAZO_VOTE_URL, "_blank", "noopener") : undefined}
-            className={cx("text-xs font-black", eazoReady ? "text-[#d7ff2f]" : "pointer-events-none text-white/25")}
+            className={cx("text-xs font-black", eazoReady ? "text-[#FFD23F]" : "pointer-events-none text-white/25")}
           >
             {eazoReady ? "Vote on Eazo" : "Eazo soon"}
           </button>

@@ -22,9 +22,9 @@ export default function Home({ next, go }) {
   };
 
   return (
-    <Phone mood="dark">
+    <Phone mood="cream">
       <div
-        className="relative z-10 flex flex-1 flex-col px-6 text-white"
+        className="relative z-10 flex flex-1 flex-col px-6 text-[#17112B]"
         style={{
           paddingTop: "clamp(28px, 6svh, 60px)",
           paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + clamp(20px, 4svh, 36px))",
@@ -37,7 +37,7 @@ export default function Home({ next, go }) {
           <h1 className="font-black leading-none tracking-tighter" style={{ fontSize: "clamp(3.25rem, 16vw, 5.25rem)" }}>
             MUTUALS
           </h1>
-          <p className="mt-3 font-bold text-white/70" style={{ fontSize: "clamp(1rem, 4.6vw, 1.25rem)" }}>
+          <p className="mt-3 font-bold text-black/55" style={{ fontSize: "clamp(1rem, 4.6vw, 1.25rem)" }}>
             Find out who knows who
           </p>
         </div>
@@ -78,17 +78,17 @@ export default function Home({ next, go }) {
 
           <button
             onClick={() => go("Join")}
-            className="flex w-full items-center justify-center gap-2 rounded-[22px] border-2 border-white/15 bg-white/5 py-3.5 text-sm font-black text-white transition active:scale-[0.98]"
+            className="flex w-full items-center justify-center gap-2 rounded-[22px] border-2 border-[#6B2CFF]/20 bg-white py-3.5 text-sm font-black text-[#17112B] shadow-sm transition active:scale-[0.98]"
           >
             <UserPlus className="h-5 w-5" /> Join a Room
           </button>
 
-          <p className="px-2 pt-1 text-center text-xs font-bold leading-relaxed text-white/45">
+          <p className="px-2 pt-1 text-center text-xs font-bold leading-relaxed text-black/45">
             Answer about yourself. Guess your friends. Reveal the receipts.
           </p>
           <button
             onClick={() => setHow(true)}
-            className="mx-auto block text-center text-xs font-black uppercase tracking-widest text-white/50 underline-offset-4 hover:underline"
+            className="mx-auto block text-center text-xs font-black uppercase tracking-widest text-black/45 underline-offset-4 hover:underline"
           >
             How it works
           </button>
