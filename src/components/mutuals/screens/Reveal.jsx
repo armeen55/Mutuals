@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
-import { Download, Share2, ChevronLeft, Lock, Copy } from "lucide-react";
+import { Share2, ChevronLeft, Lock, Copy, Image as ImageIcon, Link2, MoreHorizontal } from "lucide-react";
 import Phone from "../ui/Phone";
 import BottomSheet from "../ui/BottomSheet";
 import BigRevealCard from "../ui/BigRevealCard";
 import PlayerChips from "../ui/PlayerChips";
+import ShareActionTile from "../ui/ShareActionTile";
 import Button from "../ui/Button";
 import { insightCards } from "../../../data/mutualsDemoData";
 import { selectQuestions } from "../../../data/questions";
@@ -12,6 +13,7 @@ import { shareUrl, saveMutualsState, repairParticipantId } from "../../../utils/
 import { getInsights, captureGroup } from "../../../lib/mutualsApi";
 import { roomStatus } from "../../../lib/insights";
 import { cx, showToast, shareOrCopy } from "../../../utils/ui";
+import { createRevealShareImage, shareImageBlob } from "../../../utils/shareImage";
 
 // Seeded fallback order (skips index 3 — the "Full Report" gate card).
 const SEEDED = [0, 1, 2, 4, 5, 6, 7, 8, 9].map((i) => insightCards[i]);
@@ -200,9 +202,6 @@ export default function Reveal({ next, go, goSignup }) {
 
   const cards = realReady ? real.cards : SEEDED;
   const card = cards[Math.min(pos, cards.length - 1)];
-  // BigRevealCard text is white; cream/yellow moods would wash it out, so use strong bgs.
-  const revealMood = card.mood === "cream" ? "purple" : card.mood === "yellow" ? "dark" : card.mood;
-  const cardNumber = Math.min(pos + 1, cards.length);
   const atGate = !realReady && !app.signedUp && pos >= 2 && pos < cards.length;
   const atEnd = pos >= cards.length - 1;
   const status = realReady ? roomStatus(real.bundle, need) : null;
@@ -212,73 +211,88 @@ export default function Reveal({ next, go, goSignup }) {
     realReady && round
       ? (real.bundle?.participants || []).filter((p) => p.id !== myPid && !round.known.includes(p.id))
       : [];
+  const roomUrl = shareUrl(app.activeGroupId);
+  const advance = () => (atEnd ? (realReady ? go("Matrix") : go("Share")) : setPos(pos + 1));
+  const shareImage = async () => {
+    try {
+      const blob = await createRevealShareImage(card, { index: pos });
+      const res = await shareImageBlob({ blob, text: card.shareText || card.headline, url: roomUrl, fileName: "mutuals-reveal.png" });
+      showToast(res === "downloaded" ? "Image saved" : res === "copied" ? "Link copied" : "Shared");
+    } catch {
+      shareOrCopy({ text: card.shareText || card.headline, url: roomUrl });
+    }
+  };
+  const copyLink = () => {
+    navigator.clipboard?.writeText(roomUrl);
+    showToast("Link copied");
+  };
   return (
-    <Phone mood={revealMood}>
-      <BigRevealCard card={card} />
-      <BottomSheet>
-        <div className="flex gap-1">
+    <Phone mood="dark">
+      <div
+        className="relative z-10 flex h-[100dvh] flex-col px-5 text-white"
+        style={{
+          paddingTop: "clamp(16px, 4svh, 34px)",
+          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + clamp(14px, 3svh, 26px))",
+        }}
+      >
+        <p className="text-center text-sm font-black text-white/70">Here's what we learned…</p>
+
+        <div className="mt-3 flex min-h-0 flex-1 flex-col overflow-y-auto py-2">
+          <div className="my-auto w-full">
+            <BigRevealCard card={card} index={pos} />
+          </div>
+        </div>
+
+        <div className="mt-2 flex justify-center gap-1.5">
           {cards.map((_, i) => (
-            <div key={i} className={cx("h-2 flex-1 rounded-full", i <= pos ? "bg-[#ff4f9a]" : "bg-black/10")} />
+            <div
+              key={i}
+              className={cx(
+                "h-2 rounded-full transition-all",
+                i === pos ? "w-6 bg-[#ff4f9a]" : i < pos ? "w-2 bg-white/60" : "w-2 bg-white/20"
+              )}
+            />
           ))}
         </div>
-        <div className="mt-5 rounded-[26px] bg-[#f4f1fa] p-4">
-          <p className="text-xs font-black uppercase tracking-widest text-black/35">
-            {realReady ? "live reveal" : "reveal sequence"}
+
+        {realReady && (notFinished > 0 || lateJoiners.length > 0) && (
+          <p className="mt-2 text-center text-[11px] font-bold text-white/55">
+            {status.finished} finished{notFinished > 0 ? ` · ${notFinished} more can make it better` : ""}
+            {lateJoiners.length > 0 ? ` · ${lateJoiners[0].displayName} joined late` : ""}
           </p>
-          <p className="mt-2 text-sm font-black">
-            Card {cardNumber} of {cards.length} ·{" "}
-            {realReady ? "from your group's real answers" : "your highlight reel"}
-          </p>
-          {realReady && (
-            <p className="mt-1 text-xs font-bold text-[#6b2cff]">
-              {status.finished} finished. Reveal unlocked.
-              {notFinished > 0 ? ` ${notFinished} more can still make it better.` : ""}
-            </p>
-          )}
-          {lateJoiners.length > 0 && (
-            <p className="mt-1 text-xs font-bold text-[#ff4f9a]">
-              {lateJoiners[0].displayName} joined late — rematch after the reveal.
-            </p>
-          )}
-          <p className="mt-1 truncate text-xs font-bold text-black/45">{shareUrl(app.activeGroupId)}</p>
+        )}
+
+        <div className="mt-3 flex gap-2">
+          <ShareActionTile icon={ImageIcon} label="Share Image" onClick={shareImage} tone="primary" />
+          <ShareActionTile icon={Link2} label="Copy Link" onClick={copyLink} />
+          <ShareActionTile
+            icon={MoreHorizontal}
+            label="More"
+            onClick={() => shareOrCopy({ text: card.shareText || card.headline, url: roomUrl })}
+          />
         </div>
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <Button tone="lime" icon={Download} onClick={() => showToast("Screenshot to save & share")}>
-            Save
-          </Button>
-          <Button
-            tone="white"
-            icon={Share2}
-            onClick={() => shareOrCopy({ text: card.shareText || card.headline, url: shareUrl(app.activeGroupId) })}
-          >
-            Share
-          </Button>
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <Button tone="dark" icon={ChevronLeft} onClick={() => setPos(Math.max(0, pos - 1))}>
-            Prev
-          </Button>
+
+        <div className="mt-3 flex items-center gap-2">
+          {pos > 0 && (
+            <button
+              onClick={() => setPos(Math.max(0, pos - 1))}
+              aria-label="Previous"
+              className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/10 text-white transition active:scale-95"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+          )}
           {atGate ? (
             <Button onClick={goSignup} tone="pink" icon={Lock}>
               Unlock 7 more
             </Button>
-          ) : atEnd ? (
-            realReady ? (
-              <Button onClick={() => go("Matrix")} tone="primary">
-                See the map
-              </Button>
-            ) : (
-              <Button onClick={() => go("Share")} tone="primary">
-                Finish
-              </Button>
-            )
           ) : (
-            <Button onClick={() => setPos(pos + 1)} tone="primary">
-              Next card
+            <Button onClick={advance} tone="primary">
+              {atEnd ? (realReady ? "See the map" : "Finish") : "Next result"}
             </Button>
           )}
         </div>
-      </BottomSheet>
+      </div>
     </Phone>
   );
 }

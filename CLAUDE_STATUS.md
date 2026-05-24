@@ -5,6 +5,35 @@ Newest entry on top.
 
 ---
 
+## Chunk 17 — Screenshot-worthy reveal/share + real share-card images (BUILD + PUSH)
+
+### Goal
+Make the post-game flow feel like a mini Wrapped/Jackbox result: real share-card PNGs, a visual who-knows-who graph, and a tight viral loop. No schema change, no new deps (dependency-free canvas), Chunk 15 round/late-join logic preserved. Operator previews locally — no browser preview run here.
+
+### Real image generation (`utils/shareImage.js`, new)
+- Dependency-free `<canvas>` → **1080×1920 PNG**. `createRevealShareImage(card,{index})` draws a vivid result card on navy with confetti, MUTUALS wordmark, label badge, big stat/headline/detail, or the **Question / Guessed / Real answer** receipts blocks; auto-fits long stats. `createMapShareImage(graph)` draws the best mutual pair + "who reads who" bars. `shareImageBlob({blob,text,url,fileName})` uses `navigator.canShare({files})` to share the PNG, else downloads it, else copies the link — with toasts ("Image saved" / "Link copied" / "Shared"). Every caller wraps it in try/catch and falls back to native text share, so canvas failure never breaks the flow.
+
+### Reveal redesigned (`Reveal.jsx`, `ui/BigRevealCard.jsx`, `ui/ShareActionTile.jsx` new)
+- Dark navy screen, top "Here's what we learned…", the result card as the **star**, animated progress dots, then an action row **Share Image · Copy Link · More**, a subtle Prev, and a primary CTA: **Next result** → **See the map** (final real) / **Finish** (seeded).
+- `BigRevealCard` is now a self-contained vivid **card** (cycles color by index, white text, label badge, MUTUALS mark, in-card confetti, watermark) — mirrors the PNG so a screenshot looks intentional. Receipts render as structured blocks (real answer on lime). Removed the utilitarian room-link metadata card. "Save" → **Share Image** (real), "Next card" → **Next result**.
+
+### Visual map (`Matrix.jsx`)
+- Real **who-knows-who graph**: circular SVG nodes (initials) with connection lines weighted by score, **best mutual pair** highlighted lime, name chips, a "who reads who" list with score bars. Actions: **Share Map** (PNG via canvas) · Copy Link · **Continue**.
+
+### Share = result hub (`Share.jsx`)
+- Dark result page (off the full-yellow mood): a **top-knower preview card** (+ player count + late-joiner nudge), action row **Share Image · Copy Link · More**, primary **Play another round · new questions**, secondary **Challenge 1 Friend / Challenge a Group**, tertiary **View map · Back to start · Eazo** (de-emphasized, URL unchanged).
+
+### Copy + responsiveness
+- "live reveal"/"from your group's real answers" removed; "the receipts" framing throughout. All three screens use `h-[100dvh]` + an internal `min-h-0 overflow-y-auto` content area so the card/map/preview scroll **inside** while action tiles + CTAs stay pinned (no below-fold), with `clamp()` sizing for 375×667 → 430×932.
+
+### Files changed
+`utils/shareImage.js` (new), `ui/ShareActionTile.jsx` (new), `ui/BigRevealCard.jsx`, `screens/Reveal.jsx`, `screens/Matrix.jsx`, `screens/Share.jsx`. **Untouched:** Supabase schema, insight engine (reused `pairScores`), Chunk 15 round/late-join/answer-edit logic, Home/Create/AbstractBg (Chunk 16B), Eazo URL.
+
+### Build
+One `npm run build` → green (2229 modules, ~272ms). No manual preview per request.
+
+---
+
 ## Chunk 16B — Home/Create visual direction + responsiveness (BUILD + PUSH)
 
 ### Goal

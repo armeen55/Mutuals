@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
-import { Share2, Users, Trophy, RotateCcw, Map as MapIcon } from "lucide-react";
+import { Share2, Link2, MoreHorizontal, Users, RotateCcw, Map as MapIcon, Trophy } from "lucide-react";
 import Phone from "../ui/Phone";
-import BottomSheet from "../ui/BottomSheet";
+import ShareActionTile from "../ui/ShareActionTile";
 import Button from "../ui/Button";
 import { useMutuals } from "../useMutuals";
 import { shareUrl, saveMutualsState, newRoomId, ensureGroup } from "../../../utils/mutualsStorage";
 import { getInsights, captureGroup } from "../../../lib/mutualsApi";
-import { shareOrCopy, showToast } from "../../../utils/ui";
+import { cx, shareOrCopy, showToast } from "../../../utils/ui";
+import { createRevealShareImage, shareImageBlob } from "../../../utils/shareImage";
 import { EAZO_VOTE_URL } from "../../../config";
 
 // Only treat the vote CTA as live once a real link replaces the placeholder.
@@ -17,20 +18,20 @@ export default function Share({ go }) {
   const link = shareUrl(app.activeGroupId);
   const [data, setData] = useState(null); // { cards, bundle, readiness }
 
-  // Pull the finished reveal so the aftermath can name a winner + count players.
   useEffect(() => {
     if (app.soloDemo || !app.activeGroupId) return;
     getInsights(app.activeGroupId).then(setData).catch(() => {});
   }, [app.activeGroupId, app.soloDemo]);
 
+  const cards = data?.cards || [];
   const participants = data?.bundle?.participants || [];
-  const winner = (data?.cards || []).find((c) => c.id === "winner");
+  const winner = cards.find((c) => c.id === "winner");
+  const hero = winner || cards[0] || null;
   const myPid = (app.participantIdsByGroup || {})[app.activeGroupId];
   const round = (app.roundsByGroup || {})[app.activeGroupId] || null;
   const lateJoiners = round ? participants.filter((p) => p.id !== myPid && !round.known.includes(p.id)) : [];
   const late = lateJoiners[0];
 
-  // Challenge / rematch always start a FRESH room (no stale answers) and route to Create.
   const newRoom = (mode) => {
     const id = newRoomId();
     ensureGroup(id);
@@ -47,69 +48,105 @@ export default function Share({ go }) {
     go("Create");
   };
 
-  const shareReceipts = () =>
-    shareOrCopy({
-      text: winner
-        ? `${winner.headline} We just found out who actually knows who.`
-        : "We just played MUTUALS and found out who actually knows who.",
-      url: link,
-    });
+  const shareImage = async () => {
+    try {
+      if (!hero) throw new Error("no card");
+      const blob = await createRevealShareImage(hero, { index: 0 });
+      const res = await shareImageBlob({
+        blob,
+        text: hero.shareText || "We just found out who actually knows who.",
+        url: link,
+        fileName: "mutuals-result.png",
+      });
+      showToast(res === "downloaded" ? "Image saved" : res === "copied" ? "Link copied" : "Shared");
+    } catch {
+      shareOrCopy({ text: hero ? hero.headline : "We just played MUTUALS.", url: link });
+    }
+  };
+  const copyLink = () => {
+    navigator.clipboard?.writeText(link);
+    showToast("Link copied");
+  };
 
   return (
-    <Phone mood="yellow">
-      <div className="relative z-10 px-7 pt-20 text-center">
-        <p className="inline-flex rounded-full bg-black px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-white">
-          the verdict is in
-        </p>
-        <h2 className="mt-6 text-6xl font-black leading-[0.85] tracking-tighter">Your group has receipts.</h2>
-        <p className="mx-auto mt-4 max-w-[260px] text-sm font-bold text-black/60">Send it before they deny it.</p>
-      </div>
-      <BottomSheet>
-        <div className="rounded-[26px] bg-black p-4 text-white">
-          <p className="text-[11px] font-black uppercase tracking-widest text-white/50">this reveal</p>
-          <p className="mt-1 break-words text-lg font-black leading-tight">
-            {winner ? winner.headline : "Who actually knows who."}
-          </p>
-          <p className="mt-1 text-xs font-bold text-white/60">
-            {participants.length > 0 ? `${participants.length} players in this round.` : "Your round is in."}
-            {late ? ` ${late.displayName} joined late — run it back with them?` : ""}
-          </p>
+    <Phone mood="dark">
+      <div
+        className="relative z-10 flex h-[100dvh] flex-col px-5 text-white"
+        style={{
+          paddingTop: "clamp(18px, 5svh, 44px)",
+          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + clamp(14px, 3svh, 26px))",
+        }}
+      >
+        <div className="text-center">
+          <p className="text-xs font-black uppercase tracking-[0.25em] text-white/60">that was fun</p>
+          <h2 className="mt-2 font-black leading-[0.95] tracking-tighter" style={{ fontSize: "clamp(2rem, 8.5vw, 3rem)" }}>
+            The receipts are in.
+          </h2>
+          <p className="mx-auto mt-2 max-w-[280px] text-sm font-bold text-white/60">Share this before they deny it.</p>
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col justify-center py-3">
+          <div className="rounded-[26px] bg-[#1f1736] p-5">
+            <div className="flex items-center gap-2 text-white/55">
+              <Trophy className="h-4 w-4" />
+              <p className="text-[11px] font-black uppercase tracking-widest">top knower</p>
+            </div>
+            <p className="mt-2 break-words text-2xl font-black leading-tight">
+              {hero ? hero.headline : "Who actually knows who."}
+            </p>
+            <p className="mt-2 text-xs font-bold text-white/55">
+              {participants.length > 0 ? `${participants.length} players in this round.` : "Your round is in."}
+              {late ? ` ${late.displayName} joined late — run it back with them?` : ""}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <ShareActionTile icon={Share2} label="Share Image" onClick={shareImage} tone="primary" />
+          <ShareActionTile icon={Link2} label="Copy Link" onClick={copyLink} />
+          <ShareActionTile
+            icon={MoreHorizontal}
+            label="More"
+            onClick={() => shareOrCopy({ text: hero ? hero.headline : "We just played MUTUALS.", url: link })}
+          />
         </div>
 
         <div className="mt-3">
-          <Button tone="pink" icon={Share2} onClick={shareReceipts}>
-            Share the receipts
+          <Button tone="primary" icon={RotateCcw} onClick={() => newRoom(app.groupMode || "group")}>
+            {late ? `Run it back with ${late.displayName}` : "Play another round · new questions"}
           </Button>
         </div>
-        <div className="mt-3">
-          <Button tone="lime" icon={RotateCcw} onClick={() => newRoom(app.groupMode || "group")}>
-            {late ? `Run it back with ${late.displayName}` : "Run it back · new questions"}
-          </Button>
-        </div>
-        <div className="mt-3">
-          <Button tone="white" icon={MapIcon} onClick={() => go("Matrix")}>
-            View who-knows-who map
-          </Button>
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <Button tone="white" icon={Users} onClick={() => newRoom("duo")}>
-            Challenge a friend
-          </Button>
-          <Button tone="white" icon={Users} onClick={() => newRoom("group")}>
-            Challenge a group
-          </Button>
-        </div>
-        <div className="mt-3">
-          <Button
-            tone="dark"
-            icon={Trophy}
-            className={eazoReady ? "" : "pointer-events-none opacity-40"}
-            onClick={eazoReady ? () => window.open(EAZO_VOTE_URL, "_blank", "noopener") : undefined}
+
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <button
+            onClick={() => newRoom("duo")}
+            className="flex items-center justify-center gap-2 rounded-2xl border-2 border-white/15 bg-white/5 py-3 text-xs font-black text-white active:scale-95"
           >
-            {eazoReady ? "Help MUTUALS win on Eazo" : "Eazo vote link coming"}
-          </Button>
+            <Users className="h-4 w-4" /> Challenge 1 Friend
+          </button>
+          <button
+            onClick={() => newRoom("group")}
+            className="flex items-center justify-center gap-2 rounded-2xl border-2 border-white/15 bg-white/5 py-3 text-xs font-black text-white active:scale-95"
+          >
+            <Users className="h-4 w-4" /> Challenge a Group
+          </button>
         </div>
-      </BottomSheet>
+
+        <div className="mt-2 flex items-center justify-center gap-4">
+          <button onClick={() => go("Matrix")} className="flex items-center gap-1.5 text-xs font-black text-white/55">
+            <MapIcon className="h-4 w-4" /> View map
+          </button>
+          <button onClick={() => go("Home")} className="text-xs font-black text-white/45">
+            Back to start
+          </button>
+          <button
+            onClick={eazoReady ? () => window.open(EAZO_VOTE_URL, "_blank", "noopener") : undefined}
+            className={cx("text-xs font-black", eazoReady ? "text-[#d7ff2f]" : "pointer-events-none text-white/25")}
+          >
+            {eazoReady ? "Vote on Eazo" : "Eazo soon"}
+          </button>
+        </div>
+      </div>
     </Phone>
   );
 }
