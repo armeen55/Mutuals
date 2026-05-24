@@ -120,7 +120,7 @@ export default function JoinWall({ go }) {
             {cta}
           </Button>
         </div>
-        <p className="mt-2 text-center text-[11px] font-bold text-black/35">No account. No install. Takes about 2 minutes.</p>
+        <p className="mt-2 text-center text-[11px] font-bold text-black/35">No account. No install. Quick round. Real receipts.</p>
       </BottomSheet>
     </Phone>
   );

@@ -281,8 +281,8 @@ export default function Reveal({ next, go, goSignup }) {
         )}
 
         <div className="mt-3 flex gap-2">
-          <ShareActionTile icon={ImageIcon} label="Share Image" onClick={shareImage} tone="primary" />
-          <ShareActionTile icon={Link2} label="Copy Link" onClick={copyLink} />
+          <ShareActionTile icon={ImageIcon} label="Share the receipts" onClick={shareImage} tone="primary" />
+          <ShareActionTile icon={Link2} label="Copy link" onClick={copyLink} />
           <ShareActionTile
             icon={MoreHorizontal}
             label="More"

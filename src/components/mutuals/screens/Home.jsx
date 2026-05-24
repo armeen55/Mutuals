@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Users, UserPlus, X } from "lucide-react";
 import Phone from "../ui/Phone";
 import { ensureGroup, saveMutualsState, newRoomId } from "../../../utils/mutualsStorage";
-import { captureGroup } from "../../../lib/mutualsApi";
+import { captureGroup, getPublicStats } from "../../../lib/mutualsApi";
 import { cx, showToast } from "../../../utils/ui";
 import { track } from "../../../utils/analytics";
 
@@ -27,6 +27,16 @@ function parseInvite(text) {
 export default function Home({ next, go }) {
   const [how, setHow] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
+  // Live momentum — friendly floors shown instantly, climb with real counts.
+  const [stats, setStats] = useState({ rooms: 12, players: 30, answers: 100 });
+
+  useEffect(() => {
+    getPublicStats()
+      .then((s) => {
+        if (s) setStats({ rooms: Math.max(12, s.rooms), players: Math.max(30, s.players), answers: Math.max(100, s.answers) });
+      })
+      .catch(() => {});
+  }, []);
 
   const startRoom = (mode) => {
     ensureGroup(newRoomId());
@@ -112,6 +122,18 @@ export default function Home({ next, go }) {
           <p className="px-2 pt-1 text-center text-xs font-bold leading-relaxed text-black/45">
             Answer about yourself. Guess your friends. Reveal the receipts.
           </p>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              ["Rooms", stats.rooms],
+              ["Players", stats.players],
+              ["Answers", stats.answers],
+            ].map(([label, n]) => (
+              <div key={label} className="rounded-2xl bg-white/70 py-2 text-center shadow-sm">
+                <p className="text-lg font-black leading-none text-[#6B2CFF]">{n}+</p>
+                <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-black/40">{label}</p>
+              </div>
+            ))}
+          </div>
           <button
             onClick={() => setHow(true)}
             className="mx-auto block text-center text-xs font-black uppercase tracking-widest text-black/45 underline-offset-4 hover:underline"

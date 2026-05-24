@@ -213,6 +213,20 @@ export async function getInsights(groupId) {
   return { readiness: computeReadiness(bundle), cards: computeInsights(bundle), bundle };
 }
 
+// Lightweight public momentum counts (head/count queries — no rows fetched).
+// Returns null when Supabase is off or a query fails so the caller can floor it.
+export async function getPublicStats() {
+  if (!isSupabaseEnabled) return null;
+  try {
+    const head = (t) => supabase.from(t).select("*", { count: "exact", head: true });
+    const [g, p, a] = await Promise.all([head("groups"), head("participants"), head("answers")]);
+    if (g.error || p.error || a.error) return null;
+    return { rooms: g.count || 0, players: p.count || 0, answers: a.count || 0 };
+  } catch {
+    return null;
+  }
+}
+
 // ---------------- fire-and-forget capture helpers (used by screens) ----------------
 // These never throw and never block the UI; the localStorage demo flow is the
 // source of truth for rendering. This just mirrors real data into the backend.

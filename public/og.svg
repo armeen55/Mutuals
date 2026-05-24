@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif">
+  <rect width="1200" height="630" fill="#FFF3DF"/>
+  <!-- corner blobs -->
+  <circle cx="1120" cy="70" r="150" fill="#FFD23F" opacity="0.95"/>
+  <circle cx="90" cy="80" r="110" fill="#7B3CFF" opacity="0.45"/>
+  <ellipse cx="60" cy="470" rx="120" ry="150" fill="#FF4F9A" opacity="0.8"/>
+  <circle cx="1150" cy="560" r="150" fill="#35C58A" opacity="0.85"/>
+  <!-- dots -->
+  <g fill="#17112B" opacity="0.18">
+    <circle cx="150" cy="190" r="7"/><circle cx="185" cy="190" r="7"/><circle cx="220" cy="190" r="7"/>
+    <circle cx="150" cy="225" r="7"/><circle cx="185" cy="225" r="7"/><circle cx="220" cy="225" r="7"/>
+  </g>
+  <!-- wordmark + subtitle -->
+  <text x="80" y="300" font-size="150" font-weight="900" fill="#17112B" letter-spacing="-6">MUTUALS</text>
+  <text x="86" y="360" font-size="40" font-weight="800" fill="rgba(23,17,43,0.6)">Find out who actually knows who</text>
+  <!-- reveal card mock -->
+  <g>
+    <rect x="80" y="410" width="1040" height="150" rx="34" fill="#FF4F9A"/>
+    <text x="120" y="470" font-size="26" font-weight="900" fill="rgba(255,255,255,0.7)" letter-spacing="3">THE RECEIPTS ARE IN.</text>
+    <text x="120" y="525" font-size="56" font-weight="900" fill="#ffffff">Who knows who?</text>
+    <text x="1080" y="500" text-anchor="end" font-size="28" font-weight="900" fill="rgba(255,255,255,0.85)">MUTUALS</text>
+  </g>
+</svg>

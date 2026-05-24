@@ -20,7 +20,16 @@ const param = (k) => {
     return null;
   }
 };
-const isDebug = () => param("debug") === "1";
+const isLocalHost = () => {
+  try {
+    return ["localhost", "127.0.0.1"].includes(window.location.hostname);
+  } catch {
+    return false;
+  }
+};
+// Debug shell (desktop view + step nav) is localhost-only. Production always
+// serves the public mobile app, even with ?debug=1.
+const isDebug = () => isLocalHost() && param("debug") === "1";
 
 export default function MutualsMergedFlow() {
   const debug = isDebug();
@@ -38,8 +47,9 @@ export default function MutualsMergedFlow() {
       const prev = getMutualsState().activeGroupId;
       ensureGroup(gid);
       if (gid !== prev) {
-        // Opening a different room — drop the previous room's local play state.
-        saveMutualsState({ selfAnswers: {}, guesses: {}, revealUnlocked: false, completedSteps: [], soloDemo: false });
+        // Opening a different room — drop the previous room's local play state
+        // (answers, guesses, reveal, round) so an invite never shows stale data.
+        saveMutualsState({ selfAnswers: {}, guesses: {}, revealUnlocked: false, completedSteps: [], soloDemo: false, roundsByGroup: {} });
       }
       setShowPrototype(true);
       setStep(steps.indexOf("Join"));

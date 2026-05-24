@@ -6,13 +6,10 @@ import Button from "../ui/Button";
 import { useMutuals } from "../useMutuals";
 import { shareUrl, saveMutualsState, newRoomId, ensureGroup } from "../../../utils/mutualsStorage";
 import { getInsights, captureGroup } from "../../../lib/mutualsApi";
-import { cx, shareOrCopy, showToast } from "../../../utils/ui";
+import { shareOrCopy, showToast } from "../../../utils/ui";
 import { createRevealShareImage, shareImageBlob } from "../../../utils/shareImage";
 import { track } from "../../../utils/analytics";
 import { EAZO_VOTE_URL } from "../../../config";
-
-// Only treat the vote CTA as live once a real link replaces the placeholder.
-const eazoReady = !/^https?:\/\/eazo\.ai\/?$/.test(EAZO_VOTE_URL);
 
 export default function Share({ go }) {
   const app = useMutuals();
@@ -77,6 +74,10 @@ export default function Share({ go }) {
     navigator.clipboard?.writeText(link);
     showToast("Link copied");
   };
+  const voteEazo = () => {
+    track("eazo_vote_clicked");
+    window.open(EAZO_VOTE_URL, "_blank", "noopener");
+  };
 
   return (
     <Phone mood="dark">
@@ -112,13 +113,20 @@ export default function Share({ go }) {
         </div>
 
         <div className="flex gap-2">
-          <ShareActionTile icon={Share2} label="Share Image" onClick={shareImage} tone="primary" />
-          <ShareActionTile icon={Link2} label="Copy Link" onClick={copyLink} />
+          <ShareActionTile icon={Share2} label="Share the receipts" onClick={shareImage} tone="primary" />
+          <ShareActionTile icon={Link2} label="Copy link" onClick={copyLink} />
           <ShareActionTile
             icon={MoreHorizontal}
             label="More"
             onClick={() => shareOrCopy({ text: hero ? hero.headline : "We just played MUTUALS.", url: link })}
           />
+        </div>
+
+        <div className="mt-3">
+          <Button tone="yellow" icon={Trophy} onClick={voteEazo}>
+            Vote for MUTUALS
+          </Button>
+          <p className="mt-1.5 text-center text-[11px] font-bold text-white/55">Search MUTUALS on Eazo. Use all your votes.</p>
         </div>
 
         <div className="mt-3">
@@ -143,18 +151,12 @@ export default function Share({ go }) {
           </button>
         </div>
 
-        <div className="mt-2 flex items-center justify-center gap-4">
+        <div className="mt-2 flex items-center justify-center gap-5">
           <button onClick={() => go("Matrix")} className="flex items-center gap-1.5 text-xs font-black text-white/55">
             <MapIcon className="h-4 w-4" /> {roomMode === "duo" ? "View breakdown" : "View map"}
           </button>
           <button onClick={() => go("Home")} className="text-xs font-black text-white/45">
             Back to start
-          </button>
-          <button
-            onClick={eazoReady ? () => window.open(EAZO_VOTE_URL, "_blank", "noopener") : undefined}
-            className={cx("text-xs font-black", eazoReady ? "text-[#FFD23F]" : "pointer-events-none text-white/40")}
-          >
-            {eazoReady ? "Help MUTUALS win on Eazo" : "Eazo vote link coming"}
           </button>
         </div>
       </div>

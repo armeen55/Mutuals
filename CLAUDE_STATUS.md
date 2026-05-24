@@ -5,6 +5,47 @@ Newest entry on top.
 
 ---
 
+## Chunk 23 — FINAL pre-submit hardening + Eazo vote CTA + public stats (BUILD + PUSH)
+
+### Submission pitch (for Eazo + judges)
+- **One-liner:** MUTUALS is the group-chat game where friends answer about themselves, guess each other, and reveal who actually knows who.
+- **Eazo description:** MUTUALS is a fast friendship game for group chats. Answer spicy multiple-choice questions about yourself, guess what your friends picked, and get reveal cards that expose who knows who best, the strongest mutual pair, and the answer everyone got wrong.
+
+### PART 1 — Vote link (`config.js`)
+- `EAZO_VOTE_URL = "https://hackathon2026.eazo.dev/"`. Placeholder/TODO removed.
+
+### PART 2 — Eazo CTA + share labels (`screens/Share.jsx`)
+- Eazo CTA is **active** (yellow `Button`, Trophy icon) → opens the vote page in a new tab. Copy: **"Vote for MUTUALS"** + microcopy **"Search MUTUALS on Eazo. Use all your votes."** No "coming/soon/placeholder" anywhere.
+- Tiles renamed: **"Share the receipts" / "Copy link" / "More"**. Placement order: 1) Share the receipts, 2) Vote for MUTUALS, 3) Run it back, 4) Challenge 1 Friend / Group.
+- `screens/Reveal.jsx` share tiles also renamed to "Share the receipts" / "Copy link" (same visible label rule).
+
+### PART 3 — Production debug guard (`MutualsMergedFlow.jsx`)
+- `isDebug = isLocalHost() && param("debug")==="1"`. In production `?debug=1` is ignored — public visitors always get the mobile app. Debug/desktop components kept (localhost-only).
+
+### PART 4 — OG image + meta (`public/og.svg`, `index.html`)
+- Added `public/og.svg` (1200×630, cream / MUTUALS wordmark / subtitle / colorful reveal-card mock, brand palette). No dependencies. `index.html` og:image + twitter:image → `/og.svg`; description = "Answer about yourself. Guess your friends. Reveal the receipts." (SVG chosen — no-deps/no-browser blocks quality raster PNG with text; degrades to title/description on scrapers that don't render SVG.)
+
+### PART 5 — Home momentum stats (`screens/Home.jsx`, `lib/mutualsApi.js`)
+- `getPublicStats()` — Supabase `count: exact, head: true` queries on groups/participants/answers; returns `null` when Supabase off or any query errors. Home shows 3 compact boxes (Rooms/Players/Answers) with **friendly floors 12/30/100** via `Math.max(floor, count)` and a trailing "+". Fire-and-forget; never blocks render; never shows "0+".
+
+### PART 6 — Public copy sweep
+- JoinWall footer: "Takes about 2 minutes." → **"Quick round. Real receipts."** Create/JoinWall duo subheads use "a quick round" (no "6 questions"). Home How-it-works uses "A few spicy questions."
+- Verified all fake names (Karan/Maya/Will/Armeen) live **only** in debug/demo-only surfaces that are unreachable in the real flow: `desktop/*` (gated behind `isDebug`), `ProgressScreen` (step 3, skipped — JoinWall jumps `go("Answer")`), `SeededGuess` (renders only with no active room), `SignupGate` (Reveal's `atGate` is `!realReady`, false in real rooms). No fake name renders publicly.
+
+### PART 7 — Stale-state guard (`MutualsMergedFlow.jsx`)
+- On a changed `?group=`, reset `selfAnswers/guesses/revealUnlocked/completedSteps/soloDemo/roundsByGroup`; keep `currentUserName`. Prevents an invite from showing a prior room's data.
+
+### Out of scope (not built, per spec)
+- No profiles/auth, no open-text answers, no contact sync, no new modes, no UI rebuild, no schema changes, no extra questions, no adult toggle, no Eazo explainer/tutorial.
+
+### Files changed
+`config.js`, `screens/Share.jsx`, `screens/Reveal.jsx`, `MutualsMergedFlow.jsx`, `public/og.svg`, `index.html`, `lib/mutualsApi.js`, `screens/Home.jsx`, `screens/JoinWall.jsx`.
+
+### Build
+One `npm run build` → green. No manual preview per request.
+
+---
+
 ## Chunk 22B — One spicy bank (unlock everything) + variable-length copy (BUILD + PUSH)
 
 ### Goal
